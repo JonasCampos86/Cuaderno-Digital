@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clase 16 — Clases en JavaScript v2</title>
+<style>
+:root {
+  --purple:#6f42c1; --purple-dark:#211536;
+  --blue:#145cc7; --blue-bg:#f2f7ff;
+  --red:#b42318; --red-bg:#fff3f1;
+  --orange:#b05a00; --orange-bg:#fff8ef;
+  --black:#222; --black-bg:#f1f1f1;
+  --bg:#f5f6fb; --paper:white;
+  --code-bg:#0f172a; --code:#e5e7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:#222;line-height:1.65}
+.layout{display:grid;grid-template-columns:285px 1fr;min-height:100vh}
+aside{position:sticky;top:0;height:100vh;overflow:auto;background:var(--purple-dark);padding:28px 20px;color:white}
+aside h2{margin:0 0 18px;color:#f1e7ff;font-size:1.05rem}
+aside a{display:block;color:#dfd1ff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.09);padding:8px 0;font-size:.92rem}
+aside a:hover{color:white}
+main{max-width:1000px;width:100%;margin:0 auto;padding:42px 32px 80px}
+header{background:linear-gradient(135deg,#54219a,#7c3aed);color:white;padding:36px;border-radius:26px;margin-bottom:30px;box-shadow:0 16px 38px rgba(80,60,160,.28)}
+header h1{margin:0;font-size:2.15rem;letter-spacing:-.03em}
+header p{margin:10px 0 0;font-size:1.05rem;opacity:.96}
+section{background:var(--paper);border-radius:22px;padding:30px;margin-bottom:26px;box-shadow:0 8px 24px rgba(15,23,42,.08);border:1px solid rgba(15,23,42,.06)}
+h2{color:var(--purple);font-size:1.55rem;margin:0 0 22px;border-bottom:3px solid #eadcff;padding-bottom:10px}
+.line{margin:10px 0;padding:10px 14px;border-radius:12px;border-left:5px solid transparent}
+.blue{color:var(--blue);background:var(--blue-bg);border-left-color:var(--blue)}
+.red{color:var(--red);background:var(--red-bg);border-left-color:var(--red)}
+.orange{color:var(--orange);background:var(--orange-bg);border-left-color:var(--orange)}
+.black{color:var(--black);background:var(--black-bg);border-left-color:#333}
+.star{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;font-weight:650}
+pre{background:var(--code-bg);color:var(--code);padding:22px 24px;border-radius:18px;overflow:auto;margin:22px 0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 10px 24px rgba(15,23,42,.18);font-size:.96rem;line-height:1.55}
+pre code{font-family:"Cascadia Code","Fira Code",Consolas,monospace;background:transparent;padding:0}
+code{font-family:"Cascadia Code",Consolas,monospace;background:rgba(15,23,42,.08);padding:.12em .35em;border-radius:6px}
+.footer{text-align:center;color:#666;margin-top:34px;font-size:.92rem}
+@media(max-width:900px){
+.layout{display:block}
+aside{position:static;height:auto}
+main{padding:24px 16px 54px}
+header{padding:24px;border-radius:18px}
+header h1{font-size:1.65rem}
+section{padding:22px 16px}
+}
+@media print{
+body{background:white}
+.layout{display:block}
+aside{display:none}
+main{max-width:none;padding:0}
+section{box-shadow:none;break-inside:avoid;border:1px solid #ddd}
+header{box-shadow:none}
+}
+
+/* v4: resaltado de sintaxis limpio */
+pre.code-block{
+  background:#0b1020;
+  color:#e5e7eb;
+  padding:24px 26px;
+  border-radius:18px;
+  overflow:auto;
+  margin:26px 0;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.08),
+    0 12px 28px rgba(15,23,42,.22);
+  font-size:.98rem;
+  line-height:1.6;
+}
+pre.code-block code{
+  font-family:"Cascadia Code","Fira Code",Consolas,monospace;
+  background:transparent;
+  padding:0;
+}
+.tok-keyword{color:#93c5fd;font-weight:700}
+.tok-string{color:#86efac}
+.tok-comment{color:#94a3b8;font-style:italic}
+.tok-number{color:#fbbf24}
+.tok-private{color:#f0abfc;font-weight:700}
+
+</style>
+</head>
+<body>
+<div class="layout">
+<aside>
+<h2>Índice</h2>
+<a href="#s1">1. ¿Qué son las clases?</a>
+<a href="#s2">2. Antes de class: funciones constructoras</a>
+<a href="#s3">3. ¿Qué hace realmente new?</a>
+<a href="#s4">4. Métodos dentro del constructor</a>
+<a href="#s5">5. Métodos en el prototype</a>
+<a href="#s6">6. Convertimos la función constructora en clase</a>
+<a href="#s7">7. Propiedades privadas con #</a>
+<a href="#s8">8. Métodos privados</a>
+<a href="#s9">9. Métodos estáticos</a>
+<a href="#s10">10. ¿Dónde viven los métodos estáticos?</a>
+<a href="#s11">11. Getters</a>
+<a href="#s12">12. Setters</a>
+<a href="#s13">13. Getters y setters juntos</a>
+<a href="#s14">14. Herencia</a>
+<a href="#s15">15. ¿Qué hace realmente extends?</a>
+<a href="#s16">16. super()</a>
+<a href="#s17">17. Sobrescritura de métodos (Override)</a>
+<a href="#s18">18. Resumen mental final de la clase</a>
+</aside>
+<main>
+<header>
+<h1>Clase 16 — Clases en JavaScript</h1>
+
+</header>
+<section id="s1"><h2>1. ¿Qué son las clases?</h2><p class="line blue">Las clases fueron introducidas en ES6.</p><p class="line blue">Su objetivo es ofrecer una sintaxis más clara para trabajar con objetos y prototipos.</p><p class="line red star">Error muy común: pensar que las clases sustituyen a los prototipos.</p><p class="line red star">Eso es falso.</p><p class="line blue star">Las clases son una capa de sintaxis sobre el sistema de prototipos que ya existía en JavaScript.</p><p class="line blue">Por debajo, JavaScript sigue utilizando prototipos para compartir métodos y construir relaciones entre objetos.</p><p class="line black">Entender prototipos hace mucho más fácil entender clases.</p></section><section id="s2"><h2>2. Antes de class: funciones constructoras</h2><p class="line blue">Antes de existir la sintaxis <code>class</code>, JavaScript utilizaba funciones constructoras para crear objetos con una estructura común.</p><pre class="code-block"><code><span class="tok-keyword">function</span> Usuario(nombre, apellidos) {
+  <span class="tok-keyword">this</span>.nombre = nombre;
+  <span class="tok-keyword">this</span>.apellidos = apellidos;
+}
+
+<span class="tok-keyword">const</span> u1 = <span class="tok-keyword">new</span> Usuario(<span class="tok-string">&quot;Bienve&quot;</span>, <span class="tok-string">&quot;Sáez&quot;</span>);
+<span class="tok-keyword">const</span> u2 = <span class="tok-keyword">new</span> Usuario(<span class="tok-string">&quot;Felipe&quot;</span>, <span class="tok-string">&quot;Pérez&quot;</span>);</code></pre><p class="line black"><code>Usuario</code> es una función constructora.</p><p class="line black"><code>u1</code> y <code>u2</code> son objetos distintos.</p><p class="line blue star">Una función constructora actúa como una plantilla para crear objetos con propiedades similares.</p><p class="line red">Error típico: pensar que una función constructora es una clase tradicional como en Java o C#.</p></section><section id="s3"><h2>3. ¿Qué hace realmente new?</h2><p class="line blue">Cuando usamos <code>new</code>, JavaScript no se limita a ejecutar una función.</p><pre class="code-block"><code><span class="tok-keyword">const</span> u1 = <span class="tok-keyword">new</span> Usuario(<span class="tok-string">&quot;Jonás&quot;</span>, <span class="tok-string">&quot;Campos&quot;</span>);</code></pre><p class="line blue">Internamente ocurren varios pasos.</p><p class="line orange">Paso 1: JavaScript crea un objeto vacío.</p><pre class="code-block"><code>{}</code></pre><p class="line orange">Paso 2: conecta ese objeto con el prototipo de la función constructora.</p><pre class="code-block"><code>u1
+ ↑
+Usuario.prototype</code></pre><p class="line orange">Paso 3: ejecuta la función constructora usando ese objeto como <code>this</code>.</p><pre class="code-block"><code>Usuario.call(u1, <span class="tok-string">&quot;Jonás&quot;</span>, <span class="tok-string">&quot;Campos&quot;</span>);</code></pre><p class="line orange">Paso 4: devuelve el objeto creado.</p><p class="line blue star"><code>new</code> crea el objeto.</p><p class="line blue star"><code>new</code> lo conecta con su prototipo.</p><p class="line blue star"><code>new</code> ejecuta la función constructora.</p><p class="line blue star"><code>new</code> devuelve el objeto terminado.</p><p class="line red star">No memorices únicamente la sintaxis.</p><p class="line red star">Lo importante es comprender el proceso que ocurre detrás.</p></section><section id="s4"><h2>4. Métodos dentro del constructor</h2><p class="line blue">Podemos crear métodos directamente dentro de la función constructora.</p><pre class="code-block"><code><span class="tok-keyword">function</span> Usuario(nombre, apellidos) {
+  <span class="tok-keyword">this</span>.nombre = nombre;
+  <span class="tok-keyword">this</span>.apellidos = apellidos;
+
+  <span class="tok-keyword">this</span>.saludar = <span class="tok-keyword">function</span> () {
+    <span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(<span class="tok-string">`Hola, soy ${this.nombre} ${this.apellidos}`</span>);
+  };
+}</code></pre><p class="line blue">Esto funciona correctamente.</p><p class="line blue star">Al usar <code>this.saludar</code>, cada objeto recibe una propiedad propia llamada <code>saludar</code>.</p><p class="line orange">Ejemplo:</p><pre class="code-block"><code><span class="tok-keyword">const</span> u1 = <span class="tok-keyword">new</span> Usuario(<span class="tok-string">&quot;Pepe&quot;</span>, <span class="tok-string">&quot;García&quot;</span>);
+<span class="tok-keyword">const</span> u2 = <span class="tok-keyword">new</span> Usuario(<span class="tok-string">&quot;Juan&quot;</span>, <span class="tok-string">&quot;Pérez&quot;</span>);</code></pre><p class="line blue">Tanto <code>u1</code> como <code>u2</code> tienen una propiedad propia llamada <code>saludar</code>.</p><p class="line red star">Cada instancia crea una función nueva.</p><pre class="code-block"><code><span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(u1.saludar === u2.saludar);</code></pre><p class="line orange">Resultado:</p><pre class="code-block"><code>false</code></pre><p class="line blue star">Aunque el código sea idéntico, JavaScript crea dos objetos función distintos.</p><p class="line blue star">Las funciones son objetos.</p><p class="line blue star">Los objetos se comparan por referencia, no por contenido.</p><p class="line red star">Si todos los objetos necesitan exactamente el mismo comportamiento, crear una función nueva para cada instancia es innecesario.</p></section><section id="s5"><h2>5. Métodos en el prototype</h2><p class="line blue">Si todos los objetos necesitan el mismo comportamiento, podemos almacenar el método en el prototipo.</p><pre class="code-block"><code><span class="tok-keyword">function</span> Usuario(nombre, apellidos) {
+  <span class="tok-keyword">this</span>.nombre = nombre;
+  <span class="tok-keyword">this</span>.apellidos = apellidos;
+}
+
+Usuario.prototype.saludar = <span class="tok-keyword">function</span> () {
+  <span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(<span class="tok-string">`Hola, soy ${this.nombre} ${this.apellidos}`</span>);
+};</code></pre><p class="line blue star">Ahora <code>saludar</code> ya no vive dentro de cada objeto.</p><p class="line blue star">Existe una única función compartida.</p><p class="line orange">Visualización mental:</p><pre class="code-block"><code>u1
+ ↑
+Usuario.prototype
+ └─ saludar()
+
+u2
+ ↑
+Usuario.prototype
+ └─ saludar()</code></pre><p class="line blue star">Tanto <code>u1</code> como <code>u2</code> utilizan exactamente el mismo método.</p><pre class="code-block"><code><span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(u1.saludar === u2.saludar);</code></pre><p class="line orange">Resultado:</p><pre class="code-block"><code>true</code></pre><p class="line blue star">Ambos están apuntando al mismo objeto función.</p><p class="line red">Error típico: pensar que JavaScript copia el método dentro de cada objeto.</p><p class="line red star">El método se comparte mediante la cadena de prototipos.</p></section><section id="s6"><h2>6. Convertimos la función constructora en clase</h2><p class="line blue">La sintaxis <code>class</code> permite escribir lo mismo de una forma más clara.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Usuario {
+  <span class="tok-keyword">constructor</span>(nombre, apellido) {
+    <span class="tok-keyword">this</span>.nombre = nombre;
+    <span class="tok-keyword">this</span>.apellido = apellido;
+  }
+
+  saludar() {
+    <span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(<span class="tok-string">`Hola, soy ${this.nombre} ${this.apellido}`</span>);
+  }
+}
+
+<span class="tok-keyword">const</span> u1 = <span class="tok-keyword">new</span> Usuario(<span class="tok-string">&quot;Bienvenido&quot;</span>, <span class="tok-string">&quot;Sáez&quot;</span>);
+u1.saludar();</code></pre><p class="line black"><code>constructor()</code> es un método especial.</p><p class="line blue star"><code>new</code> crea el objeto y prepara todo el proceso.</p><p class="line blue star"><code>constructor()</code> inicializa las propiedades de ese objeto.</p><p class="line blue">Los métodos definidos dentro de una clase se almacenan automáticamente en <code>Usuario.prototype</code>.</p><p class="line blue star">La sintaxis es más cómoda.</p><p class="line red star">El mecanismo interno sigue siendo el mismo.</p><p class="line red star">Las clases no sustituyen a los prototipos.</p><p class="line blue star">Las clases utilizan prototipos.</p></section><section id="s7"><h2>7. Propiedades privadas con #</h2><p class="line blue">JavaScript moderno permite crear propiedades privadas mediante el símbolo <code>#</code>.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Usuario {
+  <span class="tok-private">#edad</span>;
+
+  <span class="tok-keyword">constructor</span>(nombre, apellido, edad) {
+    <span class="tok-keyword">this</span>.nombre = nombre;
+    <span class="tok-keyword">this</span>.apellido = apellido;
+    <span class="tok-keyword">this</span>.<span class="tok-private">#edad</span> = edad;
+  }
+
+  saludar() {
+    <span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(
+      <span class="tok-string">`Hola, soy ${this.nombre} ${this.apellido} y tengo ${this.#edad} años`</span>
+    );
+  }
+}</code></pre><p class="line black"><code>#edad</code> es una propiedad privada.</p><p class="line blue star">Solo puede utilizarse desde dentro de la propia clase.</p><p class="line red">Esto produce un error:</p><pre class="code-block"><code><span class="tok-keyword">const</span> u1 = <span class="tok-keyword">new</span> Usuario(<span class="tok-string">&quot;Pepe&quot;</span>, <span class="tok-string">&quot;García&quot;</span>, <span class="tok-number">30</span>);
+
+<span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(u1.<span class="tok-private">#edad</span>);</code></pre><p class="line red star">El código externo no puede acceder directamente a una propiedad privada.</p><p class="line blue star">“Privado” no significa secreto absoluto.</p><p class="line blue star">Significa que la propiedad es de uso interno de la clase.</p><p class="line orange">Visualización mental:</p><pre class="code-block"><code>Exterior
+   ❌
+<span class="tok-private">#edad</span>
+   ✔
+Clase Usuario</code></pre><p class="line blue">Esto permite proteger datos y controlar cómo se utilizan.</p></section><section id="s8"><h2>8. Métodos privados</h2><p class="line blue">Además de propiedades privadas, también podemos crear métodos privados.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Usuario {
+  salir() {
+    <span class="tok-keyword">this</span>.<span class="tok-private">#cerrarSesion</span>();
+  }
+
+  <span class="tok-private">#cerrarSesion</span>() {
+    <span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(<span class="tok-string">&quot;He cerrado la sesión&quot;</span>);
+  }
+}
+
+<span class="tok-keyword">const</span> u1 = <span class="tok-keyword">new</span> Usuario();
+u1.salir();</code></pre><p class="line black"><code>salir()</code> es un método público.</p><p class="line black"><code>#cerrarSesion()</code> es un método privado.</p><p class="line blue star">Los métodos públicos pueden utilizar métodos privados internamente.</p><p class="line red">Esto produce un error:</p><pre class="code-block"><code>u1.<span class="tok-private">#cerrarSesion</span>();</code></pre><p class="line red star">Los métodos privados no pueden ejecutarse desde fuera de la clase.</p><p class="line orange">Visualización mental:</p><pre class="code-block"><code>u1.salir()
+     ↓
+<span class="tok-private">#cerrarSesion</span>()
+     ↓
+<span class="tok-string">&quot;He cerrado la sesión&quot;</span></code></pre><p class="line blue star">Los métodos privados sirven para ocultar detalles internos de funcionamiento.</p><p class="line blue star">El usuario utiliza la interfaz pública sin conocer la implementación interna.</p></section><section id="s9"><h2>9. Métodos estáticos</h2><p class="line blue">Un método estático pertenece a la clase.</p><p class="line blue">No pertenece a los objetos creados por la clase.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Usuario {
+  <span class="tok-keyword">constructor</span>(nombre, apellido) {
+    <span class="tok-keyword">this</span>.nombre = nombre;
+    <span class="tok-keyword">this</span>.apellido = apellido;
+  }
+
+  <span class="tok-keyword">static</span> crearInvitado() {
+    <span class="tok-keyword">return</span> <span class="tok-keyword">new</span> Usuario(<span class="tok-string">&quot;Invitado&quot;</span>, <span class="tok-string">&quot;Anónimo&quot;</span>);
+  }
+}</code></pre><pre class="code-block"><code><span class="tok-keyword">const</span> invitado = Usuario.crearInvitado();</code></pre><p class="line blue star">El método se ejecuta desde la propia clase.</p><pre class="code-block"><code>Usuario.crearInvitado();</code></pre><p class="line red">No se ejecuta desde una instancia.</p><pre class="code-block"><code><span class="tok-keyword">const</span> u1 = <span class="tok-keyword">new</span> Usuario(<span class="tok-string">&quot;Jonás&quot;</span>, <span class="tok-string">&quot;Campos&quot;</span>);
+
+u1.crearInvitado(); <span class="tok-comment">// Error</span></code></pre><p class="line red star">Un método estático pertenece a la clase, no a los objetos creados.</p><p class="line orange">Uso típico:</p><pre class="code-block"><code>Crear objetos especiales
+Funciones auxiliares
+Utilidades relacionadas con la clase</code></pre></section><section id="s10"><h2>10. ¿Dónde viven los métodos estáticos?</h2><p class="line blue">Los métodos normales viven en el prototipo.</p><pre class="code-block"><code>Usuario.prototype.saludar</code></pre><p class="line blue">Los métodos estáticos viven directamente en la clase.</p><pre class="code-block"><code>Usuario.crearInvitado</code></pre><p class="line orange">Visualización mental:</p><pre class="code-block"><code>Usuario
+ └─ crearInvitado()
+
+Usuario.prototype
+ └─ saludar()
+
+u1
+ ↑
+Usuario.prototype</code></pre><p class="line blue star">Los métodos normales son accesibles desde las instancias.</p><p class="line blue star">Los métodos estáticos son accesibles desde la clase.</p><p class="line red">Error típico:</p><pre class="code-block"><code>u1.crearInvitado();</code></pre><p class="line red star">Las instancias no tienen acceso a los métodos estáticos.</p></section><section id="s11"><h2>11. Getters</h2><p class="line blue">Un getter permite ejecutar lógica cuando leemos una propiedad.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Usuario {
+  <span class="tok-private">#edad</span>;
+
+  <span class="tok-keyword">get</span> edad() {
+    <span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(<span class="tok-string">&quot;Ejecutando getter&quot;</span>);
+    <span class="tok-keyword">return</span> <span class="tok-keyword">this</span>.<span class="tok-private">#edad</span>;
+  }
+}</code></pre><pre class="code-block"><code><span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(u1.edad);</code></pre><p class="line black">Parece una propiedad normal.</p><p class="line black">Internamente se ejecuta una función.</p><p class="line blue star">El getter permite controlar cómo se obtiene un valor.</p><p class="line red">Error típico:</p><pre class="code-block"><code>u1.edad();</code></pre><p class="line red star">Un getter no se usa como una función.</p><p class="line blue star">Se utiliza exactamente igual que una propiedad.</p></section><section id="s12"><h2>12. Setters</h2><p class="line blue">Un setter permite ejecutar lógica cuando asignamos un valor.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Usuario {
+  <span class="tok-private">#edad</span>;
+
+  <span class="tok-keyword">set</span> edad(nuevaEdad) {
+    <span class="tok-keyword">if</span> (nuevaEdad &lt; <span class="tok-number">0</span>) {
+      <span class="tok-keyword">throw</span> <span class="tok-keyword">Error</span>(<span class="tok-string">&quot;La edad no puede ser menor que 0&quot;</span>);
+    }
+
+    <span class="tok-keyword">this</span>.<span class="tok-private">#edad</span> = nuevaEdad;
+  }
+}</code></pre><pre class="code-block"><code>u1.edad = <span class="tok-number">25</span>;</code></pre><p class="line blue">Aunque parece una asignación normal, internamente se ejecuta el setter.</p><p class="line blue star">Los setters permiten validar datos antes de guardarlos.</p><p class="line orange">Ejemplo:</p><pre class="code-block"><code>u1.edad = -<span class="tok-number">10</span>;</code></pre><p class="line orange">Resultado:</p><pre class="code-block"><code><span class="tok-keyword">Error</span>: La edad no puede ser menor que <span class="tok-number">0</span></code></pre><p class="line red star">El setter evita que el objeto entre en un estado inválido.</p></section><section id="s13"><h2>13. Getters y setters juntos</h2><p class="line blue">Lo habitual es utilizar getter y setter para controlar lectura y escritura.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Usuario {
+  <span class="tok-private">#edad</span>;
+
+  <span class="tok-keyword">get</span> edad() {
+    <span class="tok-keyword">return</span> <span class="tok-keyword">this</span>.<span class="tok-private">#edad</span>;
+  }
+
+  <span class="tok-keyword">set</span> edad(nuevaEdad) {
+    <span class="tok-keyword">if</span> (nuevaEdad &lt; <span class="tok-number">0</span>) {
+      <span class="tok-keyword">throw</span> <span class="tok-keyword">Error</span>(<span class="tok-string">&quot;La edad no puede ser menor que 0&quot;</span>);
+    }
+
+    <span class="tok-keyword">this</span>.<span class="tok-private">#edad</span> = nuevaEdad;
+  }
+}</code></pre><pre class="code-block"><code><span class="tok-keyword">const</span> u1 = <span class="tok-keyword">new</span> Usuario();
+
+u1.edad = <span class="tok-number">30</span>;
+
+<span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(u1.edad);</code></pre><p class="line blue">El setter valida antes de guardar.</p><p class="line blue">El getter controla cómo se devuelve el valor.</p><p class="line blue star">Desde fuera parece una propiedad normal.</p><p class="line blue star">Internamente existe lógica de control.</p><p class="line orange">Visualización mental:</p><pre class="code-block"><code>u1.edad = <span class="tok-number">30</span>
+      ↓
+   setter
+      ↓
+ validación
+      ↓
+ almacenamiento
+
+u1.edad
+      ↓
+   getter
+      ↓
+ devolución del valor</code></pre><p class="line blue star">Los getters y setters permiten que el objeto proteja sus propias reglas.</p><p class="line red star">Un objeto no solo almacena datos.</p><p class="line red star">También puede controlar cómo se leen y modifican esos datos.</p></section><section id="s14"><h2>14. Herencia</h2><p class="line blue">La herencia permite crear una clase a partir de otra.</p><p class="line blue">La nueva clase reutiliza propiedades y métodos ya existentes.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Persona {
+  <span class="tok-keyword">constructor</span>(nombre, apellido) {
+    <span class="tok-keyword">this</span>.nombre = nombre;
+    <span class="tok-keyword">this</span>.apellido = apellido;
+  }
+
+  saludar() {
+    <span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(<span class="tok-string">`Hola, soy ${this.nombre} ${this.apellido}`</span>);
+  }
+}
+
+<span class="tok-keyword">class</span> Alumno <span class="tok-keyword">extends</span> Persona {
+  estudiar() {
+    <span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(<span class="tok-string">&quot;Estoy estudiando&quot;</span>);
+  }
+}
+
+<span class="tok-keyword">const</span> a1 = <span class="tok-keyword">new</span> Alumno(<span class="tok-string">&quot;Juan&quot;</span>, <span class="tok-string">&quot;García&quot;</span>);
+
+a1.saludar();
+a1.estudiar();</code></pre><p class="line black"><code>Persona</code> es la clase padre.</p><p class="line black"><code>Alumno</code> es la clase hija.</p><p class="line blue star"><code>Alumno</code> hereda las propiedades y métodos de <code>Persona</code>.</p><p class="line blue star">Además puede añadir métodos propios.</p><p class="line orange">Resultado:</p><pre class="code-block"><code>a1 puede usar:
+
+saludar()   ← heredado
+estudiar()  ← propio</code></pre><p class="line red">Error típico: pensar que JavaScript copia todos los métodos del padre dentro del hijo.</p><p class="line red star">Eso no ocurre.</p></section><section id="s15"><h2>15. ¿Qué hace realmente extends?</h2><p class="line blue">La palabra <code>extends</code> crea una relación de herencia entre dos clases.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Alumno <span class="tok-keyword">extends</span> Persona {
+}</code></pre><p class="line blue">Mucha gente imagina esto:</p><p class="line red">Persona ↓ copia ↓ Alumno</p><p class="line red star">Eso es incorrecto.</p><p class="line blue star">Lo que realmente ocurre es una conexión entre prototipos.</p><p class="line orange">Visualización mental:</p><pre class="code-block"><code>a1
+ ↑
+Alumno.prototype
+ ↑
+Persona.prototype
+ ↑
+Object.prototype
+ ↑
+null</code></pre><p class="line blue">Cuando buscamos un método:</p><pre class="code-block"><code>a1.saludar();</code></pre><p class="line orange">Paso 1:</p><pre class="code-block"><code>a1</code></pre><p class="line blue">No lo encuentra.</p><p class="line orange">Paso 2:</p><pre class="code-block"><code>Alumno.prototype</code></pre><p class="line blue">Tampoco lo encuentra.</p><p class="line orange">Paso 3:</p><pre class="code-block"><code>Persona.prototype</code></pre><p class="line blue">Allí encuentra <code>saludar()</code>.</p><p class="line blue star">La herencia funciona gracias a la cadena de prototipos.</p><p class="line red star"><code>extends</code> no significa copiar.</p><p class="line red star"><code>extends</code> significa conectar.</p></section><section id="s16"><h2>16. super()</h2><p class="line blue">Cuando una clase hija tiene su propio constructor, necesita ejecutar también el constructor del padre.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Persona {
+  <span class="tok-keyword">constructor</span>(nombre, apellido) {
+    <span class="tok-keyword">this</span>.nombre = nombre;
+    <span class="tok-keyword">this</span>.apellido = apellido;
+  }
+}
+
+<span class="tok-keyword">class</span> Alumno <span class="tok-keyword">extends</span> Persona {
+  <span class="tok-private">#curso</span>;
+
+  <span class="tok-keyword">constructor</span>(nombre, apellido, curso) {
+    <span class="tok-keyword">super</span>(nombre, apellido);
+
+    <span class="tok-keyword">this</span>.<span class="tok-private">#curso</span> = curso;
+  }
+}</code></pre><p class="line black"><code>super()</code> ejecuta el constructor de la clase padre.</p><p class="line blue star">Gracias a <code>super()</code> se inicializan las propiedades heredadas.</p><p class="line orange">En este ejemplo, <code>nombre</code> y <code>apellido</code> se inicializan dentro de <code>Persona</code>.</p><p class="line orange"><code>curso</code> se inicializa dentro de <code>Alumno</code>.</p><p class="line orange">Visualización mental:</p><pre class="code-block"><code><span class="tok-keyword">new</span> Alumno(...)
+        ↓
+<span class="tok-keyword">constructor</span> Alumno
+        ↓
+<span class="tok-keyword">super</span>(...)
+        ↓
+<span class="tok-keyword">constructor</span> Persona
+        ↓
+nombre
+apellido
+        ↓
+vuelve a Alumno
+        ↓
+curso</code></pre><p class="line blue star"><code>super()</code> conecta la construcción del hijo con la construcción del padre.</p><p class="line red">Error muy importante:</p><pre class="code-block"><code><span class="tok-keyword">constructor</span>(nombre, apellido, curso) {
+  <span class="tok-keyword">this</span>.<span class="tok-private">#curso</span> = curso;
+  <span class="tok-keyword">super</span>(nombre, apellido);
+}</code></pre><p class="line red star">En una clase hija no se puede usar <code>this</code> antes de llamar a <code>super()</code>.</p></section><section id="s17"><h2>17. Sobrescritura de métodos (Override)</h2><p class="line blue">Una clase hija puede redefinir un método heredado.</p><pre class="code-block"><code><span class="tok-keyword">class</span> Persona {
+  saludar() {
+    <span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(<span class="tok-string">`Hola, soy ${this.nombre} ${this.apellido}`</span>);
+  }
+}
+
+<span class="tok-keyword">class</span> Alumno <span class="tok-keyword">extends</span> Persona {
+  saludar() {
+    <span class="tok-keyword">console</span>.<span class="tok-keyword">log</span>(
+      <span class="tok-string">`Hola, soy ${this.nombre} ${this.apellido} y soy un alumno`</span>
+    );
+  }
+}
+
+<span class="tok-keyword">const</span> a1 = <span class="tok-keyword">new</span> Alumno(<span class="tok-string">&quot;Juan&quot;</span>, <span class="tok-string">&quot;García&quot;</span>);
+
+a1.saludar();</code></pre><p class="line orange">Resultado:</p><pre class="code-block"><code>Hola, soy Juan García y soy un alumno</code></pre><p class="line blue">Cuando JavaScript busca <code>saludar()</code>:</p><p class="line orange">Paso 1:</p><pre class="code-block"><code>a1</code></pre><p class="line blue">No existe.</p><p class="line orange">Paso 2:</p><pre class="code-block"><code>Alumno.prototype</code></pre><p class="line blue">Lo encuentra aquí.</p><p class="line blue star">La búsqueda termina.</p><p class="line blue">No necesita subir a <code>Persona.prototype</code>.</p><p class="line blue star">Sobrescribir no elimina el método del padre.</p><p class="line blue star">Simplemente el método más cercano tiene prioridad.</p><p class="line orange">Es exactamente la misma idea que ya vimos con las propiedades heredadas.</p><pre class="code-block"><code>Propiedad propia
+      ↓
+tiene prioridad
+      ↓
+sobre la heredada</code></pre><p class="line blue">Con los métodos ocurre lo mismo.</p></section><section id="s18"><h2>18. Resumen mental final de la clase</h2><p class="line blue star">Las clases son una sintaxis más cómoda para trabajar con prototipos.</p><p class="line blue star">Las clases NO sustituyen a los prototipos.</p><p class="line blue star"><code>new</code>:</p><pre class="code-block"><code><span class="tok-number">1.</span> Crea un objeto
+<span class="tok-number">2.</span> Lo conecta con su prototipo
+<span class="tok-number">3.</span> Ejecuta el <span class="tok-keyword">constructor</span>
+<span class="tok-number">4.</span> Devuelve el objeto</code></pre><p class="line blue star"><code>constructor()</code> inicializa el objeto.</p><p class="line blue star"><code>new</code> es quien crea el objeto.</p><p class="line blue star">Todo lo que se asigna mediante <code>this.algo = ...</code> se convierte en una propiedad propia de cada instancia.</p><p class="line blue star">Los métodos definidos como <code>saludar() {}</code> viven en <code>NombreClase.prototype</code>.</p><p class="line blue star">Los métodos estáticos viven directamente en la clase.</p><pre class="code-block"><code>Usuario
+ └─ crearInvitado()</code></pre><p class="line blue star">Las propiedades y métodos privados utilizan <code>#</code>.</p><p class="line blue star">Solo pueden utilizarse desde dentro de la clase.</p><p class="line blue star">Los getters controlan la lectura.</p><p class="line blue star">Los setters controlan la escritura.</p><p class="line blue star">Los setters permiten validar datos antes de guardarlos.</p><p class="line blue star"><code>extends</code> crea una relación de herencia.</p><p class="line blue star">La herencia funciona mediante prototipos.</p><pre class="code-block"><code>Alumno.prototype
+        ↑
+Persona.prototype</code></pre><p class="line blue star"><code>super()</code> ejecuta el constructor de la clase padre.</p><p class="line blue star">Permite inicializar las propiedades heredadas.</p><p class="line blue star">La sobrescritura da prioridad al método más cercano en la cadena de prototipos.</p><p class="line red star">Si entiendes las clases pero no entiendes los prototipos, estás entendiendo solo la mitad del tema.</p><p class="line red star">Si entiendes los prototipos, las clases dejan de parecer magia.</p></section>
+
+</main>
+</div>
+</body>
+</html>
