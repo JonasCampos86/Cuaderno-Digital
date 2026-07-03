@@ -1,12 +1,10 @@
-# 📚 Cuaderno Digital
+# Cuaderno Digital
 
 Aplicación personal de estudio desarrollada con HTML, SCSS, JavaScript y Vite.
 
-El objetivo del proyecto es organizar los contenidos del máster por temas y 
-convertirlos en una herramienta de repaso clara, navegable y progresiva.
+El objetivo del proyecto es organizar los contenidos del máster por temas y convertirlos en una herramienta de repaso clara, navegable y progresiva.
 
-Este repositorio no es solo un almacén de apuntes: es una aplicación que irá 
-creciendo junto con mis conocimientos como desarrollador.
+Este repositorio no es solo un almacén de apuntes: es una aplicación que irá creciendo junto con mis conocimientos como desarrollador.
 
 ## Objetivos
 
@@ -25,4 +23,4 @@ creciendo junto con mis conocimientos como desarrollador.
 
 ## Estado
 
-🚧 En desarrollo
+En desarrollo.
