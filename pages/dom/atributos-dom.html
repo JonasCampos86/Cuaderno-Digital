@@ -16,4 +16,463 @@
     <!-- JavaScript principal -->
     <script type="module" src="/src/js/main.js"></script>
   </head>
+  <body>
+  <div class="lesson-layout">
+    <aside class="lesson-sidebar">
+      <a class="lesson-sidebar__back" href="./index.html">
+        ← Volver a DOM
+      </a>
+
+      <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+        <h2>Índice</h2>
+
+        <a href="#atributos">1. Qué son los atributos</a>
+        <a href="#html-dom">2. HTML y DOM</a>
+        <a href="#propiedades-metodos">3. Propiedades y métodos</a>
+        <a href="#class-list">4. classList</a>
+        <a href="#style">5. style</a>
+        <a href="#metodos">6. Métodos genéricos</a>
+        <a href="#data">7. data-* y dataset</a>
+        <a href="#booleanos">8. Atributos booleanos</a>
+        <a href="#toggle">9. toggleAttribute()</a>
+        <a href="#formularios">10. Atributo y valor actual</a>
+        <a href="#resumen">11. Resumen final</a>
+      </nav>
+    </aside>
+
+    <main class="lesson-main">
+      <header class="lesson-hero">
+        <h1>Gestión de atributos del DOM</h1>
+        <p>
+          Cómo leer, crear, modificar y eliminar atributos HTML desde JavaScript.
+        </p>
+      </header>
+
+    
+      <section class="lesson-section" id="atributos">
+        <h2>1. Qué son los atributos</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          Los atributos son información adicional que escribimos dentro de una etiqueta HTML.
+        </p>
+
+        <p class="lesson-note lesson-note--explanation">
+          Sirven para identificar elementos, configurar su comportamiento, añadir rutas, aplicar estilos, guardar datos o modificar cómo funciona un elemento.
+        </p>
+
+        <pre class="code-block"><code>&lt;div id="caja" class="rojo" title="Caja principal"&gt;&lt;/div&gt;</code></pre>
+
+        <p class="lesson-note lesson-note--key">
+          En este ejemplo, el div tiene tres atributos: id, class y title.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Los atributos pertenecen al HTML y aportan información extra a una etiqueta.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="html-dom">
+        <h2>2. Del HTML al DOM</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          Cuando el navegador lee el HTML, construye una representación interna llamada DOM.
+        </p>
+
+        <p class="lesson-note lesson-note--explanation">
+          Esa representación no es texto plano: es una estructura de objetos que JavaScript puede leer y modificar.
+        </p>
+
+        <pre class="diagram-block">&lt;div id="caja" class="rojo"&gt;&lt;/div&gt;
+        ↓
+Objeto DOM
+        ↓
+{
+  id: "caja",
+  className: "rojo",
+  classList: DOMTokenList,
+  style: CSSStyleDeclaration
+}</pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          El atributo está escrito en el HTML; la propiedad vive en el objeto DOM que JavaScript maneja.
+        </p>
+
+        <pre class="code-block"><code>&lt;input id="nombre" required&gt;</code></pre>
+
+        <pre class="diagram-block">HTML
+        ↓
+&lt;input id="nombre" required&gt;
+        ↓
+Objeto DOM
+        ↓
+{
+  id: "nombre",
+  required: true
+}</pre>
+
+        <p class="lesson-note lesson-note--warning">
+          Atributo HTML y propiedad DOM están relacionados, pero no siempre son exactamente lo mismo.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="propiedades-metodos">
+        <h2>3. Propiedades y métodos genéricos</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          En JavaScript podemos trabajar con atributos principalmente de dos formas: mediante propiedades o mediante métodos genéricos.
+        </p>
+
+        <pre class="code-block"><code>element.id;
+element.className;
+element.disabled;
+element.style;</code></pre>
+
+        <pre class="code-block"><code>element.getAttribute("id");
+element.setAttribute("id", "caja");
+element.hasAttribute("id");
+element.removeAttribute("id");</code></pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Las propiedades son cómodas para atributos conocidos; los métodos genéricos sirven para trabajar con cualquier atributo.
+        </p>
+
+        <pre class="code-block"><code>const caja = document.querySelector("div");
+
+console.log(caja.id);
+console.log(caja.className);
+
+caja.id = "divConID";
+caja.className = "importante negrita";</code></pre>
+
+        <p class="lesson-note lesson-note--warning">
+          En HTML usamos class, pero en JavaScript la propiedad se llama className.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="class-list">
+        <h2>4. classList</h2>
+
+        <p class="lesson-note lesson-note--warning">
+          Si usamos className, sustituimos todas las clases del elemento de golpe.
+        </p>
+
+        <pre class="code-block"><code>&lt;div class="rojo grande activo"&gt;&lt;/div&gt;</code></pre>
+
+        <pre class="code-block"><code>caja.className = "azul";</code></pre>
+
+        <pre class="code-block"><code>&lt;div class="azul"&gt;&lt;/div&gt;</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          Para trabajar con clases de forma más controlada usamos classList.
+        </p>
+
+        <pre class="code-block"><code>caja.classList.add("activo");
+
+caja.classList.remove("rojo");
+
+caja.classList.toggle("oculto");
+
+caja.classList.contains("grande");
+
+caja.classList.replace("rojo", "azul");</code></pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          classList es la forma más limpia de añadir, quitar o comprobar clases sin sobrescribir todas las demás.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="style">
+        <h2>5. Acceso al atributo style</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          El atributo style también tiene un tratamiento especial desde JavaScript.
+        </p>
+
+        <pre class="code-block"><code>&lt;div style="color: red; font-size: 20px;"&gt;&lt;/div&gt;</code></pre>
+
+        <pre class="code-block"><code>const caja = document.querySelector("div");
+
+caja.style.color = "blue";
+
+caja.style.fontSize = "24px";
+
+caja.style.backgroundColor = "yellow";
+
+caja.style.borderRadius = "10px";</code></pre>
+
+        <p class="lesson-note lesson-note--key">
+          En JavaScript, las propiedades CSS con guion se escriben en camelCase.
+        </p>
+
+        <p class="lesson-note lesson-note--example">
+          font-size pasa a ser fontSize.
+        </p>
+
+        <p class="lesson-note lesson-note--example">
+          background-color pasa a ser backgroundColor.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          Modificar todo el atributo style como texto suele ser menos recomendable porque puede reemplazar estilos anteriores.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="metodos">
+        <h2>6. Métodos genéricos para atributos</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          Los métodos genéricos permiten trabajar con atributos por su nombre.
+        </p>
+
+        <pre class="code-block"><code>element.getAttribute("nombreDelAtributo");
+
+element.setAttribute("nombreDelAtributo", "valor");
+
+element.hasAttribute("nombreDelAtributo");
+
+element.removeAttribute("nombreDelAtributo");</code></pre>
+
+        <p class="lesson-note lesson-note--key">
+          getAttribute() lee el valor de un atributo.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          setAttribute() crea o modifica un atributo.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          hasAttribute() comprueba si existe un atributo concreto.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          hasAttributes() comprueba si el elemento tiene algún atributo.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          getAttributeNames() devuelve los nombres de todos los atributos.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          removeAttribute() elimina un atributo.
+        </p>
+
+        <pre class="code-block"><code>&lt;div id="caja" class="rojo" pepito="1234"&gt;&lt;/div&gt;</code></pre>
+
+        <pre class="code-block"><code>const caja = document.querySelector("div");
+
+console.log(caja.getAttribute("id"));
+console.log(caja.getAttribute("class"));
+console.log(caja.getAttribute("pepito"));
+console.log(caja.getAttribute("noExiste")); // null</code></pre>
+
+        <p class="lesson-note lesson-note--warning">
+          removeAttribute() elimina el atributo del elemento, no elimina el elemento del DOM.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="data">
+        <h2>7. Atributos data-* y dataset</h2>
+
+        <p class="lesson-note lesson-note--warning">
+          Técnicamente podemos crear atributos inventados, pero en HTML moderno no es buena práctica hacerlo sin criterio.
+        </p>
+
+        <pre class="code-block"><code>&lt;div pepito="1234"&gt;&lt;/div&gt;</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          Para guardar datos personalizados en un elemento, lo correcto es usar atributos data-*.
+        </p>
+
+        <pre class="code-block"><code>&lt;article data-id="20" data-category="libros"&gt;&lt;/article&gt;</code></pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Si queremos guardar datos propios en HTML, es mejor usar data-* que inventar atributos como pepito.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          dataset permite acceder desde JavaScript a los atributos data-*.
+        </p>
+
+        <pre class="code-block"><code>const articulo = document.querySelector("article");
+
+console.log(articulo.dataset.id);
+console.log(articulo.dataset.category);</code></pre>
+
+        <pre class="code-block"><code>&lt;div data-user-id="15"&gt;&lt;/div&gt;</code></pre>
+
+        <pre class="code-block"><code>const div = document.querySelector("div");
+
+console.log(div.dataset.userId);</code></pre>
+
+        <p class="lesson-note lesson-note--example">
+          data-user-id se convierte en dataset.userId.
+        </p>
+
+        <pre class="code-block"><code>articulo.dataset.id = "30";
+
+articulo.dataset.estado = "activo";</code></pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Modificar dataset modifica los atributos data-* del elemento.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="booleanos">
+        <h2>8. Atributos booleanos</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          Algunos atributos HTML son booleanos. Su funcionamiento depende de si el atributo existe o no existe.
+        </p>
+
+        <pre class="code-block"><code>&lt;input required&gt;
+
+&lt;button disabled&gt;Enviar&lt;/button&gt;
+
+&lt;input type="checkbox" checked&gt;
+
+&lt;option selected&gt;Opción 1&lt;/option&gt;
+
+&lt;div hidden&gt;Contenido oculto&lt;/div&gt;</code></pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          En los atributos booleanos, lo importante es si el atributo está presente.
+        </p>
+
+        <p class="lesson-note lesson-note--warning lesson-note--important">
+          button.setAttribute("disabled", false) no desactiva disabled.
+        </p>
+
+        <pre class="code-block"><code>button.setAttribute("disabled", false);</code></pre>
+
+        <pre class="code-block"><code>&lt;button disabled="false"&gt;Enviar&lt;/button&gt;</code></pre>
+
+        <p class="lesson-note lesson-note--warning">
+          Como el atributo disabled existe, el botón queda deshabilitado igualmente.
+        </p>
+
+        <pre class="code-block"><code>button.disabled = true;
+
+button.disabled = false;
+
+button.setAttribute("disabled", "");
+
+button.removeAttribute("disabled");</code></pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Para atributos booleanos conocidos, suele ser más claro usar propiedades como button.disabled = true o button.disabled = false.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="toggle">
+        <h2>9. toggleAttribute()</h2>
+
+        <p class="lesson-note lesson-note--key">
+          toggleAttribute() añade o elimina un atributo.
+        </p>
+
+        <pre class="code-block"><code>input.toggleAttribute("required");</code></pre>
+
+        <pre class="diagram-block">Si el atributo existe
+        ↓
+Lo elimina
+
+Si el atributo no existe
+        ↓
+Lo crea</pre>
+
+        <p class="lesson-note lesson-note--example">
+          Es especialmente útil con atributos booleanos.
+        </p>
+
+        <pre class="code-block"><code>input.toggleAttribute("required", true);
+
+input.toggleAttribute("required", false);</code></pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          El segundo parámetro de toggleAttribute() permite controlar el resultado en vez de alternarlo a ciegas.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="formularios">
+        <h2>10. Atributo HTML y valor actual</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          A veces leer un atributo con getAttribute() no es exactamente lo mismo que leer una propiedad.
+        </p>
+
+        <pre class="code-block"><code>&lt;input value="Jonás"&gt;</code></pre>
+
+        <pre class="code-block"><code>const input = document.querySelector("input");
+
+console.log(input.getAttribute("value"));
+
+console.log(input.value);</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          Al principio ambos pueden parecer iguales, pero si el usuario cambia el valor del input en la página, la propiedad value puede cambiar.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          getAttribute("value") lee el atributo original.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          input.value lee el valor actual del objeto DOM.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          En algunos elementos, el atributo puede representar el valor inicial y la propiedad puede representar el valor actual.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          Esta diferencia se nota especialmente en formularios.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="resumen">
+        <h2>11. Resumen final</h2>
+
+        <p class="lesson-note lesson-note--key">
+          Los atributos son información adicional escrita dentro de una etiqueta HTML.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          El navegador transforma el HTML en objetos del DOM.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          Muchos atributos se reflejan como propiedades del objeto DOM.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          Atributo HTML y propiedad DOM están relacionados, pero no siempre son idénticos.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          classList es la forma más limpia de trabajar con clases.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          dataset es la forma más cómoda de trabajar con atributos data-*.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          Los atributos booleanos dependen de su presencia, no de valores como "true" o "false".
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          Usar setAttribute("disabled", false) mantiene disabled activo porque el atributo sigue existiendo.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Gestionar atributos desde JavaScript permite modificar la identidad, el comportamiento, los estilos, los datos y el estado de los elementos del DOM.
+        </p>
+      </section>
+
+      <footer class="lesson-footer">
+        Cuaderno Digital · DOM · Atributos
+      </footer>
+    </main>
+  </div>
+</body>
 </html>

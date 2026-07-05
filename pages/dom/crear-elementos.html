@@ -16,4 +16,400 @@
     <!-- JavaScript principal -->
     <script type="module" src="/src/js/main.js"></script>
   </head>
+  <body>
+  <div class="lesson-layout">
+    <aside class="lesson-sidebar">
+      <a class="lesson-sidebar__back" href="./index.html">
+        ← Volver a DOM
+      </a>
+
+      <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+        <h2>Índice</h2>
+
+        <a href="#introduccion">1. Crear elementos</a>
+        <a href="#flujo">2. Flujo de creación</a>
+        <a href="#create-element">3. createElement()</a>
+        <a href="#text-content">4. textContent</a>
+        <a href="#inner-html">5. innerHTML</a>
+        <a href="#create-text-node">6. createTextNode()</a>
+        <a href="#append-child">7. appendChild()</a>
+        <a href="#insertar-dom">8. Insertar en el DOM</a>
+        <a href="#is-connected">9. isConnected</a>
+        <a href="#create-comment">10. createComment()</a>
+        <a href="#resumen">11. Resumen final</a>
+      </nav>
+    </aside>
+
+    <main class="lesson-main">
+      <header class="lesson-hero">
+        <h1>Creación de elementos del DOM</h1>
+        <p>
+          Cómo crear nodos desde JavaScript, añadirles contenido e insertarlos dentro del documento.
+        </p>
+      </header>
+
+      
+
+      <section class="lesson-section" id="introduccion">
+        <h2>1. Crear elementos</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          En la clase anterior aprendimos a seleccionar elementos que ya existían en el documento HTML.
+        </p>
+
+        <p class="lesson-note lesson-note--explanation">
+          Ahora aprendemos a crear elementos nuevos desde JavaScript e insertarlos en el documento.
+        </p>
+
+        <p class="lesson-note lesson-note--key lesson-note--important">
+          El DOM no solo permite leer el HTML; también permite construirlo dinámicamente.
+        </p>
+
+        <p class="lesson-note lesson-note--example">
+          Una aplicación de notas puede crear una nota nueva cuando pulsamos “Añadir”.
+        </p>
+
+        <p class="lesson-note lesson-note--example">
+          Un chat puede crear un mensaje nuevo cuando alguien escribe.
+        </p>
+
+        <p class="lesson-note lesson-note--example">
+          Una tienda online puede crear tarjetas de productos cuando recibe datos del servidor.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          JavaScript puede crear elementos HTML que originalmente no existían en el archivo .html.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="flujo">
+        <h2>2. Flujo de creación</h2>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Para crear contenido dinámico en el DOM seguiremos casi siempre el mismo proceso.
+        </p>
+
+        <pre class="diagram-block">Crear el elemento
+        ↓
+Añadir contenido
+        ↓
+Insertarlo en otro nodo
+        ↓
+Conectarlo al documento
+        ↓
+El usuario puede verlo</pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          Este flujo será uno de los más repetidos durante todo el bloque del DOM.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          Crear un elemento y verlo en pantalla son dos cosas distintas.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="create-element">
+        <h2>3. createElement()</h2>
+
+        <p class="lesson-note lesson-note--key">
+          createElement() crea un nuevo elemento HTML en memoria.
+        </p>
+
+        <pre class="code-block"><code>const primerParrafo = document.createElement("p");</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          El navegador crea un elemento &lt;p&gt; completamente nuevo.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          Ese elemento todavía no pertenece al documento.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Crear un elemento no significa que aparezca automáticamente en la página.
+        </p>
+
+        <pre class="diagram-block">createElement()
+        ↓
+Elemento creado en memoria
+        ↓
+Todavía no forma parte del DOM visible</pre>
+
+        <p class="lesson-note lesson-note--example">
+          Es como fabricar un mueble: existe, pero todavía no está colocado dentro de la habitación.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="text-content">
+        <h2>4. textContent</h2>
+
+        <p class="lesson-note lesson-note--key">
+          textContent permite insertar texto dentro de un elemento.
+        </p>
+
+        <pre class="code-block"><code>const parrafo = document.createElement("p");
+
+parrafo.textContent =
+  "Hola &lt;strong&gt;soy el contenido&lt;/strong&gt; del párrafo";</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          Todo el contenido será tratado como texto plano.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          textContent nunca interpreta etiquetas HTML.
+        </p>
+
+        <pre class="diagram-block">textContent
+        ↓
+Todo se considera texto
+        ↓
+No se crean etiquetas HTML</pre>
+
+        <p class="lesson-note lesson-note--example">
+          Si queremos mostrar el nombre de un usuario, una descripción o un mensaje de error, textContent suele ser la mejor opción.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="inner-html">
+        <h2>5. innerHTML</h2>
+
+        <p class="lesson-note lesson-note--key">
+          innerHTML permite insertar e interpretar código HTML dentro de un elemento.
+        </p>
+
+        <pre class="code-block"><code>const parrafo = document.createElement("p");
+
+parrafo.innerHTML =
+  "Hola &lt;strong&gt;soy el contenido&lt;/strong&gt; del párrafo";</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          En este caso, el navegador analiza la cadena como HTML.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          innerHTML analiza la cadena recibida como HTML y crea los nodos del DOM correspondientes.
+        </p>
+
+        <pre class="diagram-block">innerHTML
+        ↓
+El navegador analiza la cadena
+        ↓
+Si encuentra etiquetas
+        ↓
+Crea nodos HTML reales</pre>
+
+        <p class="lesson-note lesson-note--warning">
+          innerHTML debe usarse con cuidado si el contenido viene de un usuario, porque puede generar problemas de seguridad.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Si solo queremos mostrar texto, textContent suele ser más seguro que innerHTML.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="create-text-node">
+        <h2>6. createTextNode()</h2>
+
+        <p class="lesson-note lesson-note--key">
+          createTextNode() crea un nodo cuyo contenido es únicamente texto.
+        </p>
+
+        <pre class="code-block"><code>const contenido = document.createTextNode(
+  "Contenido de tipo texto del tercer párrafo"
+);</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          A diferencia de textContent, aquí el texto se crea como un nodo independiente.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Un texto también puede existir como nodo independiente dentro del DOM.
+        </p>
+
+        <pre class="diagram-block">&lt;p&gt;Hola&lt;/p&gt;
+
+p
+│
+└── "Hola"</pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          El &lt;p&gt; es un nodo elemento. El texto "Hola" es un nodo de texto.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          En código moderno muchas veces usaremos textContent porque es más directo, pero createTextNode() ayuda a entender cómo funciona el DOM por dentro.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="append-child">
+        <h2>7. appendChild()</h2>
+
+        <p class="lesson-note lesson-note--key">
+          appendChild() inserta un nodo como último hijo de otro nodo.
+        </p>
+
+        <pre class="code-block"><code>const parrafo = document.createElement("p");
+
+const contenido = document.createTextNode("Hola DOM");
+
+parrafo.appendChild(contenido);</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          El nodo de texto pasa a estar dentro del elemento &lt;p&gt;.
+        </p>
+
+        <pre class="diagram-block">Nodo de texto
+        ↓
+appendChild()
+        ↓
+Se convierte en hijo del &lt;p&gt;</pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          appendChild() no crea nodos; inserta o mueve nodos existentes.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          Meter texto dentro de un párrafo no significa automáticamente meter el párrafo dentro de la página.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="insertar-dom">
+        <h2>8. Insertar un elemento en el DOM</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          Para que un elemento aparezca en la página, debe formar parte del árbol del DOM conectado al documento.
+        </p>
+
+        <pre class="code-block"><code>&lt;div id="contenedor"&gt;&lt;/div&gt;</code></pre>
+
+        <pre class="code-block"><code>const contenedor = document.getElementById("contenedor");
+
+const parrafo = document.createElement("p");
+
+parrafo.textContent = "Soy un párrafo creado desde JavaScript";
+
+contenedor.appendChild(parrafo);</code></pre>
+
+        <pre class="diagram-block">Elemento en memoria
+        ↓
+appendChild()
+        ↓
+Elemento conectado al DOM
+        ↓
+Elemento visible para el usuario</pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          El navegador actualiza automáticamente la página cuando cambia el DOM conectado al documento.
+        </p>
+
+        <p class="lesson-note lesson-note--warning lesson-note--important">
+          Un nodo solo puede pertenecer a un único lugar del DOM al mismo tiempo.
+        </p>
+
+        <p class="lesson-note lesson-note--explanation">
+          Si usamos appendChild() con un nodo que ya estaba en otro sitio, no se copia: se mueve.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="is-connected">
+        <h2>9. isConnected</h2>
+
+        <p class="lesson-note lesson-note--key">
+          isConnected indica si un nodo pertenece actualmente al documento.
+        </p>
+
+        <pre class="code-block"><code>const parrafo = document.createElement("p");
+
+console.log(parrafo.isConnected);
+
+document.body.appendChild(parrafo);
+
+console.log(parrafo.isConnected);</code></pre>
+
+        <pre class="diagram-block">false
+true</pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          Al principio, el párrafo existe solo en memoria. Después de insertarlo en document.body, ya pertenece al documento.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          isConnected solo informa del estado del nodo; no modifica el DOM.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          Error frecuente: pensar que isConnected conecta el elemento al DOM.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="create-comment">
+        <h2>10. createComment()</h2>
+
+        <p class="lesson-note lesson-note--key">
+          createComment() crea un nodo de tipo comentario.
+        </p>
+
+        <pre class="code-block"><code>const comentario =
+  document.createComment("Estos son mis comentarios");
+
+document.body.appendChild(comentario);</code></pre>
+
+        <pre class="code-block"><code>&lt;!-- Estos son mis comentarios --&gt;</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          Los comentarios no se ven visualmente en la página, pero sí forman parte del DOM.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          createComment() demuestra que el DOM puede contener nodos que no son elementos visibles.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="resumen">
+        <h2>11. Resumen final</h2>
+
+        <p class="lesson-note lesson-note--key">
+          createElement() crea un elemento HTML en memoria.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          textContent añade texto plano.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          innerHTML añade HTML interpretado.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          createTextNode() crea un nodo de texto independiente.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          appendChild() inserta o mueve un nodo dentro de otro nodo.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          isConnected indica si un nodo pertenece al documento.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          createComment() crea un nodo comentario.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          Crear un nodo no significa verlo en pantalla; para verlo debe estar conectado al DOM.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Entender el flujo crear → preparar → insertar es más importante que memorizar métodos sueltos.
+        </p>
+      </section>
+
+      <footer class="lesson-footer">
+        Cuaderno Digital · DOM · Creación de elementos
+      </footer>
+    </main>
+  </div>
+</body>
 </html>
