@@ -2,18 +2,13 @@
 // ABSTRACTS
 // ============================
 @use 'abstracts/variables' as v;
-@use 'abstracts/mixins'    as m;
+@use "base/reset";
+
 @use "./components/lesson-layout";
 @use "./components/lesson-nav";
 @use "./components/lesson-notes";
 @use "./components/code-block";
 
-// ============================
-// COMPONENTS
-// ============================
-// @use "components/header" as hd;
-// @use "components/hero" as hr;
-// @use "components/footer" as ft;
 
 
 // ============================
@@ -25,38 +20,8 @@
   padding: 0;
 }
 
-body {
-  // font-family: sans-serif;
-  // color: v.$color-primary;
-
-  // @include m.breakpoint(mobile) {
-  //   font-size: 14px;
-  // }
-  // @include m.breakpoint(tablet) {
-  //   font-size: 16px;
-  // }
-  // @include m.breakpoint(desktop) {
-  //   font-size: 18px;
-  // }
-  // @include m.breakpoint(desktop-xl) {
-  //   font-size: 20px;
-  // }
-}
-
-// ============================
-// Aquí empieza tu proyecto ⬇
 // ============================
 
-
-// ============================
-// Recomendaciones para hacerlo lo mejor posible:
-// .container{
-//    width: 1920px;
-//    margin-left: auto;
-//    margin-right: auto;
-//    padding-left: 160px;
-//    padding-right: 160px
-//  } 
 //   Y mucha paciencia Jonás, que eres capaz de muchas cosas, solo cree en TI
 // ============================
 
