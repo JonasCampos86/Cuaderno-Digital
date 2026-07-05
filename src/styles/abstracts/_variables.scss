@@ -1,27 +1,64 @@
 // ============================
 // BREAKPOINTS
 // ============================
-$bp-mobile:     480px;
-$bp-tablet:     768px;
-$bp-desktop:    1024px;
-$bp-desktop-xl: 1440px;
+// $bp-mobile:     480px;
+// $bp-tablet:     768px;
+// $bp-desktop:    1024px;
+// $bp-desktop-xl: 1440px;
 
-// ============================
-// COLORES
-// ============================
-$color-primary: #6f42c1;
-$color-background: #f5f6fb;
-$color-paper: #ffffff;
-$color-text: #222;
-// ============================
-// FUENTES
-// ============================
+// // ============================
+// // COLORES
+// // ============================
+// $color-primary: #6f42c1;
+// $color-background: #f5f6fb;
+// $color-paper: #ffffff;
+// $color-text: #222;
+// // ============================
+// // FUENTES
+// // ============================
 
 
-$font-main: "Segoe UI", Arial, sans-serif;
-$font-code: "Cascadia Code", Consolas, monospace;
+// $font-main: "Segoe UI", Arial, sans-serif;
+// $font-code: "Cascadia Code", Consolas, monospace;
 
 
 // ============================
 // TAMAÑO-FUENTES
 // ============================
+
+
+:root {
+  --color-bg: #f5f6fb;
+  --color-surface: #ffffff;
+  --color-text: #222222;
+  --color-muted: #666666;
+
+  --color-purple: #6f42c1;
+  --color-purple-dark: #211536;
+
+  --color-blue: #145cc7;
+  --color-blue-bg: #f2f7ff;
+
+  --color-red: #b42318;
+  --color-red-bg: #fff3f1;
+
+  --color-orange: #b05a00;
+  --color-orange-bg: #fff8ef;
+
+  --color-key: #222222;
+  --color-key-bg: #f1f1f1;
+
+  --color-code-bg: #0f172a;
+  --color-code-text: #e5e7eb;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+
+  --shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-code: 0 12px 28px rgba(15, 23, 42, 0.22);
+
+  --font-main: "Segoe UI", Arial, sans-serif;
+  --font-code: "Cascadia Code", "Fira Code", Consolas, monospace;
+}

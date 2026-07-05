@@ -1,0 +1,99 @@
+<html lang="es">
+  <head>
+    <!-- Codificación-->
+    <meta charset="UTF-8" />
+    <!-- Para que la web sea responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Descripción de la página para los buscadores -->
+    <meta name="description" content="contenido descriptivo">
+    <!-- Título para el navegador y los buscadores -->
+    <title>EL DOM</title>
+    <!-- Autor de la página -->
+    <meta name="author" content="@JonasCampos86">
+    <!-- Para algunos navegadores móviles -->
+    <meta name="theme-color" content="#1e7bbf">
+    <!-- Links -->
+    <!-- JavaScript principal -->
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+  <body>
+     <div class="lesson-layout">
+    <aside class="lesson-sidebar">
+      <h2>Índice</h2>
+      <a href="./index.html">← Volver a DOM</a>
+      <a href="#dom">1. Qué es el DOM</a>
+      <a href="#document">2. Objeto document</a>
+      <a href="#selectores">3. Selectores principales</a>
+      <a href="#colecciones">4. Colecciones</a>
+    </aside>
+
+    <main class="lesson-main">
+      <header class="lesson-hero">
+        <h1>Selectores del DOM</h1>
+        <p>Cómo encontrar elementos del HTML desde JavaScript para poder leerlos o modificarlos.</p>
+      </header>
+
+      <section class="lesson-section" id="dom">
+        <h2>1. Qué es el DOM</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          El DOM es la representación del documento HTML como un árbol de objetos que JavaScript puede leer y modificar.
+        </p>
+
+        <p class="lesson-note lesson-note--key lesson-note--important">
+          El DOM es el puente entre HTML y JavaScript.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="document">
+        <h2>2. Objeto document</h2>
+
+        <p class="lesson-note lesson-note--key">
+          document es el punto de entrada principal al DOM.
+        </p>
+
+        <pre class="code-block"><code>document.getElementById()
+document.querySelector()
+document.querySelectorAll()</code></pre>
+      </section>
+
+      <section class="lesson-section" id="selectores">
+        <h2>3. Selectores principales</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          Los selectores permiten encontrar elementos que ya existen en el documento.
+        </p>
+
+        <pre class="code-block"><code>const parrafo = document.querySelector("p");
+
+const todosLosParrafos = document.querySelectorAll("p");</code></pre>
+
+        <p class="lesson-note lesson-note--warning">
+          querySelector() puede devolver null si no encuentra ningún elemento.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="colecciones">
+        <h2>4. Colecciones</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          Algunos selectores devuelven un único elemento y otros devuelven colecciones como HTMLCollection o NodeList.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          Una colección no es un elemento individual. Para acceder a un elemento concreto hay que usar un índice o recorrerla.
+        </p>
+
+        <pre class="code-block"><code>const parrafos = document.querySelectorAll("p");
+
+console.log(parrafos[0].textContent);</code></pre>
+      </section>
+
+      <footer class="lesson-footer">
+        Cuaderno Digital · DOM
+      </footer>
+    </main>
+  </div>
+  
+  </body>
+</html>

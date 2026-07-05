@@ -1,0 +1,41 @@
+.lesson-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  background: var(--color-purple-dark);
+  padding: 28px 20px;
+  color: white;
+
+  h2 {
+    margin: 0 0 18px;
+    color: #f1e7ff;
+    font-size: 1.05rem;
+  }
+
+  a {
+    display: block;
+    color: #dfd1ff;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    padding: 8px 0;
+    font-size: 0.92rem;
+
+    &:hover {
+      color: white;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .lesson-sidebar {
+    position: static;
+    height: auto;
+  }
+}
+
+@media print {
+  .lesson-sidebar {
+    display: none;
+  }
+}

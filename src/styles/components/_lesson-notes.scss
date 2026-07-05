@@ -1,0 +1,37 @@
+.lesson-note {
+  margin: 10px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border-left: 5px solid transparent;
+}
+
+.lesson-note--explanation {
+  color: var(--color-blue);
+  background: var(--color-blue-bg);
+  border-left-color: var(--color-blue);
+}
+
+.lesson-note--key {
+  color: var(--color-key);
+  background: var(--color-key-bg);
+  border-left-color: var(--color-key);
+}
+
+.lesson-note--example {
+  color: var(--color-orange);
+  background: var(--color-orange-bg);
+  border-left-color: var(--color-orange);
+}
+
+.lesson-note--warning {
+  color: var(--color-red);
+  background: var(--color-red-bg);
+  border-left-color: var(--color-red);
+}
+
+.lesson-note--important {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  font-weight: 650;
+}

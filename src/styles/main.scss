@@ -3,14 +3,17 @@
 // ============================
 @use 'abstracts/variables' as v;
 @use 'abstracts/mixins'    as m;
-
+@use "./components/lesson-layout";
+@use "./components/lesson-nav";
+@use "./components/lesson-notes";
+@use "./components/code-block";
 
 // ============================
 // COMPONENTS
 // ============================
-@use "components/header" as hd;
-@use "components/hero" as hr;
-@use "components/footer" as ft;
+// @use "components/header" as hd;
+// @use "components/hero" as hr;
+// @use "components/footer" as ft;
 
 
 // ============================
@@ -23,21 +26,21 @@
 }
 
 body {
-  font-family: sans-serif;
-  color: v.$color-primary;
+  // font-family: sans-serif;
+  // color: v.$color-primary;
 
-  @include m.breakpoint(mobile) {
-    font-size: 14px;
-  }
-  @include m.breakpoint(tablet) {
-    font-size: 16px;
-  }
-  @include m.breakpoint(desktop) {
-    font-size: 18px;
-  }
-  @include m.breakpoint(desktop-xl) {
-    font-size: 20px;
-  }
+  // @include m.breakpoint(mobile) {
+  //   font-size: 14px;
+  // }
+  // @include m.breakpoint(tablet) {
+  //   font-size: 16px;
+  // }
+  // @include m.breakpoint(desktop) {
+  //   font-size: 18px;
+  // }
+  // @include m.breakpoint(desktop-xl) {
+  //   font-size: 20px;
+  // }
 }
 
 // ============================
