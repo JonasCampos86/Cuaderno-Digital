@@ -17,7 +17,7 @@
     <script type="module" src="/src/js/main.js"></script>
   </head>
   <body>
-     <div class="lesson-layout">
+ <div class="lesson-layout">
     <aside class="lesson-sidebar">
       <a class="lesson-sidebar__back" href="./index.html">
         ← Volver a DOM
@@ -26,28 +26,54 @@
       <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
         <h2>Índice</h2>
 
-        <a href="#dom">1. Qué es el DOM</a>
+        <a href="#dom">1. El DOM</a>
         <a href="#document">2. Objeto document</a>
-        <a href="#selectores">3. Selectores principales</a>
-        <a href="#colecciones">4. Colecciones</a>
+        <a href="#get-element-by-id">3. getElementById()</a>
+        <a href="#get-elements-by-class-name">4. getElementsByClassName()</a>
+        <a href="#get-elements-by-tag-name">5. getElementsByTagName()</a>
+        <a href="#get-elements-by-name">6. getElementsByName()</a>
+        <a href="#query-selector">7. querySelector()</a>
+        <a href="#query-selector-all">8. querySelectorAll()</a>
+        <a href="#colecciones">9. HTMLCollection y NodeList</a>
+        <a href="#cuando-usar">10. Cuándo usar cada selector</a>
+        <a href="#resumen">11. Resumen final</a>
       </nav>
     </aside>
 
     <main class="lesson-main">
       <header class="lesson-hero">
         <h1>Selectores del DOM</h1>
-        <p>Cómo encontrar elementos del HTML desde JavaScript para poder leerlos o modificarlos.</p>
+        <p>
+          Cómo encontrar elementos del documento HTML desde JavaScript para poder leerlos,
+          modificarlos o trabajar con ellos.
+        </p>
       </header>
 
       <section class="lesson-section" id="dom">
-        <h2>1. Qué es el DOM</h2>
+        <h2>1. El DOM</h2>
 
         <p class="lesson-note lesson-note--explanation">
-          El DOM es la representación del documento HTML como un árbol de objetos que JavaScript puede leer y modificar.
+          El DOM, Document Object Model, es la representación del documento HTML como una estructura de objetos que JavaScript puede leer y modificar.
+        </p>
+
+        <p class="lesson-note lesson-note--explanation">
+          Cuando el navegador carga una página, interpreta el HTML y construye una estructura interna con la que JavaScript puede trabajar.
         </p>
 
         <p class="lesson-note lesson-note--key lesson-note--important">
           El DOM es el puente entre HTML y JavaScript.
+        </p>
+
+        <pre class="diagram-block">HTML
+  ↓
+Navegador interpreta el documento
+  ↓
+DOM
+  ↓
+JavaScript puede leer y modificar elementos</pre>
+
+        <p class="lesson-note lesson-note--warning">
+          JavaScript no modifica directamente el archivo HTML original; modifica la representación del documento que el navegador tiene en memoria.
         </p>
       </section>
 
@@ -58,45 +84,333 @@
           document es el punto de entrada principal al DOM.
         </p>
 
+        <p class="lesson-note lesson-note--explanation">
+          La mayoría de selectores parten de document porque representa el documento HTML cargado en el navegador.
+        </p>
+
         <pre class="code-block"><code>document.getElementById()
+document.getElementsByClassName()
+document.getElementsByTagName()
+document.getElementsByName()
 document.querySelector()
 document.querySelectorAll()</code></pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Si queremos buscar elementos dentro del HTML desde JavaScript, normalmente empezamos desde document.
+        </p>
       </section>
 
-      <section class="lesson-section" id="selectores">
-        <h2>3. Selectores principales</h2>
+      <section class="lesson-section" id="get-element-by-id">
+        <h2>3. getElementById()</h2>
 
         <p class="lesson-note lesson-note--explanation">
-          Los selectores permiten encontrar elementos que ya existen en el documento.
+          getElementById() busca un elemento por el valor de su atributo id.
         </p>
 
-        <pre class="code-block"><code>const parrafo = document.querySelector("p");
+        <pre class="code-block"><code>&lt;p id="p1"&gt;Párrafo con id establecido&lt;/p&gt;
 
-const todosLosParrafos = document.querySelectorAll("p");</code></pre>
+const pConId = document.getElementById("p1");</code></pre>
+
+        <p class="lesson-note lesson-note--key">
+          Devuelve un HTMLElement si encuentra el elemento.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          Devuelve null si no encuentra ningún elemento con ese id.
+        </p>
+
+        <p class="lesson-note lesson-note--warning lesson-note--important">
+          Los id deberían ser únicos dentro de una misma página.
+        </p>
+
+        <pre class="code-block"><code>const parrafo = document.getElementById("noExiste");
+
+console.log(parrafo); // null</code></pre>
 
         <p class="lesson-note lesson-note--warning">
-          querySelector() puede devolver null si no encuentra ningún elemento.
+          Si intentamos acceder a una propiedad de null, JavaScript dará error.
         </p>
+      </section>
+
+      <section class="lesson-section" id="get-elements-by-class-name">
+        <h2>4. getElementsByClassName()</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          getElementsByClassName() busca todos los elementos que tengan una determinada clase.
+        </p>
+
+        <pre class="code-block"><code>&lt;p class="importante"&gt;Primer elemento&lt;/p&gt;
+&lt;div class="importante"&gt;Segundo elemento&lt;/div&gt;
+
+const elementosImportantes =
+  document.getElementsByClassName("importante");</code></pre>
+
+        <p class="lesson-note lesson-note--key">
+          Devuelve siempre un HTMLCollection.
+        </p>
+
+        <p class="lesson-note lesson-note--explanation">
+          Aunque solo encuentre un elemento, el resultado será una colección.
+        </p>
+
+        <pre class="code-block"><code>elementosImportantes[0];
+elementosImportantes[1];</code></pre>
+
+        <p class="lesson-note lesson-note--warning">
+          No podemos tratar directamente una colección como si fuera un único elemento.
+        </p>
+
+        <pre class="code-block"><code>// Incorrecto
+document.getElementsByClassName("importante").textContent;
+
+// Correcto
+document.getElementsByClassName("importante")[0].textContent;</code></pre>
+      </section>
+
+      <section class="lesson-section" id="get-elements-by-tag-name">
+        <h2>5. getElementsByTagName()</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          getElementsByTagName() busca todos los elementos que tengan una determinada etiqueta HTML.
+        </p>
+
+        <pre class="code-block"><code>const parrafos = document.getElementsByTagName("p");</code></pre>
+
+        <p class="lesson-note lesson-note--key">
+          Devuelve siempre un HTMLCollection.
+        </p>
+
+        <p class="lesson-note lesson-note--example">
+          Si usamos getElementsByTagName("p"), JavaScript buscará todos los párrafos del documento.
+        </p>
+
+        <pre class="code-block"><code>parrafos[0];
+parrafos[1];
+parrafos[2];</code></pre>
+
+        <p class="lesson-note lesson-note--warning">
+          Este selector solo busca por etiqueta. No busca por clase, id ni atributo name.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="get-elements-by-name">
+        <h2>6. getElementsByName()</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          getElementsByName() busca elementos que tengan un determinado atributo name.
+        </p>
+
+        <pre class="code-block"><code>&lt;p name="nombreimportante"&gt;Primer elemento&lt;/p&gt;
+&lt;p name="nombreimportante"&gt;Segundo elemento&lt;/p&gt;
+
+const elementosConName =
+  document.getElementsByName("nombreimportante");</code></pre>
+
+        <p class="lesson-note lesson-note--key">
+          Devuelve un NodeList.
+        </p>
+
+        <p class="lesson-note lesson-note--explanation">
+          No importa la etiqueta del elemento. Lo importante es el valor del atributo name.
+        </p>
+
+        <pre class="code-block"><code>&lt;div name="import"&gt;&lt;/div&gt;
+&lt;p name="import"&gt;&lt;/p&gt;
+&lt;input name="import"&gt;</code></pre>
+
+        <p class="lesson-note lesson-note--example">
+          Los tres elementos pueden ser seleccionados porque los tres tienen name="import".
+        </p>
+      </section>
+
+      <section class="lesson-section" id="query-selector">
+        <h2>7. querySelector()</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          querySelector() permite buscar elementos utilizando selectores CSS.
+        </p>
+
+        <p class="lesson-note lesson-note--key lesson-note--important">
+          Devuelve solamente el primer elemento que cumpla la condición.
+        </p>
+
+        <pre class="code-block"><code>const primerParrafo = document.querySelector("p");</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          También permite usar selectores más concretos.
+        </p>
+
+        <pre class="code-block"><code>document.querySelector("#p1");
+document.querySelector(".importante");
+document.querySelector("div");
+document.querySelector("div p");
+document.querySelector("input[type='text']");</code></pre>
+
+        <p class="lesson-note lesson-note--key">
+          Devuelve un HTMLElement si encuentra un elemento.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          Devuelve null si no encuentra ningún elemento.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          querySelector() es muy versátil, pero hay que recordar que puede devolver null.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="query-selector-all">
+        <h2>8. querySelectorAll()</h2>
+
+        <p class="lesson-note lesson-note--explanation">
+          querySelectorAll() funciona como querySelector(), pero devuelve todos los elementos que cumplen la condición.
+        </p>
+
+        <pre class="code-block"><code>const parrafos = document.querySelectorAll("p");</code></pre>
+
+        <p class="lesson-note lesson-note--key">
+          Devuelve un NodeList.
+        </p>
+
+        <p class="lesson-note lesson-note--explanation">
+          Podemos acceder a cada elemento mediante índices.
+        </p>
+
+        <pre class="code-block"><code>parrafos[0];
+parrafos[1];
+parrafos[2];</code></pre>
+
+        <p class="lesson-note lesson-note--explanation">
+          También podemos recorrer el NodeList con forEach().
+        </p>
+
+        <pre class="code-block"><code>parrafos.forEach(parrafo =&gt; {
+  console.log(parrafo.textContent);
+});</code></pre>
+
+        <p class="lesson-note lesson-note--warning">
+          querySelectorAll() devuelve una colección, no un elemento individual.
+        </p>
+
+        <pre class="code-block"><code>// Incorrecto
+document.querySelectorAll("p").textContent;
+
+// Correcto
+document.querySelectorAll("p")[0].textContent;</code></pre>
       </section>
 
       <section class="lesson-section" id="colecciones">
-        <h2>4. Colecciones</h2>
+        <h2>9. HTMLCollection y NodeList</h2>
 
         <p class="lesson-note lesson-note--explanation">
-          Algunos selectores devuelven un único elemento y otros devuelven colecciones como HTMLCollection o NodeList.
+          Algunos selectores devuelven un único elemento y otros devuelven colecciones de elementos.
+        </p>
+
+        <p class="lesson-note lesson-note--key lesson-note--important">
+          HTMLCollection y NodeList son colecciones de elementos o nodos del DOM.
+        </p>
+
+        <pre class="code-block"><code>const parrafosPorEtiqueta =
+  document.getElementsByTagName("p");
+
+const parrafosPorSelector =
+  document.querySelectorAll("p");</code></pre>
+
+        <p class="lesson-note lesson-note--example">
+          getElementsByTagName("p") devuelve un HTMLCollection.
+        </p>
+
+        <p class="lesson-note lesson-note--example">
+          querySelectorAll("p") devuelve un NodeList.
         </p>
 
         <p class="lesson-note lesson-note--warning">
-          Una colección no es un elemento individual. Para acceder a un elemento concreto hay que usar un índice o recorrerla.
+          HTMLCollection y NodeList no son arrays reales.
         </p>
 
-        <pre class="code-block"><code>const parrafos = document.querySelectorAll("p");
+        <p class="lesson-note lesson-note--explanation">
+          Si queremos trabajar con métodos de array como map(), filter() o reduce(), podemos convertir la colección en un array real.
+        </p>
 
-console.log(parrafos[0].textContent);</code></pre>
+        <pre class="code-block"><code>const arrayParrafos = [...document.querySelectorAll("p")];
+
+arrayParrafos.map(parrafo =&gt; parrafo.textContent);</code></pre>
+
+        <p class="lesson-note lesson-note--key lesson-note--important">
+          El spread operator permite convertir colecciones iterables del DOM en arrays reales.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="cuando-usar">
+        <h2>10. Cuándo usar cada selector</h2>
+
+        <p class="lesson-note lesson-note--key">
+          Si queremos un elemento concreto por id, podemos usar getElementById().
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          Si queremos el primer elemento que cumpla una condición CSS, usamos querySelector().
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          Si queremos varios elementos que cumplan una condición CSS, usamos querySelectorAll().
+        </p>
+
+        <p class="lesson-note lesson-note--explanation">
+          En proyectos modernos, querySelector() y querySelectorAll() son muy habituales porque usan la misma sintaxis que CSS.
+        </p>
+
+        <pre class="diagram-block">¿Qué elemento quiero seleccionar?
+        ↓
+¿Qué condición cumple?
+        ↓
+¿Quiero uno o varios?
+        ↓
+¿Qué selector responde mejor a esa condición?</pre>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          La clave no es memorizar métodos, sino entender qué elemento queremos encontrar.
+        </p>
+      </section>
+
+      <section class="lesson-section" id="resumen">
+        <h2>11. Resumen final</h2>
+
+        <p class="lesson-note lesson-note--key">
+          getElementById() busca por id y devuelve HTMLElement o null.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          getElementsByClassName() busca por clase y devuelve HTMLCollection.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          getElementsByTagName() busca por etiqueta y devuelve HTMLCollection.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          getElementsByName() busca por atributo name y devuelve NodeList.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          querySelector() busca con selector CSS y devuelve el primer elemento encontrado.
+        </p>
+
+        <p class="lesson-note lesson-note--key">
+          querySelectorAll() busca con selector CSS y devuelve todos los elementos encontrados.
+        </p>
+
+        <p class="lesson-note lesson-note--warning">
+          Si un selector devuelve una colección, no podemos tratarla como un único elemento.
+        </p>
+
+        <p class="lesson-note lesson-note--important lesson-note--key">
+          Los selectores permiten que JavaScript encuentre elementos del DOM para poder trabajar con ellos.
+        </p>
       </section>
 
       <footer class="lesson-footer">
-        Cuaderno Digital · DOM
+        Cuaderno Digital · DOM · Selectores
       </footer>
     </main>
   </div>
