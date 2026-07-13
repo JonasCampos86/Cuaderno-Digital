@@ -1,34 +1,68 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
   <head>
-    <!-- Codificación-->
+    <!-- Codificación -->
     <meta charset="UTF-8" />
+
     <!-- Para que la web sea responsive -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <!-- Descripción de la página para los buscadores -->
-    <meta name="description" content="contenido descriptivo">
+    <meta
+      name="description"
+      content="Cuaderno Digital de estudio para organizar apuntes de desarrollo web."
+    />
+
     <!-- Título para el navegador y los buscadores -->
-    <title>Cuaderno Digital | JavaScript</title>
+    <title>Cuaderno Digital</title>
+
     <!-- Autor de la página -->
-    <meta name="author" content="@JonasCampos86">
+    <meta name="author" content="@JonasCampos86" />
+
     <!-- Para algunos navegadores móviles -->
-    <meta name="theme-color" content="#1e7bbf">
-    <!-- Links -->
+    <meta name="theme-color" content="#7c3aed" />
+
     <!-- JavaScript principal -->
     <script type="module" src="/src/js/main.js"></script>
   </head>
-  <body>
-    <header>
-      <h1>Cuaderno Digital</h1>
-      <h2>JavaScript</h2>
-    </header>
-    <main>
-      <ul>
-        <li>
-          <a href="/pages/dom/index.html">DOM(Document Object Model)</a>
-        </li>
-      </ul>
+
+  <body class="cover-body">
+    <main class="cover-page">
+      <section class="notebook-cover">
+        <span class="notebook-cover__label">
+          Máster Desarrollo Web
+        </span>
+
+        <h1>
+          Cuaderno<br />
+          Digital
+        </h1>
+
+        <p>
+          Apuntes convertidos en una aplicación de estudio clara, navegable y
+          hecha a mi ritmo.
+        </p>
+
+        <a
+          class="notebook-cover__button"
+          href="./pages/index.html"
+          data-open-notebook
+        >
+          Entrar al cuaderno
+        </a>
+
+        <span class="notebook-cover__sticker notebook-cover__sticker--js">
+          JS
+        </span>
+
+        <span class="notebook-cover__sticker notebook-cover__sticker--html">
+          HTML
+        </span>
+
+        <span class="notebook-cover__sticker notebook-cover__sticker--css">
+          CSS
+        </span>
+      </section>
     </main>
-  
   </body>
 </html>

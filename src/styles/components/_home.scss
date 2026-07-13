@@ -1,0 +1,310 @@
+.cover-body,
+.home-body {
+  min-height: 100vh;
+  background: #f5f6fb;
+}
+
+.cover-page,
+.home-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+/* =========================
+   PORTADA DEL CUADERNO
+========================= */
+
+.notebook-cover {
+  position: relative;
+  width: min(100%, 680px);
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 56px;
+  color: white;
+  border-radius: 28px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 18px, transparent 18px),
+    linear-gradient(135deg, #7c3aed, #54219a);
+  box-shadow: 0 28px 70px rgba(33, 21, 54, 0.35);
+  transform-origin: left center;
+}
+
+.cover-page.is-opening .notebook-cover {
+  animation: notebookOpen 1.15s ease forwards;
+}
+
+.cover-page.is-opening {
+  animation: pageFadeOut 0.35s ease 0.85s forwards;
+}
+
+.notebook-cover__label {
+  width: fit-content;
+  margin-bottom: 18px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.notebook-cover h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 7vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.notebook-cover p {
+  max-width: 480px;
+  margin: 20px 0 0;
+  font-size: 1.08rem;
+  opacity: 0.92;
+}
+
+.notebook-cover__button {
+  width: fit-content;
+  margin-top: 32px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: white;
+  color: var(--color-purple);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.notebook-cover__sticker {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: white;
+  color: var(--color-purple);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+  font-weight: 900;
+}
+
+.notebook-cover__sticker--js {
+  right: 8%;
+  top: -36px;
+  width: 76px;
+  height: 76px;
+  transform: rotate(10deg);
+}
+
+.notebook-cover__sticker--html {
+  right: 26%;
+  bottom: -42px;
+  padding: 12px 16px;
+  transform: rotate(-7deg);
+}
+
+.notebook-cover__sticker--css {
+  left: -28px;
+  bottom: 58px;
+  padding: 12px 16px;
+  transform: rotate(8deg);
+}
+
+/* =========================
+   ÍNDICE GENERAL
+========================= */
+
+.home-index-card {
+  width: min(100%, 840px);
+  min-height: 540px;
+  background:
+    linear-gradient(90deg, rgba(111, 66, 193, 0.12) 0 2px, transparent 2px),
+    repeating-linear-gradient(
+      to bottom,
+      #ffffff 0,
+      #ffffff 34px,
+      #eef2ff 35px,
+      #eef2ff 36px
+    );
+  border-radius: 28px;
+  padding: 56px;
+  box-shadow: 0 28px 70px rgba(33, 21, 54, 0.18);
+}
+
+.home-index-card__back {
+  display: inline-block;
+  margin-bottom: 28px;
+  color: var(--color-purple);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.home-index__eyebrow {
+  margin: 0 0 10px;
+  color: var(--color-purple);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+}
+
+.home-index-card h1 {
+  margin: 0 0 16px;
+  color: var(--color-purple-dark);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  letter-spacing: -0.04em;
+}
+
+.home-index__intro {
+  margin: 0 0 32px;
+  max-width: 620px;
+  color: var(--color-muted);
+  font-size: 1.05rem;
+}
+
+.home-topic-list {
+  display: grid;
+  gap: 16px;
+}
+
+.home-topic {
+  display: block;
+  padding: 20px 22px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-left: 6px solid var(--color-purple);
+  border-radius: 18px;
+  color: var(--color-text);
+  text-decoration: none;
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.home-topic:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+}
+
+.home-topic strong {
+  display: block;
+  color: var(--color-purple);
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+.home-topic span {
+  color: var(--color-muted);
+}
+
+/* =========================
+   CIERRE HACIA PORTADA
+========================= */
+
+.notebook-close-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: none;
+  place-items: center;
+  padding: 24px;
+  background: #f5f6fb;
+}
+
+.notebook-close-cover.is-closing {
+  display: grid;
+}
+
+.notebook-close-cover__panel {
+  width: min(100%, 680px);
+  min-height: 560px;
+  display: grid;
+  place-items: center;
+  padding: 56px;
+  color: white;
+  border-radius: 28px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 18px, transparent 18px),
+    linear-gradient(135deg, #7c3aed, #54219a);
+  box-shadow: 0 28px 70px rgba(33, 21, 54, 0.35);
+  transform-origin: left center;
+  animation: notebookClose 1.05s ease forwards;
+}
+
+.notebook-close-cover__panel span {
+  font-size: clamp(2.4rem, 7vw, 5rem);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+}
+
+/* =========================
+   ANIMACIONES
+========================= */
+
+@keyframes notebookOpen {
+  to {
+    transform: perspective(1200px) rotateY(-82deg) translateX(-70px);
+  }
+}
+
+@keyframes notebookClose {
+  from {
+    transform: perspective(1200px) rotateY(-82deg) translateX(-70px);
+  }
+
+  to {
+    transform: perspective(1200px) rotateY(0) translateX(0);
+  }
+}
+
+@keyframes pageFadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 760px) {
+  .cover-page,
+  .home-page,
+  .notebook-close-cover {
+    padding: 14px;
+  }
+
+  .notebook-cover,
+  .home-index-card,
+  .notebook-close-cover__panel {
+    min-height: calc(100vh - 28px);
+    padding: 34px 24px;
+    border-radius: 22px;
+  }
+
+  .notebook-cover__sticker--css {
+    left: 12px;
+    bottom: 28px;
+  }
+
+  .notebook-cover__sticker--js {
+    right: 18px;
+    top: -24px;
+  }
+
+  .notebook-cover__sticker--html {
+    right: 18px;
+    bottom: -28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cover-page.is-opening,
+  .cover-page.is-opening .notebook-cover,
+  .notebook-close-cover__panel,
+  .home-topic {
+    animation: none;
+    transition: none;
+  }
+}
