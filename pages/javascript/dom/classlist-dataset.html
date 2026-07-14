@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <!-- Codificación -->
+    <meta charset="UTF-8" />
+
+    <!-- Para que la web sea responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Descripción de la página para los buscadores -->
+    <meta
+      name="description"
+      content="Lección sobre classList y dataset dentro del DOM en JavaScript."
+    />
+
+    <!-- Título para el navegador y los buscadores -->
+    <title>classList y dataset | Cuaderno Digital</title>
+
+    <!-- Autor de la página -->
+    <meta name="author" content="@JonasCampos86" />
+
+    <!-- Para algunos navegadores móviles -->
+    <meta name="theme-color" content="#7c3aed" />
+
+    <!-- JavaScript principal -->
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a DOM
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#punto-partida">1. Punto de partida</a>
+          <a href="#class-name">2. className</a>
+          <a href="#class-list">3. classList</a>
+          <a href="#metodos-classlist">4. Métodos de classList</a>
+          <a href="#data-attributes">5. data attributes</a>
+          <a href="#dataset">6. dataset</a>
+          <a href="#camel-case">7. Conversión a camelCase</a>
+          <a href="#leer-modificar-eliminar">8. Leer, modificar y eliminar</a>
+          <a href="#getattribute-dataset">9. getAttribute() frente a dataset</a>
+          <a href="#cuando-usar-data">10. Cuándo usar data-*</a>
+          <a href="#relacion">11. Relación classList y dataset</a>
+          <a href="#resumen">12. Resumen final</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>classList y dataset</h1>
+          <p>
+            APIs específicas del DOM para gestionar clases CSS y atributos
+            personalizados data-* desde JavaScript.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="punto-partida">
+          <h2>1. Punto de partida: los atributos HTML</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            En la gestión de atributos vimos que los elementos HTML pueden
+            contener información adicional mediante atributos.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Algunos atributos identifican elementos, otros modifican su
+            comportamiento y otros permiten guardar datos asociados al propio
+            elemento.
+          </p>
+
+          <pre class="code-block"><code>&lt;div class="container" data-id="15"&gt;
+  &lt;button disabled&gt;Avisar&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--key lesson-note--important">
+            Los atributos HTML pueden gestionarse desde JavaScript mediante
+            propiedades del objeto DOM o mediante métodos específicos.
+          </p>
+
+          <pre class="diagram-block">Elemento HTML
+        ↓
+DOM
+        ↓
+JavaScript
+        ↓
+Leer / Modificar / Eliminar atributos</pre>
+        </section>
+
+        <section class="lesson-section" id="class-name">
+          <h2>2. El problema especial del atributo class</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            El atributo class puede contener varias clases separadas por
+            espacios.
+          </p>
+
+          <pre class="code-block"><code>&lt;div class="rojo importante principal"&gt;&lt;/div&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Podemos acceder al atributo completo mediante la propiedad
+            className.
+          </p>
+
+          <pre class="code-block"><code>const primerDiv = document.querySelector("div");
+
+console.log(primerDiv.className);</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            className trabaja con el contenido completo del atributo class como
+            una única cadena de texto.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El problema aparece cuando modificamos className directamente.
+          </p>
+
+          <pre class="code-block"><code>primerDiv.className = "activo";</code></pre>
+
+          <pre class="diagram-block">"rojo importante principal"
+        ↓
+className = "activo"
+        ↓
+"activo"</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Asignar un nuevo valor a className reemplaza toda la cadena de
+            clases existente.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="class-list">
+          <h2>3. Qué es classList</h2>
+
+          <p class="lesson-note lesson-note--key lesson-note--important">
+            classList permite trabajar con las clases de un elemento de forma
+            individual.
+          </p>
+
+          <pre class="diagram-block">class="rojo importante principal"
+        ↓
+classList
+        ↓
+rojo | importante | principal</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esto permite añadir, eliminar, comprobar, alternar o reemplazar
+            clases sin manipular manualmente toda la cadena.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            className trabaja con toda la cadena del atributo class.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            classList trabaja con cada clase individualmente.
+          </p>
+
+          <pre class="diagram-block">className → "rojo importante principal" → Cadena completa
+
+classList → rojo | importante | principal → Clases individuales</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            classList no es un array real.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            classList devuelve un objeto de tipo DOMTokenList.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un DOMTokenList es una colección especializada para trabajar con
+            tokens separados por espacios, como las clases CSS.
+          </p>
+
+          <pre class="code-block"><code>console.log(primerDiv.classList);
+
+console.log(primerDiv.classList.length);</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            length permite consultar cuántas clases contiene la colección.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="metodos-classlist">
+          <h2>4. Métodos principales de classList</h2>
+
+          <h3>add()</h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            classList.add() añade una o varias clases sin eliminar las
+            existentes.
+          </p>
+
+          <pre class="code-block"><code>primerDiv.classList.add("activo");
+
+primerDiv.classList.add("activo", "visible");</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Si intentamos añadir una clase que ya existe, no se duplica.
+          </p>
+
+          <h3>remove()</h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            classList.remove() elimina una clase concreta sin afectar a las
+            demás.
+          </p>
+
+          <pre class="code-block"><code>primerDiv.classList.remove("importante");
+
+primerDiv.classList.remove("rojo", "principal");</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Si la clase indicada no existe, no se produce un error por ese
+            motivo.
+          </p>
+
+          <h3>contains()</h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            classList.contains() comprueba si un elemento contiene una clase
+            concreta.
+          </p>
+
+          <pre class="code-block"><code>primerDiv.classList.contains("principal");</code></pre>
+
+          <pre class="diagram-block">contains("principal")
+        ↓
+¿Existe la clase?
+        ↓
+true / false</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            contains() no modifica el elemento; únicamente comprueba la
+            existencia de una clase.
+          </p>
+
+          <h3>toggle()</h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            classList.toggle() añade una clase si no existe y la elimina si ya
+            existe.
+          </p>
+
+          <pre class="code-block"><code>primerDiv.classList.toggle("activo");</code></pre>
+
+          <pre class="diagram-block">No existe
+        ↓
+add()
+        ↓
+La añade
+
+Existe
+        ↓
+remove()
+        ↓
+La elimina</pre>
+
+          <p class="lesson-note lesson-note--example">
+            toggle() es muy útil cuando una clase representa un estado visual,
+            como un menú abierto o cerrado.
+          </p>
+
+          <pre class="code-block"><code>menu.classList.toggle("abierto");</code></pre>
+
+          <pre class="diagram-block">Clic
+        ↓
+toggle("abierto")
+        ↓
+Añadir / Eliminar clase
+        ↓
+Cambiar estado visual</pre>
+
+          <p class="lesson-note lesson-note--key">
+            toggle() también devuelve un booleano.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Devuelve true si, después de la operación, la clase queda presente.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Devuelve false si, después de la operación, la clase queda ausente.
+          </p>
+
+          <p class="lesson-note lesson-note--warning lesson-note--important">
+            El booleano devuelto por toggle() representa el estado final de la
+            clase.
+          </p>
+
+          <h3>replace()</h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            classList.replace() sustituye una clase existente por otra.
+          </p>
+
+          <pre class="code-block"><code>primerDiv.classList.replace("rojo", "azul");</code></pre>
+
+          <pre class="diagram-block">rojo | importante | principal
+        ↓
+replace("rojo", "azul")
+        ↓
+azul | importante | principal</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Si la clase antigua no existe, no se realiza el reemplazo.
+          </p>
+
+          <h3>Resumen de métodos</h3>
+
+          <pre class="diagram-block">add()      → Añadir
+remove()   → Eliminar
+contains() → Comprobar
+toggle()   → Alternar
+replace()  → Sustituir</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            classList permite gestionar clases individualmente sin manipular
+            manualmente toda la cadena del atributo class.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="data-attributes">
+          <h2>5. Qué son los data attributes</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los atributos data-* permiten almacenar información personalizada
+            dentro de un elemento HTML.
+          </p>
+
+          <pre class="code-block"><code>&lt;article data-id="1"&gt;&lt;/article&gt;
+
+&lt;article data-price="23.5"&gt;&lt;/article&gt;
+
+&lt;article data-peso-kg="6.7"&gt;&lt;/article&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Estos atributos permiten asociar información adicional al propio
+            elemento.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Por ejemplo, una tarjeta de producto puede guardar su identificador,
+            su precio o su peso.
+          </p>
+
+          <pre class="code-block"><code>&lt;article
+  class="producto"
+  data-id="1"
+  data-price="23.5"
+  data-peso-kg="6.7"
+&gt;
+&lt;/article&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            data-id puede guardar un identificador.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            data-price puede guardar un precio.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            data-peso-kg puede guardar un peso.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="dataset">
+          <h2>6. Acceder a data-* mediante dataset</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Como los data-* siguen siendo atributos HTML, pueden leerse con
+            getAttribute().
+          </p>
+
+          <pre class="code-block"><code>const primerProducto = document.querySelector(".producto");
+
+const precio = primerProducto.getAttribute("data-price");
+
+console.log(precio);</code></pre>
+
+          <pre class="diagram-block">Resultado
+        ↓
+"23.5"</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            dataset permite acceder específicamente a los atributos data-* de un
+            elemento.
+          </p>
+
+          <pre class="code-block"><code>primerProducto.dataset.id;
+
+primerProducto.dataset.price;
+
+primerProducto.dataset.pesoKg;</code></pre>
+
+          <pre class="diagram-block">data-id      → dataset.id
+data-price   → dataset.price
+data-peso-kg → dataset.pesoKg</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            dataset elimina el prefijo data- y transforma los nombres compuestos
+            a camelCase.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="camel-case">
+          <h2>7. Conversión a camelCase</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando un atributo data-* tiene varias palabras separadas por
+            guiones, dataset lo transforma a camelCase.
+          </p>
+
+          <pre class="code-block"><code>&lt;article data-peso-kg="6.7"&gt;&lt;/article&gt;</code></pre>
+
+          <pre class="code-block"><code>element.dataset.pesoKg;</code></pre>
+
+          <pre class="diagram-block">data-peso-kg
+        ↓
+eliminar "data-"
+        ↓
+peso-kg
+        ↓
+camelCase
+        ↓
+pesoKg</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            data-mi-dato se convierte en dataset.miDato.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Error frecuente:
+          </p>
+
+          <pre class="code-block"><code>element.dataset.peso-kg;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Forma correcta:
+          </p>
+
+          <pre class="code-block"><code>element.dataset.pesoKg;</code></pre>
+        </section>
+
+        <section class="lesson-section" id="leer-modificar-eliminar">
+          <h2>8. Leer, modificar, crear y eliminar datos</h2>
+
+          <h3>Leer datos</h3>
+
+          <pre class="code-block"><code>const id = primerProducto.dataset.id;
+const precio = primerProducto.dataset.price;
+const peso = primerProducto.dataset.pesoKg;</code></pre>
+
+          <pre class="diagram-block">"1"
+"23.5"
+"6.7"</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los valores obtenidos mediante dataset son cadenas de texto.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si necesitamos trabajar con números, debemos convertirlos
+            manualmente.
+          </p>
+
+          <pre class="code-block"><code>const precio = Number(primerProducto.dataset.price);</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            dataset no interpreta automáticamente si un dato representa un
+            número, un booleano u otro tipo.
+          </p>
+
+          <h3>Modificar un data attribute</h3>
+
+          <p class="lesson-note lesson-note--key">
+            Podemos modificar un atributo data-* asignando un nuevo valor a una
+            propiedad de dataset.
+          </p>
+
+          <pre class="code-block"><code>primerProducto.dataset.price = "30";</code></pre>
+
+          <pre class="diagram-block">dataset.price = "30"
+        ↓
+data-price="30"</pre>
+
+          <h3>Crear un nuevo data attribute</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si la propiedad no existía, la asignación crea un nuevo atributo.
+          </p>
+
+          <pre class="code-block"><code>primerProducto.dataset.stock = "8";</code></pre>
+
+          <pre class="code-block"><code>&lt;article data-stock="8"&gt;&lt;/article&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Asignar una nueva propiedad a dataset crea el correspondiente
+            atributo data-*.
+          </p>
+
+          <h3>Eliminar un data attribute</h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Para eliminar un atributo gestionado mediante dataset utilizamos
+            delete.
+          </p>
+
+          <pre class="code-block"><code>delete primerProducto.dataset.price;</code></pre>
+
+          <pre class="diagram-block">delete dataset.price
+        ↓
+Eliminar data-price</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Asignar una cadena vacía no es lo mismo que eliminar el atributo.
+          </p>
+
+          <pre class="code-block"><code>primerProducto.dataset.price = "";</code></pre>
+
+          <pre class="code-block"><code>&lt;article data-price=""&gt;&lt;/article&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Para eliminar realmente el atributo mediante dataset, utilizamos
+            delete.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="getattribute-dataset">
+          <h2>9. getAttribute() frente a dataset</h2>
+
+          <pre class="code-block"><code>primerProducto.getAttribute("data-price");
+
+primerProducto.dataset.price;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            getAttribute() trabaja con cualquier atributo.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            dataset está especializado en atributos data-*.
+          </p>
+
+          <pre class="diagram-block">getAttribute("data-price")
+        ↓
+Método genérico
+
+dataset.price
+        ↓
+API específica para data-*</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Cuando trabajamos específicamente con atributos data-*, dataset
+            ofrece una sintaxis más directa y expresiva.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="cuando-usar-data">
+          <h2>10. Cuándo usar y cuándo no usar data-*</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los data attributes sirven para asociar información adicional a un
+            elemento cuando tiene sentido para el comportamiento de la página.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplos reales: ID interno de un producto, precio asociado a una
+            tarjeta, categoría de un elemento, estado auxiliar o identificador
+            necesario para una interacción JavaScript.
+          </p>
+
+          <pre class="code-block"><code>&lt;button data-product-id="42"&gt;
+  Añadir al carrito
+&lt;/button&gt;</code></pre>
+
+          <pre class="code-block"><code>boton.dataset.productId;</code></pre>
+
+          <pre class="diagram-block">Botón
+        ↓
+data-product-id
+        ↓
+dataset.productId
+        ↓
+JavaScript
+        ↓
+Acción</pre>
+
+          <p class="lesson-note lesson-note--warning lesson-note--important">
+            Los data attributes no deben sustituir atributos HTML que ya tienen
+            una función específica.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Mal planteamiento:
+          </p>
+
+          <pre class="code-block"><code>&lt;input data-required="true"&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Correcto:
+          </p>
+
+          <pre class="code-block"><code>&lt;input required&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            No debemos inventar un data-* cuando HTML ya dispone de un atributo
+            semántico para esa función.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Tampoco debemos utilizar data-* para ocultar información que debería
+            ser visible o accesible para el usuario.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="relacion">
+          <h2>11. Relación entre classList y dataset</h2>
+
+          <pre class="diagram-block">class
+        ↓
+classList
+        ↓
+Gestionar clases individualmente
+
+data-*
+        ↓
+dataset
+        ↓
+Gestionar datos personalizados</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            classList especializa la gestión del atributo class, mientras que
+            dataset especializa la gestión de los atributos data-*.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esta es la idea conceptual que une toda la clase.
+          </p>
+
+          <h3>Ejemplo combinado</h3>
+
+          <pre class="code-block"><code>&lt;article
+  class="producto"
+  data-id="1"
+  data-price="23.5"
+&gt;
+&lt;/article&gt;</code></pre>
+
+          <pre class="code-block"><code>const producto = document.querySelector(".producto");
+
+const precio = Number(producto.dataset.price);
+
+producto.classList.add("seleccionado");</code></pre>
+
+          <pre class="diagram-block">dataset
+        ↓
+Lee información del producto
+
+classList
+        ↓
+Modifica el estado visual del producto</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            dataset puede almacenar información asociada al elemento y classList
+            puede reflejar visualmente su estado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>12. Resumen final</h2>
+
+          <h3>classList</h3>
+
+          <p class="lesson-note lesson-note--key">
+            className trabaja con toda la cadena de clases.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            classList trabaja con clases individuales.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            classList devuelve un DOMTokenList, no un array real.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            add() añade clases.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            remove() elimina clases.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            contains() comprueba clases.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            toggle() alterna clases.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            replace() sustituye clases.
+          </p>
+
+          <pre class="diagram-block">class
+        ↓
+classList
+        ↓
+add / remove / contains / toggle / replace</pre>
+
+          <h3>dataset</h3>
+
+          <p class="lesson-note lesson-note--key">
+            Los atributos data-* almacenan información personalizada asociada a
+            un elemento.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            dataset permite acceder específicamente a los atributos data-*.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            El prefijo data- desaparece al acceder mediante dataset.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Los nombres compuestos se transforman a camelCase.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Los valores obtenidos mediante dataset son cadenas de texto.
+          </p>
+
+          <pre class="code-block"><code>element.dataset.price;</code></pre>
+
+          <pre class="code-block"><code>element.dataset.price = "30";</code></pre>
+
+          <pre class="code-block"><code>delete element.dataset.price;</code></pre>
+
+          <pre class="diagram-block">data-price
+        ↓
+dataset.price
+        ↓
+Leer / Modificar / Eliminar</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            classList gestiona clases y dataset gestiona información
+            personalizada asociada al elemento.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · DOM · classList y dataset
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
