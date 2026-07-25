@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <!-- Codificación -->
+    <meta charset="UTF-8" />
+
+    <!-- Para que la web sea responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Descripción de la página para los buscadores -->
+    <meta
+      name="description"
+      content="Lección sobre insertar, mover, eliminar y recorrer elementos del DOM en JavaScript."
+    />
+
+    <!-- Título para el navegador y los buscadores -->
+    <title>Insertar y movernos por el DOM | Cuaderno Digital</title>
+
+    <!-- Autor de la página -->
+    <meta name="author" content="@JonasCampos86" />
+
+    <!-- Para algunos navegadores móviles -->
+    <meta name="theme-color" content="#7c3aed" />
+
+    <!-- JavaScript principal -->
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a DOM
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#introduccion">1. Qué aprenderemos</a>
+          <a href="#propiedades">2. Propiedades de un elemento</a>
+          <a href="#textcontent">3. textContent</a>
+          <a href="#innertext">4. innerText</a>
+          <a href="#innerhtml">5. innerHTML</a>
+          <a href="#outerhtml">6. outerHTML</a>
+          <a href="#insertar">7. Insertar elementos</a>
+          <a href="#api-clasica">8. API clásica de nodos</a>
+          <a href="#api-moderna">9. API moderna de elementos</a>
+          <a href="#clasica-moderna">10. API clásica vs moderna</a>
+          <a href="#navegar-elementos">11. Navegar por elementos</a>
+          <a href="#navegar-nodos">12. Navegar por nodos</a>
+          <a href="#elementos-nodos">13. Elementos vs nodos</a>
+          <a href="#resumen">14. Resumen final</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Insertar y movernos por el DOM</h1>
+          <p>
+            Colocar elementos dentro del árbol DOM, moverlos, eliminarlos y
+            recorrer su estructura desde JavaScript.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="introduccion">
+          <h2>1. Qué aprenderemos en esta clase</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Hasta ahora hemos aprendido a seleccionar elementos, crear elementos,
+            modificar atributos, gestionar clases con classList y trabajar con
+            dataset.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En esta clase aprenderemos a colocar esos elementos dentro del árbol
+            DOM, moverlos, eliminarlos y recorrer su estructura.
+          </p>
+
+          <pre class="diagram-block">Crear nodo
+      │
+      ▼
+Insertarlo
+      │
+      ▼
+Moverlo
+      │
+      ▼
+Eliminarlo
+      │
+      ▼
+Recorrer el DOM</pre>
+        </section>
+
+        <section class="lesson-section" id="propiedades">
+          <h2>2. Propiedades de un elemento</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Antes de insertar o recorrer elementos, conviene distinguir algunas
+            propiedades que permiten leer el contenido de un elemento de formas
+            diferentes.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Propiedad</th>
+                <th>¿Qué obtiene?</th>
+                <th>Tiene en cuenta el CSS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>innerText</code></td>
+                <td>Solo el texto visible</td>
+                <td>Sí</td>
+              </tr>
+              <tr>
+                <td><code>textContent</code></td>
+                <td>Todo el texto del nodo</td>
+                <td>No</td>
+              </tr>
+              <tr>
+                <td><code>innerHTML</code></td>
+                <td>HTML interno del elemento</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>outerHTML</code></td>
+                <td>Todo el elemento, incluidas sus etiquetas</td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="lesson-note lesson-note--key">
+            Estas propiedades permiten consultar el contenido de un elemento,
+            pero no todas devuelven lo mismo.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="textcontent">
+          <h2>3. textContent</h2>
+
+          <p class="lesson-note lesson-note--key">
+            textContent devuelve todo el texto contenido en el elemento.
+          </p>
+
+          <pre class="code-block"><code>const producto = document.querySelector(".producto");
+
+console.log(producto.textContent);</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            textContent ignora si ese texto está oculto mediante CSS.
+          </p>
+
+          <pre class="diagram-block">Elemento
+      │
+      ▼
+textContent
+      │
+      ▼
+Todo el texto del nodo</pre>
+        </section>
+
+        <section class="lesson-section" id="innertext">
+          <h2>4. innerText</h2>
+
+          <p class="lesson-note lesson-note--key">
+            innerText devuelve únicamente el texto que realmente es visible
+            después del renderizado.
+          </p>
+
+          <pre class="code-block"><code>console.log(producto.innerText);</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            innerText tiene en cuenta reglas CSS como display: none.
+          </p>
+
+          <pre class="diagram-block">Elemento
+      │
+      ▼
+innerText
+      │
+      ▼
+Solo el texto visible</pre>
+        </section>
+
+        <section class="lesson-section" id="innerhtml">
+          <h2>5. innerHTML</h2>
+
+          <p class="lesson-note lesson-note--key">
+            innerHTML devuelve el contenido HTML interno de un elemento.
+          </p>
+
+          <pre class="code-block"><code>console.log(producto.innerHTML);</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Resultado aproximado:
+          </p>
+
+          <pre class="code-block"><code>&lt;h3&gt;Rueda de tacos&lt;/h3&gt;
+&lt;p&gt;...&lt;/p&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            innerHTML no devuelve solo texto: devuelve el HTML que hay dentro
+            del elemento.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="outerhtml">
+          <h2>6. outerHTML</h2>
+
+          <p class="lesson-note lesson-note--key">
+            outerHTML devuelve el elemento completo.
+          </p>
+
+          <pre class="code-block"><code>console.log(producto.outerHTML);</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Resultado:
+          </p>
+
+          <pre class="code-block"><code>&lt;article class="producto" ...&gt;
+  ...
+&lt;/article&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            outerHTML incluye el propio elemento y su contenido.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="insertar">
+          <h2>7. Insertar elementos en el DOM</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Crear un nodo no hace que aparezca automáticamente en la página.
+          </p>
+
+          <pre class="diagram-block">Primero:
+createElement()
+
+Después:
+Insertarlo en el DOM</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para que un elemento creado desde JavaScript aparezca en la página,
+            debe insertarse dentro del árbol DOM.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="api-clasica">
+          <h2>8. API clásica de nodos</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            La API clásica de nodos trabaja insertando, eliminando o
+            sustituyendo nodos hijos.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Método</th>
+                <th>¿Qué hace?</th>
+                <th>Devuelve</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>appendChild()</code></td>
+                <td>Inserta como último hijo</td>
+                <td>El nodo insertado</td>
+              </tr>
+              <tr>
+                <td><code>removeChild()</code></td>
+                <td>Elimina un hijo</td>
+                <td>El nodo eliminado</td>
+              </tr>
+              <tr>
+                <td><code>replaceChild()</code></td>
+                <td>Sustituye un hijo</td>
+                <td>El nodo sustituido</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>appendChild()</h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            appendChild() inserta el nodo como último hijo del elemento.
+          </p>
+
+          <pre class="code-block"><code>const nuevo = document.createElement("p");
+
+nuevo.textContent = "Nuevo párrafo";
+
+producto.appendChild(nuevo);</code></pre>
+
+          <pre class="diagram-block">article
+│
+├── h3
+├── p
+└── nuevo p</pre>
+
+          <h3>removeChild()</h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            removeChild() elimina un hijo concreto del elemento.
+          </p>
+
+          <pre class="code-block"><code>producto.removeChild(nuevo);</code></pre>
+
+          <pre class="diagram-block">Padre
+│
+└── hijo eliminado</pre>
+
+          <h3>replaceChild()</h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            replaceChild() sustituye un hijo por otro.
+          </p>
+
+          <pre class="code-block"><code>producto.replaceChild(nuevoH2, actualH3);</code></pre>
+
+          <pre class="diagram-block">Antes:
+
+article
+│
+└── h3
+
+Después:
+
+article
+│
+└── h2</pre>
+        </section>
+
+        <section class="lesson-section" id="api-moderna">
+          <h2>9. API moderna de elementos</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los navegadores modernos incorporan métodos más cómodos que la API
+            clásica de nodos.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Método</th>
+                <th>Posición</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>append()</code></td>
+                <td>Final del elemento</td>
+              </tr>
+              <tr>
+                <td><code>prepend()</code></td>
+                <td>Inicio del elemento</td>
+              </tr>
+              <tr>
+                <td><code>before()</code></td>
+                <td>Antes del elemento</td>
+              </tr>
+              <tr>
+                <td><code>after()</code></td>
+                <td>Después del elemento</td>
+              </tr>
+              <tr>
+                <td><code>replaceWith()</code></td>
+                <td>Sustituye el elemento</td>
+              </tr>
+              <tr>
+                <td><code>remove()</code></td>
+                <td>Elimina el elemento</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Este esquema resume prácticamente toda la API moderna de inserción.
+          </p>
+
+          <pre class="diagram-block">before()
+
+──────────────
+
+&lt;div&gt;
+
+    prepend()
+
+    contenido
+
+    append()
+
+&lt;/div&gt;
+
+──────────────
+
+after()</pre>
+
+          <h3>before()</h3>
+
+          <p class="lesson-note lesson-note--key">
+            before() inserta el nuevo nodo justo antes del elemento.
+          </p>
+
+          <pre class="code-block"><code>titulo.before(nuevoH2);</code></pre>
+
+          <h3>after()</h3>
+
+          <p class="lesson-note lesson-note--key">
+            after() inserta el nuevo nodo justo después del elemento.
+          </p>
+
+          <pre class="code-block"><code>titulo.after(nuevoH2);</code></pre>
+
+          <h3>replaceWith()</h3>
+
+          <p class="lesson-note lesson-note--key">
+            replaceWith() sustituye directamente el elemento.
+          </p>
+
+          <pre class="code-block"><code>titulo.replaceWith(nuevoH2);</code></pre>
+
+          <h3>remove()</h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            remove() elimina el propio elemento sin necesidad de acceder al
+            padre.
+          </p>
+
+          <pre class="code-block"><code>titulo.remove();</code></pre>
+        </section>
+
+        <section class="lesson-section" id="clasica-moderna">
+          <h2>10. API clásica vs API moderna</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Ambas APIs siguen siendo válidas.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>API clásica</th>
+                <th>API moderna</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>appendChild()</code></td>
+                <td><code>append()</code></td>
+              </tr>
+              <tr>
+                <td><code>removeChild()</code></td>
+                <td><code>remove()</code></td>
+              </tr>
+              <tr>
+                <td><code>replaceChild()</code></td>
+                <td><code>replaceWith()</code></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En proyectos actuales suele verse con más frecuencia la API moderna
+            por ser más expresiva.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="navegar-elementos">
+          <h2>11. Navegar por el DOM mediante elementos</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Estas propiedades ignoran comentarios y nodos de texto, centrándose
+            únicamente en elementos HTML.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Propiedad</th>
+                <th>Devuelve</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>parentElement</code></td>
+                <td>Padre</td>
+              </tr>
+              <tr>
+                <td><code>children</code></td>
+                <td>Hijos</td>
+              </tr>
+              <tr>
+                <td><code>firstElementChild</code></td>
+                <td>Primer hijo</td>
+              </tr>
+              <tr>
+                <td><code>lastElementChild</code></td>
+                <td>Último hijo</td>
+              </tr>
+              <tr>
+                <td><code>nextElementSibling</code></td>
+                <td>Hermano siguiente</td>
+              </tr>
+              <tr>
+                <td><code>previousElementSibling</code></td>
+                <td>Hermano anterior</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <pre class="diagram-block">parentElement
+      │
+      ▼
+
+article
+
+├── h3
+├── p
+└── button
+
+▲        ▲
+│        │
+
+first    last</pre>
+
+          <p class="lesson-note lesson-note--key">
+            Si queremos trabajar únicamente con etiquetas HTML, estas
+            propiedades suelen ser las más adecuadas.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="navegar-nodos">
+          <h2>12. Navegar por el DOM mediante nodos</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            A diferencia del apartado anterior, aquí también aparecen los nodos
+            de texto y comentarios.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Propiedad</th>
+                <th>Devuelve</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>parentNode</code></td>
+                <td>Nodo padre</td>
+              </tr>
+              <tr>
+                <td><code>childNodes</code></td>
+                <td>Todos los nodos hijos</td>
+              </tr>
+              <tr>
+                <td><code>firstChild</code></td>
+                <td>Primer nodo</td>
+              </tr>
+              <tr>
+                <td><code>lastChild</code></td>
+                <td>Último nodo</td>
+              </tr>
+              <tr>
+                <td><code>nextSibling</code></td>
+                <td>Nodo siguiente</td>
+              </tr>
+              <tr>
+                <td><code>previousSibling</code></td>
+                <td>Nodo anterior</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <pre class="code-block"><code>console.log(producto.childNodes);</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            childNodes puede incluir elementos HTML, nodos de texto y
+            comentarios.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="elementos-nodos">
+          <h2>13. Elementos vs nodos</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Esta es la diferencia más importante de toda la clase.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Elementos</th>
+                <th>Nodos</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Solo etiquetas HTML</td>
+                <td>Etiquetas + texto + comentarios</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <pre class="diagram-block">DOM
+
+article
+│
+├── h3
+├── texto
+├── comentario
+└── p
+
+children
+    ↓
+h3 | p
+
+childNodes
+    ↓
+h3 | texto | comentario | p</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Si únicamente queremos trabajar con etiquetas HTML, normalmente
+            utilizaremos la API de elementos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>14. Resumen final</h2>
+
+          <p class="lesson-note lesson-note--key">
+            textContent obtiene todo el texto.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            innerText obtiene únicamente el texto visible.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            innerHTML devuelve el HTML interno.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            outerHTML devuelve el elemento completo.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            appendChild() inserta un nodo como último hijo.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            removeChild() elimina un hijo.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            replaceChild() sustituye un hijo.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            append(), prepend(), before(), after(), replaceWith() y remove()
+            forman la API moderna de manipulación del DOM.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            children trabaja únicamente con elementos HTML.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            childNodes incluye también nodos de texto y comentarios.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Comprender la diferencia entre elementos y nodos es la clave para
+            entender la navegación por el DOM.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · DOM · Insertar y movernos por el DOM
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
