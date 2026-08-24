@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <!-- Codificación -->
+    <meta charset="UTF-8" />
+
+    <!-- Para que la web sea responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Descripción de la página para los buscadores -->
+    <meta
+      name="description"
+      content="Lección sobre gestión de eventos en JavaScript dentro del DOM."
+    />
+
+    <!-- Título para el navegador y los buscadores -->
+    <title>Gestión de eventos | Cuaderno Digital</title>
+
+    <!-- Autor de la página -->
+    <meta name="author" content="@JonasCampos86" />
+
+    <!-- Para algunos navegadores móviles -->
+    <meta name="theme-color" content="#7c3aed" />
+
+    <!-- JavaScript principal -->
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a DOM
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#evento">1. Qué es un evento</a>
+          <a href="#asincronia">2. Eventos y asincronía</a>
+          <a href="#formas">3. Formas de gestionar eventos</a>
+          <a href="#onclick-html">4. onclick en HTML</a>
+          <a href="#onclick-js">5. onclick desde JavaScript</a>
+          <a href="#add-event-listener">6. addEventListener()</a>
+          <a href="#callback">7. El callback</a>
+          <a href="#formas-callback">8. Formas de escribir callbacks</a>
+          <a href="#multiples-listeners">9. Múltiples listeners</a>
+          <a href="#remove-event-listener">10. removeEventListener()</a>
+          <a href="#funciones-anonimas">11. Funciones anónimas</a>
+          <a href="#event">12. El objeto Event</a>
+          <a href="#propiedades-event">13. Propiedades de Event</a>
+          <a href="#event-target">14. event.target</a>
+          <a href="#resumen-formas">15. Resumen de formas</a>
+          <a href="#resumen">16. Resumen final</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Gestión de eventos en JavaScript</h1>
+          <p>
+            Detectar sucesos de la página y ejecutar código cuando el usuario
+            interactúa con los elementos.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="evento">
+          <h2>1. Qué es un evento</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un evento es un suceso que ocurre en una página y que JavaScript
+            puede detectar para ejecutar una determinada acción.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Muchos eventos se producen como consecuencia de una acción realizada
+            por el usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Algunos ejemplos son pulsar un botón, hacer clic sobre un elemento,
+            escribir mediante el teclado o interactuar con alguna parte de la
+            página.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los eventos permiten que JavaScript responda a sucesos que ocurren
+            en la página, muchos de ellos provocados por el usuario.
+          </p>
+
+          <pre class="diagram-block">Usuario / página
+      ↓
+Ocurre un suceso
+      ↓
+EVENTO
+      ↓
+JavaScript lo detecta
+      ↓
+Ejecuta código</pre>
+        </section>
+
+        <section class="lesson-section" id="asincronia">
+          <h2>2. Los eventos funcionan de forma asíncrona</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            JavaScript no necesita detener el programa esperando a que ocurra el
+            evento.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Preparamos previamente el código que deberá ejecutarse cuando ese
+            evento se produzca.
+          </p>
+
+          <pre class="diagram-block">Preparar código
+      ↓
+El programa continúa
+      ↓
+Ocurre el evento
+      ↓
+Se ejecuta la función asociada</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El código queda preparado para responder cuando el evento se
+            produzca.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            A permanecer pendientes de un evento se le suele llamar escuchar un
+            evento.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="formas">
+          <h2>3. Formas de gestionar eventos</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Existen diferentes formas de gestionar eventos.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Las dos primeras presentan problemas y debemos evitar utilizarlas
+            como forma habitual de trabajo.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Para gestionar eventos utilizaremos addEventListener().
+          </p>
+        <div class="lesson-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Forma</th>
+                <th>Funcionamiento</th>
+                <th>¿La utilizaremos?</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>onclick=""</code></td>
+                <td>El evento se escribe directamente en HTML</td>
+                <td>NO</td>
+              </tr>
+              <tr>
+                <td><code>setAttribute("onclick", ...)</code></td>
+                <td>JavaScript crea un atributo onclick</td>
+                <td>NO</td>
+              </tr>
+              <tr>
+                <td><code>addEventListener()</code></td>
+                <td>JavaScript registra un listener y un callback</td>
+                <td>SÍ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+          <pre class="diagram-block">onclick en HTML
+      ↓
+PROBLEMAS
+      ↓
+onclick creado desde JavaScript
+      ↓
+LOS MISMOS PROBLEMAS
+      ↓
+addEventListener()
+      ↓
+FORMA QUE UTILIZAREMOS</pre>
+        </section>
+
+        <section class="lesson-section" id="onclick-html">
+          <h2>4. Primera forma: onclick en HTML</h2>
+
+          <p class="lesson-note lesson-note--warning lesson-note--important">
+            Esta forma no la utilizaremos como forma habitual de trabajo.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            HTML permite asociar directamente un evento a una etiqueta mediante
+            un atributo.
+          </p>
+
+          <pre class="code-block"><code>&lt;button onclick="mostrarAlert()"&gt;
+  Prueba de botón con la primera manera
+&lt;/button&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La función se encuentra definida en JavaScript.
+          </p>
+
+          <pre class="code-block"><code>function mostrarAlert() {
+  alert("Botón pulsado");
+}</code></pre>
+
+          <pre class="diagram-block">&lt;button&gt;
+      ↓
+onclick
+      ↓
+mostrarAlert()
+      ↓
+Se ejecuta la función</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            El problema es que estamos introduciendo comportamiento JavaScript
+            dentro del HTML.
+          </p>
+
+          <pre class="diagram-block">HTML → estructura
+
+JavaScript → comportamiento</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Además, el HTML necesita conocer el nombre de una función
+            JavaScript.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si posteriormente modificamos el nombre de esa función en
+            JavaScript, podríamos olvidar actualizar las referencias existentes
+            en el HTML.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Esta forma crea una dependencia entre el HTML y las funciones
+            definidas en JavaScript.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="onclick-js">
+          <h2>5. Segunda forma: crear onclick desde JavaScript</h2>
+
+          <p class="lesson-note lesson-note--warning lesson-note--important">
+            Esta forma tampoco la utilizaremos.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos crear el atributo desde JavaScript mediante setAttribute().
+          </p>
+
+          <pre class="code-block"><code>let segundoBoton =
+  document.getElementById("segundoBoton");
+
+segundoBoton.setAttribute(
+  "onClick",
+  "mostrarAlert()"
+);</code></pre>
+
+          <pre class="diagram-block">JavaScript
+      ↓
+setAttribute()
+      ↓
+Crea onclick
+      ↓
+HTML</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Seguimos utilizando un atributo HTML onclick; simplemente lo estamos
+            creando desde JavaScript.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Esta segunda forma tampoco será la que utilizaremos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="add-event-listener">
+          <h2>6. addEventListener(): la forma que utilizaremos</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            addEventListener() permite registrar una función que se ejecutará
+            cuando ocurra un determinado evento.
+          </p>
+
+          <h3>Sintaxis</h3>
+
+          <pre class="code-block"><code>elemento.addEventListener(
+  "evento",
+  funcion
+);</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Primer argumento: evento que queremos escuchar.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Segundo argumento: función que se ejecutará cuando ocurra el evento.
+          </p>
+
+          <pre class="diagram-block">Elemento
+      ↓
+addEventListener()
+      ↓
+Evento
+      ↓
+Callback</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Para gestionar eventos utilizaremos addEventListener().
+          </p>
+
+          <h3>Ejemplo</h3>
+
+          <pre class="code-block"><code>let tercerBoton =
+  document.getElementById("tercerBoton");
+
+tercerBoton.addEventListener(
+  "click",
+  function () {
+    alert("Botón pulsado");
+  }
+);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            JavaScript queda escuchando el evento "click".
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando el usuario pulsa el botón, se ejecuta la función asociada.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            No ejecutamos nosotros directamente esa función; JavaScript la
+            ejecutará cuando ocurra el evento.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="callback">
+          <h2>7. El callback</h2>
+
+          <p class="lesson-note lesson-note--key">
+            La función asociada al evento recibe el nombre de callback.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Es el código que JavaScript ejecutará cuando ocurra el evento.
+          </p>
+
+          <pre class="diagram-block">addEventListener("click", funcion)
+                 ↓
+              espera
+                 ↓
+               click
+                 ↓
+              funcion()</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Cuando pasamos una función como callback, pasamos su referencia sin
+            ejecutarla.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Correcto:
+          </p>
+
+          <pre class="code-block"><code>tercerBoton.addEventListener(
+  "click",
+  mostrarConsole
+);</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Incorrecto:
+          </p>
+
+          <pre class="code-block"><code>tercerBoton.addEventListener(
+  "click",
+  mostrarConsole()
+);</code></pre>
+
+          <pre class="diagram-block">mostrarConsole
+      ↓
+Referencia a la función
+
+
+mostrarConsole()
+      ↓
+Ejecutar la función</pre>
+        </section>
+
+        <section class="lesson-section" id="formas-callback">
+          <h2>8. Función declarada o arrow function</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            El callback puede escribirse de diferentes formas.
+          </p>
+
+          <h3>Función declarada</h3>
+
+          <pre class="code-block"><code>function mostrarConsole() {
+  console.log(
+    "Escribiendo algo por consola"
+  );
+}
+
+tercerBoton.addEventListener(
+  "click",
+  mostrarConsole
+);</code></pre>
+
+          <h3>Arrow function</h3>
+
+          <pre class="code-block"><code>const accion = () =>
+  alert("Hello!");
+
+button.addEventListener(
+  "click",
+  accion
+);</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La forma de escribir la función puede cambiar, pero sigue actuando
+            como callback del listener.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="multiples-listeners">
+          <h2>9. Múltiples listeners</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un mismo elemento puede tener varios listeners asociados al mismo
+            evento.
+          </p>
+
+          <pre class="code-block"><code>tercerBoton.addEventListener(
+  "click",
+  function () {
+    alert("Botón pulsado");
+  }
+);
+
+tercerBoton.addEventListener(
+  "click",
+  mostrarConsole
+);</code></pre>
+
+          <pre class="diagram-block">CLICK
+  │
+  ├── Listener 1 → alert()
+  │
+  └── Listener 2 → mostrarConsole()</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            addEventListener() permite registrar varios callbacks para un mismo
+            evento.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="remove-event-listener">
+          <h2>10. Eliminar un listener: removeEventListener()</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            removeEventListener() permite eliminar un listener registrado
+            anteriormente.
+          </p>
+
+          <h3>Sintaxis</h3>
+
+          <pre class="code-block"><code>elemento.removeEventListener(
+  "evento",
+  funcion
+);</code></pre>
+
+          <p class="lesson-note lesson-note--warning lesson-note--important">
+            Para eliminar un listener debemos indicar el mismo tipo de evento y
+            la misma referencia de función utilizados al registrarlo.
+          </p>
+
+          <h3>Ejemplo correcto</h3>
+
+          <pre class="code-block"><code>function accion() {
+  alert("Hello!");
+}
+
+button.addEventListener(
+  "click",
+  accion
+);
+
+button.removeEventListener(
+  "click",
+  accion
+);</code></pre>
+
+          <pre class="diagram-block">                accion
+                  │
+        ┌─────────┴─────────┐
+        ↓                   ↓
+
+addEventListener()   removeEventListener()</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Ambos métodos utilizan la misma referencia de función.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="funciones-anonimas">
+          <h2>11. Problema con las funciones anónimas</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si registramos un listener con una función anónima y después
+            intentamos eliminarlo escribiendo otra función anónima igual, el
+            listener no se elimina.
+          </p>
+
+          <pre class="code-block"><code>tercerBoton.addEventListener(
+  "click",
+  function () {
+    alert("Botón pulsado");
+  }
+);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Después intentamos eliminarlo mediante:
+          </p>
+
+          <pre class="code-block"><code>tercerBoton.removeEventListener(
+  "click",
+  function () {
+    alert("Botón pulsado");
+  }
+);</code></pre>
+
+          <p class="lesson-note lesson-note--warning lesson-note--important">
+            El listener no se elimina.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aunque las dos funciones contienen exactamente el mismo código, son
+            funciones diferentes.
+          </p>
+
+          <pre class="diagram-block">function () { ... }
+        ↓
+    Función A
+
+
+function () { ... }
+        ↓
+    Función B
+
+
+Función A ≠ Función B</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Dos funciones pueden contener exactamente el mismo código y seguir
+            siendo funciones distintas.
+          </p>
+
+          <h3>Si queremos eliminar posteriormente el listener</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Conviene conservar la referencia a la función.
+          </p>
+
+          <pre class="code-block"><code>function mostrarAlert() {
+  alert("Botón pulsado");
+}
+
+tercerBoton.addEventListener(
+  "click",
+  mostrarAlert
+);
+
+tercerBoton.removeEventListener(
+  "click",
+  mostrarAlert
+);</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Guardar la función permite reutilizar exactamente la misma
+            referencia.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="event">
+          <h2>12. El objeto Event</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Cuando ocurre un evento, JavaScript proporciona un objeto con
+            información relacionada con ese evento.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos recibirlo como parámetro del callback.
+          </p>
+
+          <pre class="code-block"><code>cuartoBoton.addEventListener(
+  "click",
+  function (event) {
+    console.log(
+      "He pulsado el cuarto botón."
+    );
+
+    console.log(event);
+  }
+);</code></pre>
+
+          <pre class="diagram-block">Ocurre el evento
+      ↓
+JavaScript proporciona Event
+      ↓
+Callback recibe event
+      ↓
+Consultamos información</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El objeto Event nos permite conocer información sobre lo que acaba
+            de ocurrir.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="propiedades-event">
+          <h2>13. Propiedades del objeto Event</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            El objeto Event dispone de propiedades que contienen información
+            relacionada con el evento.
+          </p>
+        <div class="lesson-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Propiedad</th>
+                <th>Utilidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>altKey</code></td>
+                <td>Indica si la tecla Alt estaba pulsada durante el evento</td>
+              </tr>
+              <tr>
+                <td><code>button</code></td>
+                <td>Indica qué botón del ratón activó el evento</td>
+              </tr>
+              <tr>
+                <td><code>charCode</code></td>
+                <td>Código del carácter pulsado</td>
+              </tr>
+              <tr>
+                <td><code>clientX</code></td>
+                <td>Coordenada X del ratón respecto a la ventana</td>
+              </tr>
+              <tr>
+                <td><code>clientY</code></td>
+                <td>Coordenada Y del ratón respecto a la ventana</td>
+              </tr>
+              <tr>
+                <td><code>ctrlKey</code></td>
+                <td>Indica si Ctrl estaba pulsada durante el evento</td>
+              </tr>
+              <tr>
+                <td><code>pageX</code></td>
+                <td>Coordenada X del ratón respecto al documento completo</td>
+              </tr>
+              <tr>
+                <td><code>pageY</code></td>
+                <td>Coordenada Y del ratón respecto al documento completo</td>
+              </tr>
+              <tr>
+                <td><code>screenX</code></td>
+                <td>Coordenada X del evento respecto a la pantalla</td>
+              </tr>
+              <tr>
+                <td><code>screenY</code></td>
+                <td>Coordenada Y del evento respecto a la pantalla</td>
+              </tr>
+              <tr>
+                <td><code>shiftKey</code></td>
+                <td>Indica si Shift estaba pulsada durante el evento</td>
+              </tr>
+              <tr>
+                <td><code>target</code></td>
+                <td>Referencia al elemento que lanzó el evento</td>
+              </tr>
+              <tr>
+                <td><code>timeStamp</code></td>
+                <td>Momento asociado a la creación del evento</td>
+              </tr>
+              <tr>
+                <td><code>type</code></td>
+                <td>Nombre del evento</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+          <p class="lesson-note lesson-note--warning">
+            No es necesario memorizar todas estas propiedades de golpe.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Lo importante es comprender que Event contiene información sobre el
+            evento producido.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="event-target">
+          <h2>14. event.target</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            event.target permite conocer qué elemento ha originado el evento.
+          </p>
+
+          <pre class="code-block"><code>let botones =
+  document.getElementsByTagName("button");
+
+for (let boton of botones) {
+  boton.addEventListener(
+    "click",
+    (event) =>
+      console.log(
+        "He pulsado el botón",
+        event.target
+      )
+  );
+}</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este ejemplo existen varios botones, por lo que event.target
+            permite identificar exactamente cuál de ellos ha originado el
+            evento.
+          </p>
+
+          <pre class="diagram-block">Botón 1 ─┐
+Botón 2 ─┼─→ Usuario pulsa uno
+Botón 3 ─┤
+Botón 4 ─┘
+          ↓
+        EVENTO
+          ↓
+     event.target
+          ↓
+Elemento que lo originó</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            event.target referencia al elemento concreto que ha provocado el
+            evento.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="resumen-formas">
+          <h2>15. Lo que debemos recordar sobre las tres formas</h2>
+        <div class="lesson-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Forma</th>
+                <th>Qué ocurre</th>
+                <th>¿La utilizaremos?</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>onclick=""</code></td>
+                <td>El comportamiento JavaScript queda ligado al HTML</td>
+                <td>NO</td>
+              </tr>
+              <tr>
+                <td><code>setAttribute("onclick", ...)</code></td>
+                <td>Seguimos creando onclick, aunque sea desde JavaScript</td>
+                <td>NO</td>
+              </tr>
+              <tr>
+                <td><code>addEventListener()</code></td>
+                <td>Registramos listeners y callbacks desde JavaScript</td>
+                <td>SÍ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+          <pre class="diagram-block">onclick en HTML
+      ↓
+❌ NO
+
+
+setAttribute("onclick")
+      ↓
+❌ NO
+
+
+addEventListener()
+      ↓
+✅ SÍ</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Para gestionar eventos utilizaremos addEventListener().
+          </p>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>16. Resumen final</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Un evento es un suceso que JavaScript puede detectar.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Los eventos permiten que JavaScript responda a sucesos que ocurren
+            en la página.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            El código queda preparado para ejecutarse cuando ocurra el evento.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Utilizar onclick directamente en HTML es una forma que debemos
+            evitar.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Crear onclick mediante setAttribute() tampoco soluciona realmente el
+            problema.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Para gestionar eventos utilizaremos addEventListener().
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            addEventListener() recibe el nombre del evento y una función
+            callback.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            El callback se ejecutará cuando el evento ocurra.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Un elemento puede tener varios listeners asociados al mismo evento.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            removeEventListener() permite eliminar un listener registrado
+            anteriormente.
+          </p>
+
+          <p class="lesson-note lesson-note--warning lesson-note--important">
+            Para eliminar un listener debemos utilizar el mismo evento y la
+            misma referencia de función utilizados al registrarlo.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Dos funciones anónimas escritas exactamente igual siguen siendo
+            funciones diferentes.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            El objeto Event contiene información sobre el evento producido.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            event.target permite conocer qué elemento originó el evento.
+          </p>
+
+          <h3>Esquema final</h3>
+
+          <pre class="diagram-block">USUARIO / PÁGINA
+      ↓
+Ocurre un suceso
+      ↓
+EVENTO
+      ↓
+addEventListener()
+      ↓
+CALLBACK
+      ↓
+Objeto Event
+      ↓
+Información del evento
+      ↓
+JavaScript responde</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            addEventListener() es el punto central: dejamos preparado un
+            callback para que JavaScript responda cuando ocurra un evento.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · DOM · Gestión de eventos
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

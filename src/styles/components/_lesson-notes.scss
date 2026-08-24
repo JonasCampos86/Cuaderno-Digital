@@ -35,3 +35,51 @@
   text-underline-offset: 4px;
   font-weight: 650;
 }
+
+.lesson-section table {
+  width: 100%;
+  margin: 28px 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.lesson-section th,
+.lesson-section td {
+  padding: 14px 22px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.lesson-section th {
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--color-purple);
+  font-weight: 800;
+}
+
+.lesson-section th + th,
+.lesson-section td + td {
+  border-left: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.lesson-section th:first-child,
+.lesson-section td:first-child {
+  width: 24%;
+  min-width: 150px;
+}
+
+.lesson-section td:first-child {
+  font-weight: 700;
+}
+
+.lesson-section td:first-child code {
+  color: var(--color-purple);
+}
+
+.lesson-section tr:last-child td {
+  border-bottom: 0;
+}
