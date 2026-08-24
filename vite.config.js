@@ -1,11 +1,52 @@
-import { defineConfig } from 'vite';
+import { readdirSync } from "node:fs";
+import { extname, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vite";
+
+const root = fileURLToPath(new URL(".", import.meta.url));
+
+function getHtmlInputs(directory, inputs = {}) {
+  const entries = readdirSync(directory, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = resolve(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      const ignoredFolders = ["node_modules", "dist", ".git"];
+
+      if (ignoredFolders.includes(entry.name)) {
+        continue;
+      }
+
+      getHtmlInputs(fullPath, inputs);
+      continue;
+    }
+
+    if (entry.isFile() && extname(entry.name) === ".html") {
+      const inputName = relative(root, fullPath)
+        .replace(/\\/g, "/")
+        .replace(".html", "");
+
+      inputs[inputName] = fullPath;
+    }
+  }
+
+  return inputs;
+}
 
 export default defineConfig({
-  base: './', // Usa rutas relativas en los enlaces generados en html
+  base: "./",
+
   server: {
-    host: true, // Permite acceder desde cualquier dispositivo de tu red (responsive en móvil/tablet)
+    host: true,
     watch: {
-      usePolling: true, // Recomendado para WSL: detecta cambios en archivos
+      usePolling: true,
+    },
+  },
+
+  build: {
+    rollupOptions: {
+      input: getHtmlInputs(root),
     },
   },
 });
