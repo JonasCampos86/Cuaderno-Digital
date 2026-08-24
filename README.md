@@ -106,6 +106,8 @@ Cuaderno-Digital/
 ├── vite.config.js
 ├── netlify.toml
 └── README.md
+```
+
 
 ## 🧠 Cómo estoy construyendo el proyecto
 
