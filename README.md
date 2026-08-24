@@ -106,3 +106,126 @@ Cuaderno-Digital/
 ├── vite.config.js
 ├── netlify.toml
 └── README.md
+
+## 🧠 Cómo estoy construyendo el proyecto
+
+Cuaderno Digital sigue algunas reglas sencillas de desarrollo:
+
+### Claridad antes que complejidad
+
+La estructura debe ser fácil de entender y mantener.
+
+### Crecimiento progresivo
+
+El proyecto crece junto con mis conocimientos y no intenta anticipar necesidades que todavía no existen.
+
+### Separación de responsabilidades
+
+Los índices sirven para navegar y las páginas de contenido contienen las lecciones correspondientes.
+
+### Coherencia
+
+Las distintas tecnologías y módulos mantienen una estructura y una experiencia de navegación homogéneas.
+
+### Aprendizaje aplicado
+
+Cada mejora del proyecto debe tener también un propósito formativo.
+
+---
+
+## 🚀 Desarrollo local
+
+Para ejecutar el proyecto en local:
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/JonasCampos86/Cuaderno-Digital.git
+```
+
+### 2. Entrar en el proyecto
+
+```bash
+cd Cuaderno-Digital
+```
+
+### 3. Instalar las dependencias
+
+```bash
+npm install
+```
+
+### 4. Iniciar el servidor de desarrollo
+
+```bash
+npm run dev
+```
+
+---
+
+## 📦 Build de producción
+
+Para generar la versión de producción:
+
+```bash
+npm run build
+```
+
+Para comprobar localmente la versión compilada:
+
+```bash
+npm run preview
+```
+
+---
+
+## 🌍 Despliegue
+
+La aplicación está desplegada mediante Netlify.
+
+Cada versión estable del proyecto puede consultarse públicamente en:
+
+👉 https://cuaderno-digital-apuntes.netlify.app
+
+---
+
+## 🚧 Estado del proyecto
+
+**En desarrollo activo.**
+
+Cuaderno Digital seguirá evolucionando conforme avance mi formación.
+
+Las futuras mejoras pueden afectar tanto al contenido como a la navegación, organización, diseño o funcionalidad de la aplicación.
+
+El objetivo no es añadir funcionalidades por añadirlas, sino incorporar nuevas soluciones cuando el crecimiento real del proyecto lo requiera.
+
+---
+
+## 💡 Sobre el proyecto
+
+Cuaderno Digital forma parte de mi proceso de formación como desarrollador web.
+
+Además de utilizarlo como herramienta personal de estudio, el proyecto me permite trabajar de forma práctica conceptos como:
+
+- Estructuración de proyectos web.
+- HTML semántico.
+- Organización modular de estilos.
+- JavaScript y manipulación del DOM.
+- Diseño responsive.
+- Navegación entre múltiples páginas.
+- Control de versiones.
+- Mantenimiento y evolución progresiva del código.
+- Despliegue de aplicaciones web.
+
+A medida que continúe avanzando en mi formación, el propio proyecto servirá como entorno para aplicar los nuevos conocimientos adquiridos.
+
+---
+
+## 👨‍💻 Autor
+
+**Jonás Campos**
+
+Desarrollador Web Junior · Full Stack en formación
+
+- GitHub: [@JonasCampos86](https://github.com/JonasCampos86)
+- Demo: [Cuaderno Digital](https://cuaderno-digital-apuntes.netlify.app)
