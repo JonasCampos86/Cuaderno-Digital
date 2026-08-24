@@ -1,26 +1,46 @@
-# Cuaderno Digital
+# 📚 Cuaderno Digital
 
-Aplicación personal de estudio desarrollada con HTML, SCSS, JavaScript y Vite.
+Aplicación web personal de estudio desarrollada para organizar y consultar de forma clara y navegable los contenidos de mi formación en Desarrollo Web Full Stack.
 
-El objetivo del proyecto es organizar los contenidos del máster por temas y convertirlos en una herramienta de repaso clara, navegable y progresiva.
+El proyecto nace como una forma de transformar mis apuntes en una herramienta real, aplicando progresivamente los conocimientos que voy adquiriendo durante mi formación.
 
-Este repositorio no es solo un almacén de apuntes: es una aplicación que irá creciendo junto con mis conocimientos como desarrollador.
+## 🌐 Demo
 
-## Objetivos
+👉 [Ver Cuaderno Digital online](https://cuaderno-digital-apuntes.netlify.app)
 
-- Organizar mis apuntes del máster.
-- Reforzar los conocimientos de HTML, SCSS y JavaScript.
-- Construir una aplicación real que crezca junto con mis conocimientos.
-- Mantener una estructura clara, simple y fácil de ampliar.
+## 🎯 Objetivo del proyecto
 
-## Tecnologías
+Cuaderno Digital no pretende ser únicamente un repositorio de apuntes.
+
+El objetivo es construir una aplicación web que evolucione junto con mis conocimientos, utilizando cada nuevo contenido del máster como una oportunidad para practicar organización, maquetación, JavaScript y arquitectura del proyecto.
+
+## ✨ Características actuales
+
+- Navegación organizada por tecnologías y módulos.
+- Contenido estructurado en lecciones independientes.
+- Sección dedicada a JavaScript.
+- Módulo específico para el DOM.
+- Diseño responsive.
+- Organización progresiva del código y los estilos.
+- Despliegue público mediante Netlify.
+
+## 🛠 Tecnologías
 
 - HTML5
-- SCSS
+- Sass / SCSS
 - JavaScript
 - Vite
-- Git
+- Git / GitHub
+- Netlify
 
-## Estado
+## 📂 Estructura del proyecto
 
-En desarrollo.
+```text
+Cuaderno-Digital/
+├── pages/
+│   └── javascript/
+├── src/
+├── index.html
+├── package.json
+├── vite.config.js
+└── netlify.toml
