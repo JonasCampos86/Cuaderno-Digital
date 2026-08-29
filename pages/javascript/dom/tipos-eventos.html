@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <!-- Codificación -->
+    <meta charset="UTF-8" />
+
+    <!-- Para que la web sea responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Descripción de la página para los buscadores -->
+    <meta
+      name="description"
+      content="Lección sobre los tipos de eventos más relevantes en JavaScript."
+    />
+
+    <!-- Título para el navegador y los buscadores -->
+    <title>Tipos de eventos | Cuaderno Digital</title>
+
+    <!-- Autor de la página -->
+    <meta name="author" content="@JonasCampos86" />
+
+    <!-- Para algunos navegadores móviles -->
+    <meta name="theme-color" content="#7c3aed" />
+
+    <!-- JavaScript principal -->
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a DOM
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#introduccion">1. Introducción</a>
+          <a href="#formularios">2. Eventos de formulario</a>
+          <a href="#document-forms">3. document.forms</a>
+          <a href="#propiedades-formulario">4. Propiedades del formulario</a>
+          <a href="#elements">5. elements</a>
+          <a href="#controles">6. Controles de formulario</a>
+          <a href="#submit-reset">7. submit() y reset()</a>
+          <a href="#prevent-default">8. preventDefault()</a>
+          <a href="#validacion-correo">9. Validación de correo</a>
+          <a href="#submit">10. Evento submit</a>
+          <a href="#frontend-backend">11. Frontend y Backend</a>
+          <a href="#change">12. Evento change</a>
+          <a href="#focus-blur">13. focus y blur</a>
+          <a href="#raton">14. Eventos de ratón</a>
+          <a href="#contextmenu">15. contextmenu</a>
+          <a href="#teclado">16. Eventos de teclado</a>
+          <a href="#event-key">17. event.key</a>
+          <a href="#event-location">18. event.location</a>
+          <a href="#multimedia">19. Eventos multimedia</a>
+          <a href="#carga">20. Eventos de carga</a>
+          <a href="#domcontentloaded">21. DOMContentLoaded</a>
+          <a href="#ventana">22. Eventos de ventana</a>
+          <a href="#impresion">23. Eventos de impresión</a>
+          <a href="#portapapeles">24. Eventos del portapapeles</a>
+          <a href="#resumen">25. Resumen final</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Tipos de eventos más relevantes</h1>
+          <p>
+            Diferentes eventos que podemos escuchar en JavaScript según la
+            interacción que queramos detectar.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="introduccion">
+          <h2>1. Introducción</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una vez comprendido cómo gestionar eventos mediante
+            <code>addEventListener()</code>, podemos utilizar distintos tipos de
+            eventos dependiendo de la interacción que queramos detectar.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Para gestionar los eventos utilizaremos
+            <code>addEventListener()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Podemos reaccionar a interacciones con formularios, acciones del
+            ratón, pulsaciones de teclado, reproducción multimedia, carga del
+            documento, cambios en la ventana y acciones del portapapeles.
+          </p>
+
+          <pre class="diagram-block">EVENTOS
+  │
+  ├── Formularios
+  ├── Ratón
+  ├── Teclado
+  ├── Multimedia
+  └── Otros eventos</pre>
+        </section>
+
+        <section class="lesson-section" id="formularios">
+          <h2>2. Eventos de formulario</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los formularios permiten introducir datos en una aplicación web.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Sus distintos controles permiten recibir información introducida por
+            el usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Algunos controles habituales son <code>input</code>,
+            <code>select</code>, <code>textarea</code> y <code>button</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Normalmente estos controles se encuentran dentro de un elemento
+            <code>form</code>.
+          </p>
+
+          <pre class="code-block"><code>&lt;form&gt;
+  ...
+&lt;/form&gt;</code></pre>
+        </section>
+
+        <section class="lesson-section" id="document-forms">
+          <h2>3. document.forms</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>document.forms</code> contiene los formularios existentes en el
+            documento.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos acceder a ellos mediante su posición.
+          </p>
+
+          <pre class="code-block"><code>const primerForm = document.forms[0];</code></pre>
+
+          <pre class="diagram-block">document
+   ↓
+forms
+   ↓
+┌──────────┬──────────┬──────────┐
+│ forms[0] │ forms[1] │ forms[2] │
+└──────────┴──────────┴──────────┘</pre>
+
+          <p class="lesson-note lesson-note--key">
+            El primer formulario será <code>document.forms[0]</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            El segundo formulario será <code>document.forms[1]</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>document.forms</code> permite acceder directamente a los
+            formularios sin tener que buscarlos mediante otros selectores del
+            DOM.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="propiedades-formulario">
+          <h2>4. Propiedades y métodos de un formulario</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Propiedad / método</th>
+                  <th>Utilidad</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>action</code></td>
+                  <td>URL que recibirá los datos del formulario</td>
+                </tr>
+                <tr>
+                  <td><code>elements</code></td>
+                  <td>Contiene los controles del formulario</td>
+                </tr>
+                <tr>
+                  <td><code>length</code></td>
+                  <td>Número de controles del formulario</td>
+                </tr>
+                <tr>
+                  <td><code>method</code></td>
+                  <td>Método utilizado para enviar los datos, como GET o POST</td>
+                </tr>
+                <tr>
+                  <td><code>enctype</code></td>
+                  <td>Tipo de codificación utilizada para los datos</td>
+                </tr>
+                <tr>
+                  <td><code>acceptCharset</code></td>
+                  <td>Conjunto de caracteres del formulario</td>
+                </tr>
+                <tr>
+                  <td><code>submit()</code></td>
+                  <td>Envía los datos del formulario</td>
+                </tr>
+                <tr>
+                  <td><code>reset()</code></td>
+                  <td>Devuelve el formulario a su estado inicial</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Dos métodos especialmente importantes son <code>submit()</code> y
+            <code>reset()</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="elements">
+          <h2>5. elements</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>elements</code> permite acceder a los controles contenidos
+            dentro de un formulario.
+          </p>
+
+          <pre class="code-block"><code>const primerForm = document.forms[0];
+
+primerForm.elements[0];</code></pre>
+
+          <pre class="diagram-block">form
+ │
+ └── elements
+      │
+      ├── elements[0]
+      ├── elements[1]
+      └── elements[2]</pre>
+
+          <pre class="code-block"><code>primerForm.elements[0].value;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este caso accedemos al valor del primer control del formulario.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="controles">
+          <h2>6. Propiedades de los controles de formulario</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los controles de un formulario disponen de diferentes propiedades
+            con las que podemos consultar o modificar su estado.
+          </p>
+
+          <h3>Propiedades principales</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Propiedad</th>
+                  <th>Utilidad</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>accept</code></td>
+                  <td>Tipos de archivos permitidos en controles de tipo archivo</td>
+                </tr>
+                <tr>
+                  <td><code>autocomplete</code></td>
+                  <td>Indica si el navegador puede autocompletar el valor</td>
+                </tr>
+                <tr>
+                  <td><code>name</code></td>
+                  <td>Nombre del control</td>
+                </tr>
+                <tr>
+                  <td><code>type</code></td>
+                  <td>Tipo de control</td>
+                </tr>
+                <tr>
+                  <td><code>value</code></td>
+                  <td>Valor actual del control</td>
+                </tr>
+                <tr>
+                  <td><code>checked</code></td>
+                  <td>Indica si el control está marcado</td>
+                </tr>
+                <tr>
+                  <td><code>defaultChecked</code></td>
+                  <td>Valor predeterminado de checked</td>
+                </tr>
+                <tr>
+                  <td><code>disabled</code></td>
+                  <td>Indica si el control está deshabilitado</td>
+                </tr>
+                <tr>
+                  <td><code>hidden</code></td>
+                  <td>Indica si el control está oculto</td>
+                </tr>
+                <tr>
+                  <td><code>readonly</code></td>
+                  <td>Indica si el valor puede modificarse</td>
+                </tr>
+                <tr>
+                  <td><code>required</code></td>
+                  <td>Indica si proporcionar un valor es obligatorio</td>
+                </tr>
+                <tr>
+                  <td><code>maxLength</code></td>
+                  <td>Longitud máxima del texto</td>
+                </tr>
+                <tr>
+                  <td><code>min</code></td>
+                  <td>Valor mínimo permitido</td>
+                </tr>
+                <tr>
+                  <td><code>max</code></td>
+                  <td>Valor máximo permitido</td>
+                </tr>
+                <tr>
+                  <td><code>pattern</code></td>
+                  <td>Expresión regular utilizada para evaluar el valor</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Otras propiedades</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Propiedad</th>
+                  <th>Utilidad</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>placeholder</code></td>
+                  <td>Muestra una pista sobre el valor que debe introducirse</td>
+                </tr>
+                <tr>
+                  <td><code>size</code></td>
+                  <td>Tamaño inicial del control</td>
+                </tr>
+                <tr>
+                  <td><code>step</code></td>
+                  <td>Tamaño del cambio entre valores</td>
+                </tr>
+                <tr>
+                  <td><code>selectionStart</code></td>
+                  <td>Posición inicial de una selección de texto</td>
+                </tr>
+                <tr>
+                  <td><code>selectionEnd</code></td>
+                  <td>Posición final de una selección de texto</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>value</code> será una de las propiedades más habituales para
+            obtener el contenido introducido por el usuario.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="submit-reset">
+          <h2>7. Enviar y reiniciar formularios</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>submit()</code> permite enviar un formulario.
+          </p>
+
+          <pre class="code-block"><code>primerForm.submit();</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>reset()</code> devuelve los controles del formulario a su
+            estado inicial.
+          </p>
+
+          <pre class="code-block"><code>primerForm.reset();</code></pre>
+
+          <pre class="diagram-block">Formulario
+  │
+  ├── submit() → Envía
+  │
+  └── reset()  → Reinicia</pre>
+        </section>
+
+        <section class="lesson-section" id="prevent-default">
+          <h2>8. preventDefault()</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>preventDefault()</code> permite impedir el comportamiento
+            predeterminado asociado a un evento.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Por ejemplo, un enlace normalmente intenta navegar hacia la dirección
+            indicada en su atributo <code>href</code>.
+          </p>
+
+          <pre class="code-block"><code>&lt;a href="http://google.com" id="buttonSubmit"&gt;
+  Enviar
+&lt;/a&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos capturar su evento y evitar inicialmente esa navegación.
+          </p>
+
+          <pre class="code-block"><code>buttonSubmit.addEventListener(
+  "click",
+  (event) => {
+    event.preventDefault();
+  }
+);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Después podemos ejecutar nuestra propia lógica antes de permitir otra
+            acción.
+          </p>
+
+          <pre class="diagram-block">Usuario hace click
+      ↓
+Evento "click"
+      ↓
+preventDefault()
+      ↓
+Se impide la acción predeterminada
+      ↓
+Ejecutamos nuestra lógica</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>preventDefault()</code> no elimina el evento: evita su
+            comportamiento predeterminado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="validacion-correo">
+          <h2>9. Ejemplo práctico: validación de correo</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos comprobar el valor introducido antes de enviar el
+            formulario.
+          </p>
+
+          <pre class="code-block"><code>const primerForm = document.forms[0];
+
+if (
+  primerForm.elements[0]
+    .value
+    .includes("@")
+) {
+  primerForm.submit();
+} else {
+  alert(
+    "Debe añadir una @ en el campo de texto"
+  );
+}</code></pre>
+
+          <pre class="diagram-block">Formulario
+    ↓
+elements[0]
+    ↓
+value
+    ↓
+includes("@")</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Podemos acceder al valor de un control mediante
+            <code>elements</code> y <code>value</code> antes de decidir qué
+            acción realizar.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="submit">
+          <h2>10. Evento submit</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>submit</code> se produce cuando se intenta enviar un
+            formulario.
+          </p>
+
+          <pre class="code-block"><code>primerForm.addEventListener(
+  "submit",
+  (event) => {
+    event.preventDefault();
+
+    // Validación
+  }
+);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos detener inicialmente el envío, comprobar los datos y decidir
+            posteriormente si permitimos continuar.
+          </p>
+
+          <h3>Ejemplo de validación de edad</h3>
+
+          <pre class="code-block"><code>primerForm.addEventListener(
+            "submit",
+            (event) => {
+                event.preventDefault();
+
+                const edad =
+                document.getElementById("age").value;
+
+                if (edad &gt;= 18 &amp;&amp; edad &lt;= 30) {
+                errorElement.textContent = "";
+                primerForm.submit();
+                } else {
+                errorElement.textContent =
+                    "Debe introducir una edad entre 18 y 30 años";
+                }
+            }
+            );</code></pre>
+
+          <pre class="diagram-block">Usuario intenta enviar
+        ↓
+      submit
+        ↓
+  preventDefault()
+        ↓
+     Validamos
+      /      \
+ Válido    No válido
+   ↓           ↓
+submit()     Error</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Capturar <code>submit</code> permite ejecutar una validación antes
+            del envío del formulario.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="frontend-backend">
+          <h2>11. ¿Dónde debemos validar: Frontend o Backend?</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La validación debe realizarse tanto en el Frontend como en el
+            Backend.
+          </p>
+
+          <h3>Frontend</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            En el Frontend la validación sirve principalmente para mejorar la
+            experiencia del usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Permite detectar errores de forma inmediata y mostrar mensajes antes
+            de enviar los datos.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Por ejemplo: avisar de que un campo está vacío, comprobar que una
+            edad está dentro de un rango o detectar que un correo no tiene el
+            formato esperado.
+          </p>
+
+          <pre class="diagram-block">Usuario introduce datos
+        ↓
+Frontend valida
+        ↓
+Detecta errores
+        ↓
+Muestra feedback inmediato
+        ↓
+Mejor experiencia de usuario</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El Frontend ayuda al usuario a corregir los datos antes de enviarlos.
+          </p>
+
+          <h3>Backend</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            En el Backend la validación es la encargada de comprobar que los
+            datos recibidos cumplen realmente las reglas de la aplicación.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            No debemos confiar únicamente en la validación realizada en el
+            navegador, porque puede ser evitada o manipulada.
+          </p>
+
+          <pre class="diagram-block">Datos enviados
+      ↓
+Backend recibe
+      ↓
+Valida
+      ↓
+Comprueba reglas
+      ↓
+Acepta o rechaza los datos</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El Backend debe validar siempre los datos antes de procesarlos.
+          </p>
+
+          <h3>Comparativa</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Lugar</th>
+                  <th>Objetivo principal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Frontend</td>
+                  <td>Mejorar la experiencia del usuario y ofrecer feedback inmediato</td>
+                </tr>
+                <tr>
+                  <td>Backend</td>
+                  <td>Comprobar que los datos cumplen realmente las reglas de la aplicación</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <pre class="diagram-block">                 VALIDACIÓN
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+      FRONTEND               BACKEND
+          │                     │
+ Feedback inmediato       Validación fiable
+ Experiencia usuario      Reglas de la aplicación
+          │                     │
+          └──────────┬──────────┘
+                     ↓
+              Datos correctos</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Frontend y Backend no sustituyen uno al otro: ambos deben validar,
+            pero cumplen funciones diferentes.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El Frontend ayuda al usuario; el Backend garantiza que los datos
+            cumplen las reglas de la aplicación.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="change">
+          <h2>12. Evento change</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>change</code> permite detectar que el valor de un control de
+            formulario ha cambiado.
+          </p>
+
+          <pre class="code-block"><code>ageElement.addEventListener(
+  "change",
+  () => {
+    console.log(
+      "El elemento se ha cambiado"
+    );
+  }
+);</code></pre>
+
+          <pre class="diagram-block">Control
+   ↓
+Cambia su valor
+   ↓
+change
+   ↓
+Callback</pre>
+        </section>
+
+        <section class="lesson-section" id="focus-blur">
+          <h2>13. Eventos focus y blur</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>focus</code> permite detectar cuándo un elemento recibe el
+            foco.
+          </p>
+
+          <pre class="code-block"><code>ageElement.addEventListener(
+  "focus",
+  () => {
+    console.log(
+      "El elemento tiene el foco"
+    );
+  }
+);</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>blur</code> permite detectar cuándo ese elemento pierde el
+            foco.
+          </p>
+
+          <pre class="code-block"><code>ageElement.addEventListener(
+  "blur",
+  () => {
+    console.log(
+      "El elemento pierde el foco"
+    );
+  }
+);</code></pre>
+
+          <pre class="diagram-block">Usuario entra en el control
+        ↓
+      focus
+        ↓
+Usuario abandona el control
+        ↓
+       blur</pre>
+        </section>
+
+        <section class="lesson-section" id="raton">
+          <h2>14. Eventos de ratón</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Existen diferentes eventos relacionados con las acciones realizadas
+            mediante el ratón.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Evento</th>
+                  <th>Cuándo se produce</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>click</code></td>
+                  <td>Al hacer clic con el botón principal</td>
+                </tr>
+                <tr>
+                  <td><code>dblclick</code></td>
+                  <td>Al hacer doble clic con el botón principal</td>
+                </tr>
+                <tr>
+                  <td><code>mousedown</code></td>
+                  <td>Al pulsar un botón del ratón</td>
+                </tr>
+                <tr>
+                  <td><code>mouseup</code></td>
+                  <td>Al soltar el botón</td>
+                </tr>
+                <tr>
+                  <td><code>mouseenter</code></td>
+                  <td>Cuando el puntero entra sobre el elemento</td>
+                </tr>
+                <tr>
+                  <td><code>mouseleave</code></td>
+                  <td>Cuando el puntero abandona el elemento</td>
+                </tr>
+                <tr>
+                  <td><code>mousemove</code></td>
+                  <td>Cuando el puntero se mueve dentro del elemento</td>
+                </tr>
+                <tr>
+                  <td><code>mouseover</code></td>
+                  <td>Cuando el puntero se sitúa sobre el elemento o alguno de sus hijos</td>
+                </tr>
+                <tr>
+                  <td><code>mouseout</code></td>
+                  <td>Cuando el puntero abandona el elemento o alguno de sus hijos</td>
+                </tr>
+                <tr>
+                  <td><code>contextmenu</code></td>
+                  <td>Cuando se solicita el menú contextual</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <pre class="diagram-block">RATÓN
+  │
+  ├── click / dblclick
+  ├── mousedown / mouseup
+  ├── mouseenter / mouseleave
+  ├── mouseover / mouseout
+  ├── mousemove
+  └── contextmenu</pre>
+
+          <h3>Ejemplo práctico</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Un elemento puede cambiar cuando el puntero entra sobre él y
+            recuperar su estado cuando el puntero lo abandona.
+          </p>
+
+          <pre class="diagram-block">Puntero entra
+     ↓
+Evento
+     ↓
+Cambiar elemento
+
+Puntero sale
+     ↓
+Evento
+     ↓
+Restaurar elemento</pre>
+        </section>
+
+        <section class="lesson-section" id="contextmenu">
+          <h2>15. Evento contextmenu</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>contextmenu</code> se produce cuando se solicita abrir el menú
+            contextual.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos capturarlo mediante:
+          </p>
+
+          <pre class="code-block"><code>elemento.addEventListener(
+  "contextmenu",
+  callback
+);</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Una posible utilización es capturar esa acción e impedir el
+            comportamiento predeterminado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="teclado">
+          <h2>16. Eventos de teclado</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los eventos de teclado permiten detectar las pulsaciones realizadas
+            por el usuario.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Evento</th>
+                  <th>Funcionamiento</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>keypress</code></td>
+                  <td>Se produce al pulsar y soltar una tecla</td>
+                </tr>
+                <tr>
+                  <td><code>keydown</code></td>
+                  <td>Se produce al pulsar una tecla, antes de soltarla</td>
+                </tr>
+                <tr>
+                  <td><code>keyup</code></td>
+                  <td>Se produce al soltar una tecla</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <pre class="diagram-block">Pulsamos tecla
+     ↓
+   keydown
+     ↓
+Mantenemos / pulsación
+     ↓
+Soltamos tecla
+     ↓
+    keyup</pre>
+        </section>
+
+        <section class="lesson-section" id="event-key">
+          <h2>17. event.key</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En los eventos de teclado, la propiedad <code>key</code> contiene
+            información sobre la tecla pulsada.
+          </p>
+
+          <pre class="code-block"><code>elemento.addEventListener(
+  "keydown",
+  (event) => {
+    console.log(event.key);
+  }
+);</code></pre>
+
+          <pre class="diagram-block">Usuario pulsa una tecla
+        ↓
+   Keyboard Event
+        ↓
+     event.key
+        ↓
+    Tecla pulsada</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La información puede variar en función de la tecla y de su
+            combinación con otras teclas.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="event-location">
+          <h2>18. event.location</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>location</code> permite conocer la zona del teclado desde la
+            que se produjo la pulsación.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Puede resultar útil cuando existen varias teclas equivalentes en
+            diferentes zonas del teclado.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Valor</th>
+                  <th>Zona</th>
+                  <th>Constante</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>0</code></td>
+                  <td>Teclado estándar</td>
+                  <td><code>DOM_KEY_LOCATION_STANDARD</code></td>
+                </tr>
+                <tr>
+                  <td><code>1</code></td>
+                  <td>Parte izquierda</td>
+                  <td><code>DOM_KEY_LOCATION_LEFT</code></td>
+                </tr>
+                <tr>
+                  <td><code>2</code></td>
+                  <td>Parte derecha</td>
+                  <td><code>DOM_KEY_LOCATION_RIGHT</code></td>
+                </tr>
+                <tr>
+                  <td><code>3</code></td>
+                  <td>Teclado numérico</td>
+                  <td><code>DOM_KEY_LOCATION_NUMPAD</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="multimedia">
+          <h2>19. Eventos de reproducción multimedia</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los eventos multimedia permiten detectar cambios relacionados con la
+            reproducción de elementos multimedia nativos de HTML.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Estos eventos se refieren a elementos multimedia nativos de HTML.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Evento</th>
+                  <th>Cuándo se produce</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>canplay</code></td>
+                  <td>Cuando el contenido puede comenzar a reproducirse</td>
+                </tr>
+                <tr>
+                  <td><code>canplaythrough</code></td>
+                  <td>Cuando existen suficientes datos cargados para reproducir el contenido</td>
+                </tr>
+                <tr>
+                  <td><code>durationchange</code></td>
+                  <td>Cuando cambia la duración del medio</td>
+                </tr>
+                <tr>
+                  <td><code>emptied</code></td>
+                  <td>Cuando el medio se queda sin datos</td>
+                </tr>
+                <tr>
+                  <td><code>ended</code></td>
+                  <td>Cuando finaliza la reproducción</td>
+                </tr>
+                <tr>
+                  <td><code>loadeddata</code></td>
+                  <td>Cuando se han cargado los primeros datos del medio</td>
+                </tr>
+                <tr>
+                  <td><code>loadedmetadata</code></td>
+                  <td>Cuando se han cargado los metadatos</td>
+                </tr>
+                <tr>
+                  <td><code>pause</code></td>
+                  <td>Cuando se pausa la reproducción</td>
+                </tr>
+                <tr>
+                  <td><code>play</code></td>
+                  <td>Cuando comienza o se reanuda la reproducción</td>
+                </tr>
+                <tr>
+                  <td><code>playing</code></td>
+                  <td>Cuando el medio está preparado para reproducirse</td>
+                </tr>
+                <tr>
+                  <td><code>ratechange</code></td>
+                  <td>Cuando cambia la velocidad de reproducción</td>
+                </tr>
+                <tr>
+                  <td><code>seeked</code></td>
+                  <td>Cuando finaliza una búsqueda dentro del medio</td>
+                </tr>
+                <tr>
+                  <td><code>seeking</code></td>
+                  <td>Cuando comienza una búsqueda</td>
+                </tr>
+                <tr>
+                  <td><code>stalled</code></td>
+                  <td>Cuando se produce un problema durante la carga</td>
+                </tr>
+                <tr>
+                  <td><code>suspend</code></td>
+                  <td>Cuando se suspende la carga</td>
+                </tr>
+                <tr>
+                  <td><code>timeupdate</code></td>
+                  <td>Cuando cambia el tiempo actual de reproducción</td>
+                </tr>
+                <tr>
+                  <td><code>volumechange</code></td>
+                  <td>Cuando cambia el volumen</td>
+                </tr>
+                <tr>
+                  <td><code>waiting</code></td>
+                  <td>Cuando la reproducción se detiene por falta de datos</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            No es necesario aprender esta lista de memoria.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Lo importante es comprender que diferentes momentos del ciclo de
+            reproducción generan diferentes eventos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="carga">
+          <h2>20. Eventos relacionados con la carga</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Evento</th>
+                  <th>Cuándo se produce</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>abort</code></td>
+                  <td>Cuando se cancela la carga de un elemento</td>
+                </tr>
+                <tr>
+                  <td><code>DOMContentLoaded</code></td>
+                  <td>Cuando se ha cargado el documento HTML</td>
+                </tr>
+                <tr>
+                  <td><code>error</code></td>
+                  <td>Cuando se produce un error durante la carga</td>
+                </tr>
+                <tr>
+                  <td><code>load</code></td>
+                  <td>Cuando se ha cargado el documento y sus elementos externos</td>
+                </tr>
+                <tr>
+                  <td><code>progress</code></td>
+                  <td>Mientras se está produciendo la carga</td>
+                </tr>
+                <tr>
+                  <td><code>readystatechange</code></td>
+                  <td>Cuando cambia el estado readyState</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="domcontentloaded">
+          <h2>21. DOMContentLoaded</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>DOMContentLoaded</code> permite ejecutar código cuando el
+            documento HTML ha sido cargado.
+          </p>
+
+          <pre class="code-block"><code>document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    document
+      .getElementById("prueba")
+      .textContent = "Hola";
+  }
+);</code></pre>
+
+          <pre class="diagram-block">Navegador carga HTML
+        ↓
+Se construye el documento
+        ↓
+DOMContentLoaded
+        ↓
+Se ejecuta el callback</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Podemos dejar preparado código para que se ejecute cuando el
+            documento HTML haya sido cargado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="ventana">
+          <h2>22. Eventos de la ventana</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Evento</th>
+                  <th>Cuándo se produce</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>scroll</code></td>
+                  <td>Cuando se desplaza la ventana</td>
+                </tr>
+                <tr>
+                  <td><code>resize</code></td>
+                  <td>Cuando cambia el tamaño de la ventana</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <pre class="diagram-block">VENTANA
+  │
+  ├── scroll → desplazamiento
+  │
+  └── resize → cambio de tamaño</pre>
+        </section>
+
+        <section class="lesson-section" id="impresion">
+          <h2>23. Eventos de impresión</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Evento</th>
+                  <th>Cuándo se produce</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>beforeprint</code></td>
+                  <td>Antes de comenzar la impresión o abrir su previsualización</td>
+                </tr>
+                <tr>
+                  <td><code>afterprint</code></td>
+                  <td>Al comenzar la impresión o cerrar su previsualización</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="portapapeles">
+          <h2>24. Eventos del portapapeles</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Evento</th>
+                  <th>Cuándo se produce</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>copy</code></td>
+                  <td>Cuando se va a copiar contenido</td>
+                </tr>
+                <tr>
+                  <td><code>cut</code></td>
+                  <td>Cuando se va a cortar contenido</td>
+                </tr>
+                <tr>
+                  <td><code>paste</code></td>
+                  <td>Cuando se va a pegar contenido</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>25. Resumen final</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>addEventListener()</code> permite escuchar diferentes tipos de
+            eventos dependiendo de la interacción que necesitemos detectar.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>document.forms</code> permite acceder a los formularios del
+            documento.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>elements</code> permite acceder a los controles contenidos
+            dentro de un formulario.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>value</code> permite obtener el valor actual de un control.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>submit()</code> permite enviar un formulario.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>reset()</code> devuelve el formulario a su estado inicial.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>preventDefault()</code> permite impedir el comportamiento
+            predeterminado asociado a un evento.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            El evento <code>submit</code> permite detectar el intento de envío de
+            un formulario y realizar comprobaciones antes de continuar.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>change</code> permite detectar cambios en un control.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>focus</code> se produce cuando un elemento recibe el foco y
+            <code>blur</code> cuando lo pierde.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Los eventos de ratón permiten detectar clics, movimientos, entradas
+            y salidas del puntero y otras interacciones.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Los eventos de teclado permiten detectar la pulsación y liberación
+            de teclas.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>event.key</code> proporciona información sobre la tecla
+            pulsada.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>event.location</code> permite conocer la zona del teclado
+            desde la que se produjo la pulsación.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Los elementos multimedia generan diferentes eventos durante su carga
+            y reproducción.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>DOMContentLoaded</code> permite ejecutar código cuando el
+            documento HTML ha sido cargado.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            También existen eventos relacionados con la ventana, la impresión y
+            el portapapeles.
+          </p>
+
+          <h3>Esquema final</h3>
+
+          <pre class="diagram-block">                    EVENTOS
+                      │
+        ┌─────────────┼─────────────┐
+        │             │             │
+   FORMULARIOS       RATÓN        TECLADO
+        │             │             │
+ submit/change      click        keydown
+ focus/blur         mouse...     keyup
+        │                           │
+ preventDefault()              event.key
+ submit()                     event.location
+ reset()
+
+                      │
+              ┌───────┴───────┐
+              │               │
+          MULTIMEDIA         OTROS
+              │               │
+       play / pause...   DOMContentLoaded
+                         scroll / resize
+                         copy / cut / paste</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Idea principal: cada tipo de interacción genera eventos diferentes,
+            pero el mecanismo de trabajo sigue siendo el mismo.
+          </p>
+
+          <pre class="code-block"><code>elemento.addEventListener(
+  "evento",
+  callback
+);</code></pre>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · DOM · Tipos de eventos
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
