@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <!-- Codificación -->
+    <meta charset="UTF-8" />
+
+    <!-- Para que la web sea responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Descripción de la página para los buscadores -->
+    <meta
+      name="description"
+      content="Clase 29: creación, emisión, propagación y control de eventos en JavaScript."
+    />
+
+    <!-- Título para el navegador y los buscadores -->
+    <title>Emisión y propagación de eventos | Cuaderno Digital</title>
+
+    <!-- Autor de la página -->
+    <meta name="author" content="@JonasCampos86" />
+
+    <!-- Para algunos navegadores móviles -->
+    <meta name="theme-color" content="#7c3aed" />
+
+    <!-- JavaScript principal -->
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">← Volver a DOM</a>
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+          <a href="#introduccion">1. Introducción</a>
+          <a href="#eventos-personalizados">2. Eventos personalizados</a>
+          <a href="#nombre-de-un-evento-personalizado">3. Nombre de un evento personalizado</a>
+          <a href="#opciones-de-customevent">4. Opciones de CustomEvent</a>
+          <a href="#propiedad-detail">5. Propiedad detail</a>
+          <a href="#emision-de-eventos">6. Emisión de eventos</a>
+          <a href="#ejemplo-de-emision-programatica">7. Ejemplo de emisión programática</a>
+          <a href="#emision-de-un-evento-personalizado">8. Emisión de un evento personalizado</a>
+          <a href="#propagacion-de-eventos">9. Propagación de eventos</a>
+          <a href="#fases-de-propagacion">10. Fases de propagación</a>
+          <a href="#comportamiento-de-burbuja">11. Comportamiento de burbuja</a>
+          <a href="#cambiar-la-fase-con-addeventlistener">12. Cambiar la fase con addEventListener()</a>
+          <a href="#metodo-stoppropagation">13. Método stopPropagation()</a>
+          <a href="#usos-de-stoppropagation">14. Usos de stopPropagation()</a>
+          <a href="#ejemplo-con-el-teclado">15. Ejemplo con el teclado</a>
+          <a href="#cancelacion-del-comportamiento-predeterminado">16. Cancelación del comportamiento predeterminado</a>
+          <a href="#ejemplos-de-preventdefault">17. Ejemplos de preventDefault()</a>
+          <a href="#stoppropagation-frente-a-preventdefault">18. stopPropagation() frente a preventDefault()</a>
+          <a href="#eventos-personalizados-cancelables">19. Eventos personalizados cancelables</a>
+          <a href="#eliminar-un-listener-con-removeeventlistener">20. Eliminar un listener con removeEventListener()</a>
+          <a href="#propiedad-event-target">21. Propiedad event.target</a>
+          <a href="#propiedad-event-currenttarget">22. Propiedad event.currentTarget</a>
+          <a href="#comparacion-entre-target-y-currenttarget">23. Comparación entre target y currentTarget</a>
+          <a href="#resumen-general">24. RESUMEN GENERAL</a>
+          <a href="#esquema-final">ESQUEMA FINAL</a>
+        </nav>
+      </aside>
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Emisión y propagación de eventos</h1>
+          <p>Clase 29 · Crear y emitir eventos, transportar información y controlar su recorrido por el DOM.</p>
+        </header>
+        <section class="lesson-section" id="introduccion">
+<h2>1. Introducción</h2>
+        <p class="lesson-note lesson-note--explanation">Además de reaccionar a eventos generados por el usuario, JavaScript permite crear y emitir eventos de forma programática.</p>
+        <p class="lesson-note lesson-note--example">Podemos utilizar esta posibilidad para:</p>
+        <p class="lesson-note lesson-note--explanation">Simular determinadas interacciones.</p>
+        <p class="lesson-note lesson-note--explanation">Comunicar que ha ocurrido algo dentro de la aplicación.</p>
+        <p class="lesson-note lesson-note--explanation">Crear eventos personalizados.</p>
+        <p class="lesson-note lesson-note--explanation">Transmitir información junto con un evento.</p>
+        <p class="lesson-note lesson-note--explanation">Controlar cómo se propaga un evento por una jerarquía de elementos.</p>
+        <h3>Esquema general</h3>
+        <pre class="diagram-block">EVENTOS
+   │
+   ├── Creación
+   │      └── Event / CustomEvent
+   │
+   ├── Emisión
+   │      └── dispatchEvent()
+   │
+   ├── Propagación
+   │      ├── Captura
+   │      └── Burbujeo
+   │
+   ├── Control
+   │      ├── stopPropagation()
+   │      ├── preventDefault()
+   │      └── removeEventListener()
+   │
+   └── Identificación
+          ├── event.target
+          └── event.currentTarget</pre>
+        </section>
+        <section class="lesson-section" id="eventos-personalizados">
+<h2>2. Eventos personalizados</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key">Un evento personalizado es un evento creado por nosotros para representar una acción concreta de la aplicación.</p>
+        <p class="lesson-note lesson-note--explanation">Para crearlo utilizamos el objeto <code>CustomEvent</code>.</p>
+        <p class="lesson-note lesson-note--example">Sintaxis:</p>
+        <pre class="code-block"><code>const evento = new CustomEvent(
+    "nombreDelEvento",
+    opciones
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation">El constructor recibe:</p>
+        <div class="lesson-table"><table><thead><tr><th scope="col">Parámetro</th><th scope="col">Utilidad</th></tr></thead><tbody><tr><td>Nombre del evento</td><td>Identifica el evento que estamos creando</td></tr><tr><td>Objeto de opciones</td><td>Configura su contenido y comportamiento</td></tr></tbody></table></div>
+        <p class="lesson-note lesson-note--important lesson-note--key">Crear el evento no provoca que se ejecute automáticamente: después tendremos que emitirlo.</p>
+        <pre class="diagram-block">Crear evento
+     ↓
+Registrar listener
+     ↓
+Emitir evento
+     ↓
+Ejecutar callback</pre>
+        </section>
+        <section class="lesson-section" id="nombre-de-un-evento-personalizado">
+<h2>3. Nombre de un evento personalizado</h2>
+        <p class="lesson-note lesson-note--explanation">El primer parámetro de <code>CustomEvent</code> es el nombre que tendrá el evento.</p>
+        <p class="lesson-note lesson-note--example">Ejemplo:</p>
+        <pre class="code-block"><code>const evento = new CustomEvent(
+    "usuarioRegistrado"
+);</code></pre>
+        <p class="lesson-note lesson-note--important lesson-note--key">El nombre debe describir claramente la acción que representa el evento.</p>
+        <p class="lesson-note lesson-note--example">Algunos nombres utilizados podrían representar acciones como:</p>
+        <pre class="diagram-block">usuarioRegistrado
+mensajeRecibido
+pedidoCompletado</pre>
+        <p class="lesson-note lesson-note--explanation">En aplicaciones grandes conviene mantener una convención de nombres coherente y fácil de recordar.</p>
+        <p class="lesson-note lesson-note--warning">El nombre utilizado al escuchar el evento debe coincidir exactamente con el utilizado al crearlo.</p>
+        <pre class="code-block"><code>document.addEventListener(
+    "usuarioRegistrado",
+    callback
+);</code></pre>
+        </section>
+        <section class="lesson-section" id="opciones-de-customevent">
+<h2>4. Opciones de CustomEvent</h2>
+        <p class="lesson-note lesson-note--explanation">El segundo parámetro es un objeto que permite configurar el contenido y el comportamiento del evento.</p>
+        <p class="lesson-note lesson-note--example">Estructura:</p>
+        <pre class="code-block"><code>const evento = new CustomEvent(
+    "usuarioRegistrado",
+    {
+        detail: {},
+        bubbles: false,
+        composed: false,
+        cancelable: false
+    }
+);</code></pre>
+        <h3>Tabla de opciones</h3>
+        <div class="lesson-table"><table><thead><tr><th scope="col">Opción</th><th scope="col">Valor inicial</th><th scope="col">Utilidad</th></tr></thead><tbody><tr><td><code>detail</code></td><td><code>null</code></td><td>Contiene la información que queremos transmitir</td></tr><tr><td><code>bubbles</code></td><td><code>false</code></td><td>Indica si el evento debe propagarse mediante burbujeo</td></tr><tr><td><code>composed</code></td><td><code>false</code></td><td>Indica si la propagación puede atravesar los límites del Shadow DOM</td></tr><tr><td><code>cancelable</code></td><td><code>false</code></td><td>Indica si puede cancelarse su comportamiento con <code>preventDefault()</code></td></tr></tbody></table></div>
+        <p class="lesson-note lesson-note--important lesson-note--key">Estas opciones permiten decidir qué información transporta el evento y cómo debe comportarse.</p>
+        </section>
+        <section class="lesson-section" id="propiedad-detail">
+<h2>5. Propiedad detail</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>detail</code> permite incorporar información dentro de un evento personalizado.</p>
+        <p class="lesson-note lesson-note--example">Código:</p>
+        <pre class="code-block"><code>const messageEvent = new CustomEvent(
+    "user:data-message",
+    {
+        detail: {
+            from: "Manz",
+            message: "Hello!"
+        }
+    }
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation">Los datos enviados pueden recuperarse desde el callback mediante:</p>
+        <pre class="code-block"><code>event.detail</code></pre>
+        <h3>Funcionamiento</h3>
+        <pre class="diagram-block">CustomEvent
+     ↓
+detail
+     ↓
+Información transportada
+     ↓
+Callback recibe event.detail</pre>
+        <p class="lesson-note lesson-note--example">Esto permite que distintas partes de la aplicación se comuniquen sin tener que llamar directamente unas a otras.</p>
+        </section>
+        <section class="lesson-section" id="emision-de-eventos">
+<h2>6. Emisión de eventos</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key">Emitir un evento significa lanzarlo para que los listeners correspondientes puedan recibirlo.</p>
+        <p class="lesson-note lesson-note--explanation">También podemos emitir de forma programática eventos que normalmente realizaría el usuario.</p>
+        <p class="lesson-note lesson-note--example">Por ejemplo, podemos crear un evento <code>click</code>:</p>
+        <pre class="code-block"><code>const evento = new Event("click");</code></pre>
+        <p class="lesson-note lesson-note--explanation">Después lo emitimos sobre un elemento:</p>
+        <pre class="code-block"><code>button.dispatchEvent(evento);</code></pre>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>dispatchEvent()</code> lanza el evento sobre el elemento desde el que se invoca.</p>
+        <h3>Flujo</h3>
+        <pre class="diagram-block">new Event("click")
+        ↓
+Se crea el evento
+        ↓
+button.dispatchEvent(evento)
+        ↓
+El botón emite el evento
+        ↓
+Se ejecutan sus listeners de click</pre>
+        </section>
+        <section class="lesson-section" id="ejemplo-de-emision-programatica">
+<h2>7. Ejemplo de emisión programática</h2>
+        <p class="lesson-note lesson-note--example">HTML:</p>
+        <pre class="code-block"><code>&lt;button&gt;Click me&lt;/button&gt;
+&lt;span class="text"&gt;Hover me&lt;/span&gt;</code></pre>
+        <p class="lesson-note lesson-note--example">JavaScript:</p>
+        <pre class="code-block"><code>const button =
+    document.querySelector("button");
+
+const text =
+    document.querySelector(".text");
+
+button.addEventListener(
+    "click",
+    () =&gt; alert("Has pulsado el botón")
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation">Cuando el puntero entra en el texto, podemos emitir programáticamente un evento <code>click</code> sobre el botón:</p>
+        <pre class="code-block"><code>text.addEventListener(
+    "mouseenter",
+    () =&gt; {
+        const evento = new Event("click");
+
+        button.dispatchEvent(evento);
+    }
+);</code></pre>
+        <h3>Resultado</h3>
+        <pre class="diagram-block">Puntero entra en el texto
+          ↓
+Se ejecuta mouseenter
+          ↓
+Se crea un evento click
+          ↓
+El botón emite el evento
+          ↓
+Se ejecuta el listener del botón</pre>
+        <p class="lesson-note lesson-note--important lesson-note--key">La emisión programática permite provocar un evento sin que el usuario realice directamente esa acción sobre el elemento.</p>
+        </section>
+        <section class="lesson-section" id="emision-de-un-evento-personalizado">
+<h2>8. Emisión de un evento personalizado</h2>
+        <p class="lesson-note lesson-note--explanation">Para trabajar con un evento personalizado necesitamos:</p>
+        <pre class="diagram-block">1. Registrar el listener
+2. Crear el CustomEvent
+3. Emitirlo con dispatchEvent()
+4. Recibirlo en el callback</pre>
+        <p class="lesson-note lesson-note--example">Primero registramos el listener:</p>
+        <pre class="code-block"><code>document.addEventListener(
+    "usuarioRegistrado",
+    (event) =&gt; {
+        console.log(event.detail);
+    }
+);</code></pre>
+        <p class="lesson-note lesson-note--example">Creamos el evento con información:</p>
+        <pre class="code-block"><code>const evento = new CustomEvent(
+    "usuarioRegistrado",
+    {
+        detail: {
+            nombreUsuario: "Juan",
+            motivo: "Registro completado"
+        }
+    }
+);</code></pre>
+        <p class="lesson-note lesson-note--example">Finalmente, lo emitimos:</p>
+        <pre class="code-block"><code>document.dispatchEvent(evento);</code></pre>
+        <h3>Flujo completo</h3>
+        <pre class="diagram-block">Listener preparado
+        ↓
+CustomEvent creado
+        ↓
+Información almacenada en detail
+        ↓
+dispatchEvent()
+        ↓
+Callback recibe el evento
+        ↓
+Consulta event.detail</pre>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>CustomEvent</code> crea el evento y <code>dispatchEvent()</code> lo pone en circulación.</p>
+        </section>
+        <section class="lesson-section" id="propagacion-de-eventos">
+<h2>9. Propagación de eventos</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key">La propagación es el recorrido que realiza un evento a través de la jerarquía de elementos del DOM.</p>
+        <p class="lesson-note lesson-note--example">Imaginemos esta estructura:</p>
+        <pre class="code-block"><code>&lt;div id="padre"&gt;
+    &lt;button id="hijo"&gt;
+        Pulsar
+    &lt;/button&gt;
+&lt;/div&gt;</code></pre>
+        <p class="lesson-note lesson-note--explanation">Si hacemos clic en el botón, el evento no tiene por qué afectar únicamente al botón.</p>
+        <p class="lesson-note lesson-note--explanation">También puede recorrer los elementos que lo contienen.</p>
+        <pre class="diagram-block">document
+   │
+   └── div#padre
+          │
+          └── button#hijo</pre>
+        <p class="lesson-note lesson-note--important lesson-note--key">La propagación permite gestionar desde elementos superiores eventos originados en elementos más profundos.</p>
+        </section>
+        <section class="lesson-section" id="fases-de-propagacion">
+<h2>10. Fases de propagación</h2>
+        <p class="lesson-note lesson-note--explanation">El recorrido de un evento puede dividirse en tres fases:</p>
+        <pre class="diagram-block">CAPTURA
+   ↓
+OBJETIVO
+   ↓
+BURBUJEO</pre>
+        <h3>Captura</h3>
+        <p class="lesson-note lesson-note--explanation">El evento recorre la jerarquía desde los elementos exteriores hasta el elemento donde se originó.</p>
+        <pre class="diagram-block">document
+   ↓
+div padre
+   ↓
+botón</pre>
+        <h3>Objetivo</h3>
+        <p class="lesson-note lesson-note--explanation">El evento llega al elemento en el que se ha producido.</p>
+        <h3>Burbujeo</h3>
+        <p class="lesson-note lesson-note--explanation">El evento vuelve desde el elemento más profundo hacia los elementos exteriores.</p>
+        <pre class="diagram-block">botón
+   ↓
+div padre
+   ↓
+document</pre>
+        <h3>Esquema completo</h3>
+        <pre class="diagram-block">              CAPTURA
+document → div padre → botón
+                        │
+                     OBJETIVO
+                        │
+document ← div padre ← botón
+              BURBUJEO</pre>
+        </section>
+        <section class="lesson-section" id="comportamiento-de-burbuja">
+<h2>11. Comportamiento de burbuja</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key">En el burbujeo, el evento se gestiona desde el elemento más profundo hacia los elementos que lo contienen.</p>
+        <p class="lesson-note lesson-note--example">Si tanto el botón como el <code>div</code> padre escuchan el evento <code>click</code>:</p>
+        <pre class="code-block"><code>padre.addEventListener(
+    "click",
+    callbackPadre
+);
+
+hijo.addEventListener(
+    "click",
+    callbackHijo
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation">Al pulsar el botón, el orden habitual será:</p>
+        <pre class="diagram-block">Click en el botón
+       ↓
+Listener del botón
+       ↓
+Listener del padre</pre>
+        <p class="lesson-note lesson-note--important lesson-note--key">El evento se origina en el botón y después burbujea hacia el elemento padre.</p>
+        </section>
+        <section class="lesson-section" id="cambiar-la-fase-con-addeventlistener">
+<h2>12. Cambiar la fase con addEventListener()</h2>
+        <p class="lesson-note lesson-note--explanation">El tercer parámetro de <code>addEventListener()</code> permite decidir si el listener debe ejecutarse durante la fase de captura.</p>
+        <p class="lesson-note lesson-note--example">Burbujeo:</p>
+        <pre class="code-block"><code>elemento.addEventListener(
+    "click",
+    callback,
+    false
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation"><code>false</code> es el comportamiento predeterminado.</p>
+        <p class="lesson-note lesson-note--example">Captura:</p>
+        <pre class="code-block"><code>elemento.addEventListener(
+    "click",
+    callback,
+    true
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation">Con <code>true</code>, el listener actúa durante la fase de captura.</p>
+        <div class="lesson-table"><table><thead><tr><th scope="col">Tercer parámetro</th><th scope="col">Fase utilizada</th></tr></thead><tbody><tr><td><code>false</code></td><td>Burbujeo</td></tr><tr><td><code>true</code></td><td>Captura</td></tr></tbody></table></div>
+        <p class="lesson-note lesson-note--important lesson-note--key">El tercer parámetro no crea otro evento: cambia la fase en la que participa el listener.</p>
+        </section>
+        <section class="lesson-section" id="metodo-stoppropagation">
+<h2>13. Método stopPropagation()</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>stopPropagation()</code> detiene la propagación del evento por la jerarquía del DOM.</p>
+        <p class="lesson-note lesson-note--example">Código:</p>
+        <pre class="code-block"><code>botonHijo.addEventListener(
+    "click",
+    (event) =&gt; {
+        event.stopPropagation();
+    }
+);</code></pre>
+        <h3>Funcionamiento</h3>
+        <pre class="diagram-block">Click en el botón
+       ↓
+Listener del botón
+       ↓
+stopPropagation()
+       ↓
+El evento no continúa hacia el padre</pre>
+        <p class="lesson-note lesson-note--explanation">El callback del botón puede seguir ejecutando el resto de sus instrucciones.</p>
+        <p class="lesson-note lesson-note--warning"><code>stopPropagation()</code> no cancela automáticamente el comportamiento predeterminado del navegador.</p>
+        <p class="lesson-note lesson-note--warning">Tampoco impide que se ejecuten otros listeners registrados en el mismo elemento; únicamente detiene el recorrido del evento hacia otros elementos.</p>
+        </section>
+        <section class="lesson-section" id="usos-de-stoppropagation">
+<h2>14. Usos de stopPropagation()</h2>
+        <div class="lesson-table"><table><thead><tr><th scope="col">Situación</th><th scope="col">Utilidad</th></tr></thead><tbody><tr><td>Botón dentro de un <code>div</code></td><td>Evitar que el clic del botón active también el listener del <code>div</code></td></tr><tr><td>Menú contextual dentro de elementos anidados</td><td>Evitar que el evento continúe hacia el contenedor exterior</td></tr><tr><td>Evento <code>keydown</code></td><td>Detener la propagación al pulsar una tecla concreta</td></tr><tr><td>Elemento especial dentro de una lista</td><td>Evitar que el listener delegado del padre procese ese elemento</td></tr></tbody></table></div>
+        <h3>Ejemplo con un botón dentro de un <code>div</code></h3>
+        <pre class="code-block"><code>botonHijo.addEventListener(
+    "click",
+    (event) =&gt; {
+        event.stopPropagation();
+
+        alert("Clic en el botón hijo");
+    }
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation">Si el <code>div</code> padre también tiene un listener de <code>click</code>, este no recibirá el evento.</p>
+        </section>
+        <section class="lesson-section" id="ejemplo-con-el-teclado">
+<h2>15. Ejemplo con el teclado</h2>
+        <p class="lesson-note lesson-note--explanation">Podemos detener la propagación únicamente cuando se pulsa una tecla determinada.</p>
+        <pre class="code-block"><code>input.addEventListener(
+    "keydown",
+    (event) =&gt; {
+        if (event.key === "Enter") {
+            event.stopPropagation();
+
+            alert("Has pulsado Enter");
+        }
+    }
+);</code></pre>
+        <h3>Flujo</h3>
+        <pre class="diagram-block">Usuario pulsa una tecla
+          ↓
+       keydown
+          ↓
+¿La tecla es Enter?
+     /           \
+   Sí             No
+    ↓              ↓
+stopPropagation()  Continúa normalmente</pre>
+        </section>
+        <section class="lesson-section" id="cancelacion-del-comportamiento-predeterminado">
+<h2>16. Cancelación del comportamiento predeterminado</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key">Algunos eventos tienen un comportamiento predeterminado establecido por el navegador.</p>
+        <p class="lesson-note lesson-note--example">Por ejemplo:</p>
+        <div class="lesson-table"><table><thead><tr><th scope="col">Evento</th><th scope="col">Comportamiento predeterminado</th></tr></thead><tbody><tr><td><code>submit</code></td><td>Envía el formulario</td></tr><tr><td><code>click</code> en un enlace</td><td>Navega hacia la URL</td></tr><tr><td><code>contextmenu</code></td><td>Abre el menú contextual</td></tr><tr><td>Tecla Espacio</td><td>Puede desplazar la página</td></tr><tr><td><code>mousedown</code> sobre texto</td><td>Permite comenzar a seleccionarlo</td></tr></tbody></table></div>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>preventDefault()</code> impide que el navegador ejecute el comportamiento predeterminado asociado al evento.</p>
+        <p class="lesson-note lesson-note--example">Código general:</p>
+        <pre class="code-block"><code>elemento.addEventListener(
+    "evento",
+    (event) =&gt; {
+        event.preventDefault();
+    }
+);</code></pre>
+        </section>
+        <section class="lesson-section" id="ejemplos-de-preventdefault">
+<h2>17. Ejemplos de preventDefault()</h2>
+        <h3>Impedir el envío automático de un formulario</h3>
+        <pre class="code-block"><code>formulario.addEventListener(
+    "submit",
+    (event) =&gt; {
+        event.preventDefault();
+
+        // Validación
+    }
+);</code></pre>
+        <h3>Impedir que un enlace navegue</h3>
+        <pre class="code-block"><code>enlace.addEventListener(
+    "click",
+    (event) =&gt; {
+        event.preventDefault();
+    }
+);</code></pre>
+        <h3>Impedir el menú contextual</h3>
+        <pre class="code-block"><code>elemento.addEventListener(
+    "contextmenu",
+    (event) =&gt; {
+        event.preventDefault();
+    }
+);</code></pre>
+        <h3>Evitar el desplazamiento con la tecla Espacio</h3>
+        <pre class="code-block"><code>window.addEventListener(
+    "keydown",
+    (event) =&gt; {
+        if (event.code === "Space") {
+            event.preventDefault();
+        }
+    }
+);</code></pre>
+        <h3>Evitar la selección de texto</h3>
+        <pre class="code-block"><code>elemento.addEventListener(
+    "mousedown",
+    (event) =&gt; {
+        event.preventDefault();
+    }
+);</code></pre>
+        </section>
+        <section class="lesson-section" id="stoppropagation-frente-a-preventdefault">
+<h2>18. stopPropagation() frente a preventDefault()</h2>
+        <p class="lesson-note lesson-note--warning">Estos métodos no realizan la misma función.</p>
+        <div class="lesson-table"><table><thead><tr><th scope="col">Método</th><th scope="col">Qué impide</th></tr></thead><tbody><tr><td><code>stopPropagation()</code></td><td>Que el evento continúe propagándose por otros elementos</td></tr><tr><td><code>preventDefault()</code></td><td>Que el navegador ejecute el comportamiento predeterminado</td></tr><tr><td><code>removeEventListener()</code></td><td>Que un listener registrado continúe escuchando eventos futuros</td></tr></tbody></table></div>
+        <h3>Comparación</h3>
+        <pre class="diagram-block">stopPropagation()
+        ↓
+Detiene el recorrido del evento
+
+preventDefault()
+        ↓
+Impide la acción del navegador
+
+removeEventListener()
+        ↓
+Elimina un listener</pre>
+        <p class="lesson-note lesson-note--important lesson-note--key">Cancelar el comportamiento predeterminado no significa detener la propagación del evento.</p>
+        <p class="lesson-note lesson-note--example">En un evento <code>contextmenu</code> podríamos necesitar ambos:</p>
+        <pre class="code-block"><code>elemento.addEventListener(
+    "contextmenu",
+    (event) =&gt; {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation">Uno impide que el evento llegue a otros elementos y el otro evita que aparezca el menú contextual del navegador.</p>
+        </section>
+        <section class="lesson-section" id="eventos-personalizados-cancelables">
+<h2>19. Eventos personalizados cancelables</h2>
+        <p class="lesson-note lesson-note--explanation">Para que <code>preventDefault()</code> pueda marcar como cancelado un evento personalizado, debemos crearlo con:</p>
+        <pre class="code-block"><code>const evento = new CustomEvent(
+    "miEvento",
+    {
+        cancelable: true
+    }
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation">Después, uno de sus listeners puede utilizar:</p>
+        <pre class="code-block"><code>event.preventDefault();</code></pre>
+        <p class="lesson-note lesson-note--explanation">La cancelación queda reflejada en:</p>
+        <pre class="code-block"><code>event.defaultPrevented</code></pre>
+        <p class="lesson-note lesson-note--explanation">La parte de la aplicación que emite el evento debe comprobar esa cancelación para decidir si continúa con su operación.</p>
+        <pre class="code-block"><code>const aceptado =
+    elemento.dispatchEvent(evento);
+
+if (!aceptado) {
+    // Algún listener canceló el evento
+}</code></pre>
+        <p class="lesson-note lesson-note--warning"><code>preventDefault()</code> no detiene los callbacks ni elimina el evento. En un evento personalizado, permite comunicar que la operación asociada no debería continuar.</p>
+        <p class="lesson-note lesson-note--warning">Si <code>cancelable</code> conserva su valor inicial <code>false</code>, <code>preventDefault()</code> no podrá marcar el evento como cancelado.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key">La opción <code>cancelable</code> debe configurarse al crear el evento personalizado.</p>
+        </section>
+        <section class="lesson-section" id="eliminar-un-listener-con-removeeventlistener">
+<h2>20. Eliminar un listener con removeEventListener()</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>removeEventListener()</code> elimina un manejador que había sido registrado previamente.</p>
+        <p class="lesson-note lesson-note--example">Para poder eliminarlo necesitamos conservar una referencia a la misma función:</p>
+        <pre class="code-block"><code>function manejarClick(event) {
+    console.log("Click");
+}
+
+button.addEventListener(
+    "click",
+    manejarClick
+);</code></pre>
+        <p class="lesson-note lesson-note--example">Después podemos eliminarlo:</p>
+        <pre class="code-block"><code>button.removeEventListener(
+    "click",
+    manejarClick
+);</code></pre>
+        <h3>Funcionamiento</h3>
+        <pre class="diagram-block">addEventListener()
+        ↓
+El listener queda registrado
+        ↓
+removeEventListener()
+        ↓
+El listener deja de ejecutarse</pre>
+        <p class="lesson-note lesson-note--warning">Esto no funciona si pasamos otra función diferente:</p>
+        <pre class="code-block"><code>button.removeEventListener(
+    "click",
+    () =&gt; console.log("Click")
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation">Aunque el contenido parezca igual, esa función es un objeto distinto.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key">Una función anónima introducida directamente en <code>addEventListener()</code> no puede eliminarse posteriormente si no conservamos su referencia.</p>
+        </section>
+        <section class="lesson-section" id="propiedad-event-target">
+<h2>21. Propiedad event.target</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>event.target</code> contiene el elemento en el que se originó realmente el evento.</p>
+        <p class="lesson-note lesson-note--example">Imaginemos un botón dentro de un <code>div</code>:</p>
+        <pre class="code-block"><code>&lt;div id="padre"&gt;
+    &lt;button id="hijo"&gt;
+        Pulsar
+    &lt;/button&gt;
+&lt;/div&gt;</code></pre>
+        <p class="lesson-note lesson-note--explanation">Si pulsamos el botón:</p>
+        <pre class="code-block"><code>event.target</code></pre>
+        <p class="lesson-note lesson-note--explanation">Será el botón, aunque el listener que está procesando el evento se encuentre en el <code>div</code> padre.</p>
+        <h3>Uso habitual</h3>
+        <p class="lesson-note lesson-note--explanation"><code>event.target</code> resulta especialmente útil en la delegación de eventos.</p>
+        <pre class="diagram-block">Listener situado en el padre
+          ↓
+Se pulsa uno de sus hijos
+          ↓
+event.target
+          ↓
+Identifica el hijo concreto</pre>
+        </section>
+        <section class="lesson-section" id="propiedad-event-currenttarget">
+<h2>22. Propiedad event.currentTarget</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>event.currentTarget</code> contiene el elemento cuyo listener está procesando actualmente el evento.</p>
+        <p class="lesson-note lesson-note--explanation">Si el listener está registrado en el <code>div</code> padre:</p>
+        <pre class="code-block"><code>event.currentTarget</code></pre>
+        <p class="lesson-note lesson-note--explanation">Será el <code>div</code>, aunque el clic se haya originado en uno de sus hijos.</p>
+        <h3>Uso habitual</h3>
+        <p class="lesson-note lesson-note--explanation">Resulta útil cuando reutilizamos el mismo callback en varios elementos y necesitamos saber cuál de ellos está gestionando el evento.</p>
+        <pre class="diagram-block">Mismo callback
+      ↓
+Varios elementos
+      ↓
+event.currentTarget
+      ↓
+Elemento cuyo listener se está ejecutando</pre>
+        </section>
+        <section class="lesson-section" id="comparacion-entre-target-y-currenttarget">
+<h2>23. Comparación entre target y currentTarget</h2>
+        <div class="lesson-table"><table><thead><tr><th scope="col">Propiedad</th><th scope="col">Representa</th></tr></thead><tbody><tr><td><code>event.target</code></td><td>Elemento en el que se originó el evento</td></tr><tr><td><code>event.currentTarget</code></td><td>Elemento cuyo listener lo está procesando</td></tr></tbody></table></div>
+        <p class="lesson-note lesson-note--example">Ejemplo:</p>
+        <pre class="code-block"><code>padre.addEventListener(
+    "click",
+    (event) =&gt; {
+        console.log(event.target);
+        console.log(event.currentTarget);
+    }
+);</code></pre>
+        <p class="lesson-note lesson-note--explanation">Si pulsamos el botón hijo:</p>
+        <pre class="diagram-block">event.target
+      ↓
+button#hijo
+
+event.currentTarget
+      ↓
+div#padre</pre>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>target</code> indica dónde comenzó el evento; <code>currentTarget</code> indica dónde se está gestionando.</p>
+        </section>
+        <section class="lesson-section" id="resumen-general">
+<h2>24. RESUMEN GENERAL</h2>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>CustomEvent</code> permite crear eventos personalizados.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key">El primer parámetro identifica el evento y el segundo contiene sus opciones.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>detail</code> permite transportar información dentro de un evento personalizado.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>bubbles</code> decide si el evento personalizado puede propagarse mediante burbujeo.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>cancelable</code> determina si puede marcarse como cancelado mediante <code>preventDefault()</code>.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>dispatchEvent()</code> emite un evento sobre un elemento.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key">La propagación es el recorrido del evento por la jerarquía del DOM.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key">Durante la captura, el recorrido avanza desde los elementos exteriores hacia el objetivo.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key">Durante el burbujeo, avanza desde el objetivo hacia los elementos exteriores.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key">El tercer parámetro de <code>addEventListener()</code> permite escuchar durante la fase de captura.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>stopPropagation()</code> detiene la propagación hacia otros elementos.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>preventDefault()</code> impide el comportamiento predeterminado del navegador o marca como cancelado un evento cancelable.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>removeEventListener()</code> elimina un listener registrado.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>event.target</code> indica el elemento que originó el evento.</p>
+        <p class="lesson-note lesson-note--important lesson-note--key"><code>event.currentTarget</code> indica el elemento cuyo listener lo está procesando.</p>
+        </section>
+        <section class="lesson-section" id="esquema-final">
+<h2>ESQUEMA FINAL</h2>
+        <pre class="diagram-block">                     EVENTOS
+                        │
+        ┌───────────────┴───────────────┐
+        │                               │
+     CREACIÓN                        EMISIÓN
+        │                               │
+ Event / CustomEvent              dispatchEvent()
+        │
+        ├── detail
+        ├── bubbles
+        ├── composed
+        └── cancelable
+
+                        │
+                  PROPAGACIÓN
+                        │
+             ┌──────────┴──────────┐
+             │                     │
+          CAPTURA               BURBUJEO
+       exterior → origen      origen → exterior
+             │                     │
+             └──────────┬──────────┘
+                        │
+              stopPropagation()
+
+                        │
+                   CONTROL
+                        │
+          ┌─────────────┼─────────────┐
+          │             │             │
+stopPropagation() preventDefault() removeEventListener()
+          │             │             │
+ Detiene recorrido  Evita acción   Elimina listener
+                   predeterminada
+
+                        │
+                IDENTIFICACIÓN
+                        │
+          ┌─────────────┴─────────────┐
+          │                           │
+     event.target             event.currentTarget
+          │                           │
+  Origen del evento        Listener que lo gestiona</pre>
+        <p class="lesson-note lesson-note--important lesson-note--key">Idea principal: JavaScript permite crear y emitir eventos, controlar su recorrido por el DOM, impedir determinadas acciones y saber tanto dónde comenzaron como dónde están siendo gestionados.</p>
+        </section>
+        <footer class="lesson-footer">Cuaderno Digital · DOM · Emisión y propagación de eventos</footer>
+      </main>
+    </div>
+  </body>
+</html>
