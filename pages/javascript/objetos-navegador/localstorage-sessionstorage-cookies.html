@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Aprende a guardar y recuperar datos del navegador con cookies, localStorage y sessionStorage."
+    />
+    <title>
+      LocalStorage, SessionStorage y Cookies | Cuaderno Digital
+    </title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a Objetos del navegador
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#introduccion">1. Almacenar datos en el navegador</a>
+          <a href="#cookies">2. Cookies</a>
+          <a href="#funciones-cookies">3. Funciones auxiliares para cookies</a>
+          <a href="#web-storage">4. LocalStorage y SessionStorage</a>
+          <a href="#metodos">5. Métodos y propiedades</a>
+          <a href="#json">6. Guardar objetos y arrays: JSON</a>
+          <a href="#recorrer-datos">7. Recorrer los datos almacenados</a>
+          <a href="#evento-storage">8. Evento storage</a>
+          <a href="#borrador">9. Ejemplo: conservar un borrador</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>LocalStorage, SessionStorage y Cookies</h1>
+          <p>
+            Clase 33 · Guardar información en el navegador, recuperarla
+            y comprender las diferencias entre cada forma de almacenamiento.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="introduccion">
+          <h2>1. Almacenar datos en el navegador</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            El navegador permite guardar información y recuperarla después,
+            incluso tras recargar una página.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Cookies, <code>localStorage</code> y <code>sessionStorage</code>
+            almacenan datos mediante pares clave–valor, pero tienen diferente
+            duración y funcionamiento.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Podemos utilizarlos para mantener una sesión, recordar
+            preferencias o conservar temporalmente un formulario.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="cookies">
+          <h2>2. Cookies</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las cookies son pequeños datos que el navegador guarda y envía
+            automáticamente al servidor en las peticiones que correspondan.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Un uso habitual es identificar una sesión:
+          </p>
+
+          <pre class="diagram-block">Inicio de sesión → Servidor comprueba las credenciales
+       ↓
+Navegador guarda una cookie con un identificador
+       ↓
+La envía en nuevas peticiones → Servidor reconoce la sesión</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El servidor puede establecerlas mediante la cabecera
+            <code>Set-Cookie</code>; el navegador las devuelve mediante
+            <code>Cookie</code>.
+          </p>
+
+          <h3>Leer y escribir cookies</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Desde JavaScript utilizamos <code>document.cookie</code>:
+          </p>
+
+          <pre class="code-block"><code>// Crear una cookie
+document.cookie = "user=John";
+
+// Leer las cookies accesibles
+console.log(document.cookie);
+// Ejemplo: "user=John; tema=oscuro"
+
+// Actualizar user, manteniendo su dominio y ruta
+document.cookie = "user=Ana";</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Leer <code>document.cookie</code> devuelve una cadena con pares
+            <code>nombre=valor</code> separados por punto y coma.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Escribir en <code>document.cookie</code> no reemplaza todas las
+            cookies: crea o actualiza una.
+          </p>
+
+          <h3>Codificación</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>encodeURIComponent()</code> permite representar espacios
+            y caracteres especiales. <code>decodeURIComponent()</code>
+            recupera el texto original.
+          </p>
+
+          <pre class="code-block"><code>document.cookie = "user=" + encodeURIComponent("John Smith");
+// user=John%20Smith</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Codificar no es cifrar: el contenido no queda protegido como un secreto.
+          </p>
+
+          <h3>Opciones principales</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Opción</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>path</code></td>
+                  <td>
+                    Define las rutas a las que se aplica.
+                    <code>path=/</code> abarca todo el sitio.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>domain</code></td>
+                  <td>
+                    Define el dominio al que se aplica.
+                    No podemos escoger un dominio ajeno.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>expires</code></td>
+                  <td>Establece una fecha de caducidad.</td>
+                </tr>
+                <tr>
+                  <td><code>max-age</code></td>
+                  <td>Establece la duración en segundos desde ahora.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--example">
+            Cookie válida durante una hora:
+          </p>
+
+          <pre class="code-block"><code>document.cookie = "user=John; path=/; max-age=3600";</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Caducidad mediante una fecha:
+          </p>
+
+          <pre class="code-block"><code>const fecha = new Date(Date.now() + 86400000);
+
+document.cookie = `user=John; path=/; expires=${fecha.toUTCString()}`;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Sumamos un día en milisegundos y convertimos la fecha al formato
+            UTC requerido.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>expires</code> indica cuándo caduca;
+            <code>max-age</code>, cuánto dura.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Sin estas opciones, la cookie es de sesión: su duración queda
+            vinculada a la sesión del navegador.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Para eliminarla, hacemos que caduque:
+          </p>
+
+          <pre class="code-block"><code>document.cookie = "user=; path=/; max-age=0";</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Al actualizar o eliminar una cookie debemos respetar su dominio
+            y ruta.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las cookies tienen una capacidad pequeña, aproximadamente 4 KB
+            por cookie. Podemos inspeccionarlas desde:
+          </p>
+
+          <pre class="diagram-block">Herramientas de desarrollo → Aplicación → Cookies → Dominio</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Una cookie que identifica una sesión es sensible: su robo podría
+            permitir suplantarla. La caducidad no sustituye las demás medidas
+            de seguridad.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Referencia:
+            <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie">
+              document.cookie — MDN
+            </a>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="funciones-cookies">
+          <h2>3. Funciones auxiliares para cookies</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos definir funciones que simplifiquen su lectura, escritura
+            y eliminación.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>getCookie()</code>, <code>setCookie()</code> y
+            <code>deleteCookie()</code> no vienen incorporadas en JavaScript.
+          </p>
+
+          <h3>getCookie(): obtener un valor</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esta función busca una cookie por su nombre y devuelve su valor
+            decodificado. Si no la encuentra, devuelve <code>undefined</code>.
+          </p>
+
+          <pre class="code-block"><code>function getCookie(name) {
+    const matches = document.cookie.match(new RegExp(
+        "(?:^|; )" +
+        name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, "\\$1") +
+        "=([^;]*)"
+    ));
+
+    return matches ? decodeURIComponent(matches[1]) : undefined;
+}</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La expresión regular localiza la cookie dentro de la cadena.
+            <code>decodeURIComponent()</code> recupera su valor original,
+            deshaciendo la codificación.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Uso:</p>
+
+          <pre class="code-block"><code>console.log(getCookie("user")); // "John", si existe
+console.log(getCookie("noExiste")); // undefined</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>getCookie()</code> es una función auxiliar que debemos definir,
+            no una función incorporada de JavaScript.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esta versión corresponde a la función de
+            <a href="https://es.javascript.info/cookie#apendice-funciones-de-cookies">
+              JavaScript.info
+            </a>.
+          </p>
+
+          <h3>setCookie(): crear o actualizar</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Recibe el nombre, el valor y un objeto opcional de configuración.
+            Utiliza <code>/</code> como ruta predeterminada.
+          </p>
+
+          <pre class="code-block"><code>function setCookie(name, value, opciones = {}) {
+    const ajustes = { path: "/", ...opciones };
+    let cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
+
+    for (const clave of Object.keys(ajustes)) {
+        const valor = ajustes[clave] instanceof Date
+            ? ajustes[clave].toUTCString()
+            : ajustes[clave];
+
+        cookie += `; ${clave}`;
+        if (valor !== true) cookie += `=${valor}`;
+    }
+
+    document.cookie = cookie;
+}</code></pre>
+
+          <p class="lesson-note lesson-note--example">Uso:</p>
+
+          <pre class="code-block"><code>setCookie("user", "John Smith", { "max-age": 3600 });
+console.log(getCookie("user")); // "John Smith"</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La función construye la cadena, añade las opciones y finalmente
+            escribe la cookie.
+          </p>
+
+          <h3>deleteCookie(): eliminar</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Reutilizamos <code>setCookie()</code> para hacer que la cookie
+            caduque inmediatamente.
+          </p>
+
+          <pre class="code-block"><code>function deleteCookie(name, opciones = {}) {
+    setCookie(name, "", { ...opciones, "max-age": -1 });
+}
+
+deleteCookie("user");</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Si se creó con otra ruta o dominio, debemos pasarlos también
+            al borrarla.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Estas son versiones adaptadas para estudiar; las funciones de
+            referencia están en
+            <a href="https://es.javascript.info/cookie#apendice-funciones-de-cookies">
+              Funciones de cookies — JavaScript.info
+            </a>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="web-storage">
+          <h2>4. LocalStorage y SessionStorage</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Ambos permiten guardar datos en el navegador sin enviarlos
+            automáticamente al servidor.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Su almacenamiento está separado por <strong>origen</strong>:
+            protocolo, dominio y puerto. Por ejemplo, una dirección HTTP
+            y otra HTTPS no comparten el mismo almacenamiento.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Característica</th>
+                  <th scope="col"><code>localStorage</code></th>
+                  <th scope="col"><code>sessionStorage</code></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Duración</td>
+                  <td>
+                    Sin caducidad automática; persiste al cerrar y abrir
+                    el navegador.
+                  </td>
+                  <td>
+                    Conserva los datos al recargar y normalmente los elimina
+                    al cerrar la pestaña.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Al recargar</td>
+                  <td>Conserva los datos.</td>
+                  <td>Conserva los datos.</td>
+                </tr>
+                <tr>
+                  <td>Entre pestañas</td>
+                  <td>Comparte datos entre pestañas del mismo origen.</td>
+                  <td>Cada pestaña mantiene un almacenamiento separado.</td>
+                </tr>
+                <tr>
+                  <td>Uso típico</td>
+                  <td>Recordar preferencias.</td>
+                  <td>Conservar datos temporales de una pestaña.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Restaurar una pestaña cerrada puede recuperar su sesión y sus
+            datos; recargarla, por sí solo, no los elimina.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Persistente no significa permanente: el usuario o el navegador
+            pueden borrar los datos.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los dos utilizan los mismos métodos, pero guardan la información
+            en espacios diferentes.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Referencia:
+            <a href="https://es.javascript.info/localstorage">
+              LocalStorage y sessionStorage — JavaScript.info
+            </a>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="metodos">
+          <h2>5. Métodos y propiedades</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Método o propiedad</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>setItem(clave, valor)</code></td>
+                  <td>Crea o actualiza un dato.</td>
+                </tr>
+                <tr>
+                  <td><code>getItem(clave)</code></td>
+                  <td>
+                    Recupera un valor. Devuelve <code>null</code>
+                    si no existe.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>removeItem(clave)</code></td>
+                  <td>Elimina un dato.</td>
+                </tr>
+                <tr>
+                  <td><code>clear()</code></td>
+                  <td>Elimina todos los datos de ese almacenamiento.</td>
+                </tr>
+                <tr>
+                  <td><code>key(indice)</code></td>
+                  <td>
+                    Devuelve la clave de una posición, o <code>null</code>
+                    si no existe.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>length</code></td>
+                  <td>Indica cuántos datos hay almacenados.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--example">Ejemplo:</p>
+
+          <pre class="code-block"><code>localStorage.setItem("tema", "oscuro");
+
+const tema = localStorage.getItem("tema");
+console.log(tema); // "oscuro"
+
+localStorage.removeItem("tema");</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para trabajar con el almacenamiento de sesión, usamos los mismos
+            métodos:
+          </p>
+
+          <pre class="code-block"><code>sessionStorage.setItem("paso", "2");
+console.log(sessionStorage.getItem("paso")); // "2"</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>clear()</code> no elimina una sola clave: vacía todo
+            el almacenamiento correspondiente.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            También existe el acceso como propiedad, por ejemplo
+            <code>localStorage.tema</code>, pero es preferible usar los métodos
+            para evitar conflictos con nombres como <code>length</code>
+            o <code>clear</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Referencia:
+            <a href="https://developer.mozilla.org/en-US/docs/Web/API/Storage">
+              Storage — MDN
+            </a>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="json">
+          <h2>6. Guardar objetos y arrays: JSON</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Las claves y los valores de ambos almacenamientos son cadenas
+            de texto.
+          </p>
+
+          <pre class="code-block"><code>localStorage.setItem("edad", 25);
+
+console.log(localStorage.getItem("edad")); // "25"</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si necesitamos un número, debemos convertirlo:
+          </p>
+
+          <pre class="code-block"><code>const edad = Number(localStorage.getItem("edad"));</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para guardar objetos o arrays utilizamos
+            <code>JSON.stringify()</code>. Para reconstruirlos,
+            <code>JSON.parse()</code>.
+          </p>
+
+          <pre class="code-block"><code>const usuario = { nombre: "Ana", edad: 25 };
+
+// Guardar
+localStorage.setItem("usuario", JSON.stringify(usuario));
+
+// Recuperar
+const guardado = localStorage.getItem("usuario");
+const recuperado = guardado === null ? null : JSON.parse(guardado);
+
+console.log(recuperado);</code></pre>
+
+          <pre class="diagram-block">Objeto → JSON.stringify() → Texto almacenado
+Texto recuperado → JSON.parse() → Objeto</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Guardar directamente un objeto no conserva su estructura:
+            normalmente se convierte en <code>"[object Object]"</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Modificar el objeto recuperado no actualiza el almacenamiento:
+            hay que volver a guardarlo.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Referencia:
+            <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API">
+              Uso de Web Storage — MDN
+            </a>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="recorrer-datos">
+          <h2>7. Recorrer los datos almacenados</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos obtener las claves y consultar sus valores:
+          </p>
+
+          <pre class="code-block"><code>for (const clave of Object.keys(localStorage)) {
+    console.log(clave, localStorage.getItem(clave));
+}</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Otra opción es recorrer las posiciones mediante
+            <code>length</code> y <code>key()</code>:
+          </p>
+
+          <pre class="code-block"><code>for (let i = 0; i &lt; localStorage.length; i++) {
+    const clave = localStorage.key(i);
+    console.log(clave, localStorage.getItem(clave));
+}</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Un <code>for...in</code> sin filtrar puede incluir propiedades
+            heredadas. Además, no debemos depender de un orden concreto
+            de las claves.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="evento-storage">
+          <h2>8. Evento storage</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            El evento <code>storage</code> permite detectar cambios realizados
+            desde otro documento que comparte el mismo almacenamiento.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Con <code>localStorage</code>, una pestaña puede reaccionar a los
+            cambios realizados desde otra del mismo origen.
+          </p>
+
+          <pre class="code-block"><code>window.addEventListener("storage", (evento) =&gt; {
+    console.log("Clave:", evento.key);
+    console.log("Antes:", evento.oldValue);
+    console.log("Ahora:", evento.newValue);
+});</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Propiedad</th>
+                  <th scope="col">Información</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>key</code></td>
+                  <td>Clave modificada.</td>
+                </tr>
+                <tr>
+                  <td><code>oldValue</code></td>
+                  <td>Valor anterior.</td>
+                </tr>
+                <tr>
+                  <td><code>newValue</code></td>
+                  <td>Valor nuevo.</td>
+                </tr>
+                <tr>
+                  <td><code>url</code></td>
+                  <td>Dirección del documento que hizo el cambio.</td>
+                </tr>
+                <tr>
+                  <td><code>storageArea</code></td>
+                  <td>Almacenamiento afectado.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El evento no se dispara en la propia página que realiza el cambio.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Con <code>sessionStorage</code> no comunica pestañas independientes;
+            puede alcanzar documentos del mismo origen dentro de la misma
+            pestaña, como un <code>iframe</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Referencia:
+            <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event">
+              Evento storage — MDN
+            </a>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="borrador">
+          <h2>9. Ejemplo: conservar un borrador</h2>
+
+          <p class="lesson-note lesson-note--example">
+            Guardamos lo escrito para recuperarlo al recargar.
+          </p>
+
+          <h3>HTML</h3>
+
+          <pre class="code-block"><code>&lt;textarea id="borrador"&gt;&lt;/textarea&gt;
+&lt;button id="borrar" type="button"&gt;Borrar borrador&lt;/button&gt;</code></pre>
+
+          <h3>JavaScript, ejecutado después del HTML</h3>
+
+          <pre class="code-block"><code>const campo = document.querySelector("#borrador");
+const boton = document.querySelector("#borrar");
+
+campo.value = localStorage.getItem("borrador") ?? "";
+
+campo.addEventListener("input", () =&gt; {
+    localStorage.setItem("borrador", campo.value);
+});
+
+boton.addEventListener("click", () =&gt; {
+    localStorage.removeItem("borrador");
+    campo.value = "";
+});</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Al cargar, recuperamos el texto; al escribir, lo guardamos;
+            al pulsar el botón, eliminamos tanto el dato almacenado como
+            el contenido visible.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si solo necesitamos conservarlo durante la sesión de esa pestaña,
+            podemos sustituir <code>localStorage</code> por
+            <code>sessionStorage</code>.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · Objetos del navegador · Almacenamiento
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
