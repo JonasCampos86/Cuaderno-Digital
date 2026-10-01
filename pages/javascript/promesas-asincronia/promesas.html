@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Clase 37: estados de una promesa, resolve, reject, then, catch, finally, orden de ejecución y encadenamiento."
+    />
+    <title>Promesas y asincronía | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a Promesas y asincronía
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#introduccion">
+            1. Qué es una promesa y para qué sirve
+          </a>
+          <a href="#crear-promesas">
+            2. Crear una promesa: resolve y reject
+          </a>
+          <a href="#gestionar-resultados">
+            3. Recibir el resultado: then, catch y finally
+          </a>
+          <a href="#orden-ejecucion">
+            4. Ampliación: cuándo se ejecuta un then
+          </a>
+          <a href="#encadenar-promesas">
+            5. Encadenar promesas: para qué sirve return
+          </a>
+          <a href="#promise-reject">
+            6. Métodos estáticos: Promise.reject()
+          </a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Promesas y asincronía</h1>
+          <p>
+            Clase 37 · Crear promesas, gestionar sus resultados y errores,
+            comprender el orden de ejecución y encadenar operaciones.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="introduccion">
+          <h2>1. Qué es una promesa y para qué sirve</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Algunas operaciones necesitan tiempo para completarse, como pedir
+            datos a un servidor. En lugar de detener todo el programa hasta
+            recibir una respuesta, podemos iniciar una operación asíncrona
+            y continuar ejecutando otras instrucciones.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una promesa permite trabajar con su resultado: indicar qué hacer
+            cuando la operación tenga éxito y qué hacer si falla.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una promesa es un objeto que representa el resultado de una
+            operación que puede completarse correctamente o fallar.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos tener una promesa cuyo resultado todavía no esté
+            disponible y dejar preparadas las funciones que actuarán
+            cuando lo esté.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Por ejemplo, al solicitar una lista de productos a un servidor:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              Mientras esperamos la respuesta, la promesa está pendiente.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Si la petición tiene éxito, utilizamos los productos recibidos.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Si falla, gestionamos el error.
+            </li>
+          </ul>
+
+          <h3>Estados de una promesa</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Significado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>pending</code> — Pendiente</td>
+                  <td>Todavía no se ha completado.</td>
+                </tr>
+                <tr>
+                  <td><code>fulfilled</code> — Cumplida</td>
+                  <td>
+                    Se ha completado correctamente y tiene un valor de resultado.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>rejected</code> — Rechazada</td>
+                  <td>Ha fallado y tiene un motivo de rechazo.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una vez cumplida o rechazada, una promesa no puede cambiar
+            de estado ni de resultado.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>fulfilled</code> significa que ha terminado correctamente.
+            Una promesa rechazada también ha terminado, pero con un fallo.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="crear-promesas">
+          <h2>
+            2. Crear una promesa: <code>resolve</code> y <code>reject</code>
+          </h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Utilizamos <code>new Promise()</code> y le pasamos una función
+            que contiene las instrucciones para iniciar la operación.
+            Esta función recibe otras dos funciones:
+            <code>resolve</code> y <code>reject</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo de una promesa que se cumple con el número <code>5</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Creación de la promesa:
+          </p>
+
+          <pre class="code-block"><code>let p1 = new Promise((resolve, reject) =&gt; {
+  resolve(5);
+});</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Función</th>
+                  <th scope="col">Para qué se utiliza en estos ejemplos</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>resolve(valor)</code></td>
+                  <td>Completar correctamente la promesa con un valor.</td>
+                </tr>
+                <tr>
+                  <td><code>reject(motivo)</code></td>
+                  <td>Rechazar la promesa e indicar el motivo.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--key">
+            La variable <code>p1</code> guarda el objeto promesa.
+            El número <code>5</code> es el resultado con el que esa
+            promesa se cumple.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aunque recibamos ambas funciones, no tenemos que utilizar
+            las dos: llamamos a la que corresponda según lo ocurrido.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo de una promesa que falla y proporciona un mensaje
+            como motivo.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Rechazo de la promesa:
+          </p>
+
+          <pre class="code-block"><code>let p3 = new Promise((resolve, reject) =&gt; {
+  reject("La promesa NO se ha resuelto de forma correcta");
+});</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El texto es el motivo del rechazo. Más adelante podremos
+            recibirlo y mostrarlo al gestionar el error.
+          </p>
+
+          <h3>Una promesa con espera</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Este ejemplo utiliza un temporizador para simular una
+            operación que tarda.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Promesa con <code>setTimeout()</code>:
+          </p>
+
+          <pre class="code-block"><code>let p2 = new Promise((resolve, reject) =&gt; {
+  setTimeout(() =&gt; {
+    resolve("La promesa se ha resuelto de forma correcta");
+  }, 5000);
+});</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La promesa permanece pendiente hasta que se ejecuta
+            <code>resolve()</code>. Los <code>5000</code> milisegundos
+            representan una espera de unos cinco segundos; mientras tanto,
+            el resto del programa puede continuar.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Crear una promesa no convierte automáticamente todo su contenido
+            en asíncrono. La función que pasamos a <code>new Promise()</code>
+            se ejecuta inmediatamente. Aquí, <code>setTimeout()</code>
+            es lo que retrasa la llamada a <code>resolve()</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="gestionar-resultados">
+          <h2>
+            3. Recibir el resultado: <code>.then()</code>,
+            <code>.catch()</code> y <code>.finally()</code>
+          </h2>
+
+          <p class="lesson-note lesson-note--key">
+            Crear una promesa y utilizar su resultado son dos cosas diferentes.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Estos métodos permiten dejar preparadas las funciones que
+            actuarán cuando la promesa termine.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Método</th>
+                  <th scope="col">Cuándo se ejecuta la función que recibe</th>
+                  <th scope="col">Para qué se utiliza</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>.then(valor =&gt; { ... })</code></td>
+                  <td>Cuando la promesa se cumple.</td>
+                  <td>Trabajar con el resultado.</td>
+                </tr>
+                <tr>
+                  <td><code>.catch(error =&gt; { ... })</code></td>
+                  <td>
+                    Cuando le llega un rechazo desde los pasos anteriores
+                    de la cadena.
+                  </td>
+                  <td>Gestionar el error.</td>
+                </tr>
+                <tr>
+                  <td><code>.finally(() =&gt; { ... })</code></td>
+                  <td>
+                    Cuando termina el paso anterior, tanto con éxito
+                    como con rechazo.
+                  </td>
+                  <td>Realizar una acción final común.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo adaptado, que utiliza la promesa <code>p2</code>
+            declarada en el apartado anterior.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Gestión del resultado y del error:
+          </p>
+
+          <pre class="code-block"><code>p2
+  .then((valor) =&gt; {
+    console.log("OK:", valor);
+  })
+  .catch((error) =&gt; {
+    console.log("Error:", error);
+  })
+  .finally(() =&gt; {
+    console.log("Proceso terminado");
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si <code>p2</code> se cumple, su resultado llega al parámetro
+            <code>valor</code>. Si se rechaza, el motivo llega a
+            <code>error</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los nombres de estos parámetros los elegimos nosotros.
+            Podríamos llamar <code>resultado</code> a <code>valor</code>
+            y el comportamiento sería el mismo.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>.finally()</code> permite realizar una tarea común
+            al terminar, como retirar un indicador de carga.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>.finally()</code> no recibe el resultado ni el motivo
+            del rechazo. Para trabajar con ellos utilizamos
+            <code>.then()</code> o <code>.catch()</code>.
+          </p>
+
+          <h3>Otra sintaxis: las dos funciones de <code>.then()</code></h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>.then()</code> también admite una segunda función para
+            gestionar el rechazo de la promesa sobre la que se llama.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Este fragmento adapta los nombres de los parámetros
+            del ejemplo original.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            <code>.then()</code> con una función para el éxito
+            y otra para el rechazo:
+          </p>
+
+          <pre class="code-block"><code>p2.then(
+  (valor) =&gt; console.log("OK:", valor),
+  (error) =&gt; console.log("Error:", error)
+);</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            La primera función atiende el éxito y la segunda el rechazo.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En cadenas de varios pasos, colocar un <code>.catch()</code>
+            después permite centralizar la gestión de los errores que
+            lleguen desde esos pasos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="orden-ejecucion">
+          <h2>
+            4. Ampliación — Cuándo se ejecuta un <code>.then()</code>
+          </h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una promesa puede cumplirse inmediatamente, pero eso no hace que
+            la función de su <code>.then()</code> se ejecute en ese mismo
+            instante. Primero termina el código síncrono que está en marcha.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo añadido para observar el orden de ejecución.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Código del ejemplo:
+          </p>
+
+          <pre class="code-block"><code>console.log("1. Inicio");
+
+let promesa = new Promise((resolve, reject) =&gt; {
+  resolve(5);
+});
+
+promesa.then((valor) =&gt; {
+  console.log("3. Resultado:", valor);
+});
+
+console.log("2. Fin del código síncrono");</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Los mensajes aparecen en este orden:
+          </p>
+
+          <pre class="diagram-block">1. Inicio
+2. Fin del código síncrono
+3. Resultado: 5</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aunque el resultado <code>5</code> ya está disponible,
+            la función del <code>.then()</code> queda programada para
+            ejecutarse después del código síncrono actual.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Tener una promesa cumplida no significa que la función
+            de su <code>.then()</code> se ejecute inmediatamente.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="encadenar-promesas">
+          <h2>
+            5. Encadenar promesas: para qué sirve <code>return</code>
+          </h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Encadenar permite organizar varios pasos: recibir un resultado,
+            trabajar con él y continuar con el siguiente.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Cada llamada a <code>.then()</code> devuelve una nueva promesa,
+            lo que permite añadir otro <code>.then()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Dentro de la función que pasamos a <code>.then()</code>,
+            usamos <code>return</code> para decidir qué resultado
+            entregamos al siguiente paso.
+          </p>
+
+          <h3>Devolver un valor</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo adaptado y simplificado para centrarnos en cómo se
+            transmite el resultado: una promesa proporciona el número
+            <code>5</code>, lo multiplicamos por <code>2</code> y pasamos
+            el resultado al siguiente paso.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Cadena que devuelve un valor:
+          </p>
+
+          <pre class="code-block"><code>let p1 = new Promise((resolve, reject) =&gt; {
+  resolve(5);
+});
+
+p1
+  .then((numero) =&gt; {
+    return numero * 2;
+  })
+  .then((resultado) =&gt; {
+    console.log(resultado); // 10
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El primer <code>.then()</code> recibe <code>5</code>,
+            lo multiplica por <code>2</code> y devuelve <code>10</code>.
+            El siguiente <code>.then()</code> recibe ese <code>10</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El <code>return</code> de un <code>.then()</code> permite pasar
+            un resultado al siguiente paso de la cadena.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Mostrar un valor no es lo mismo que devolverlo.
+            <code>console.log(numero * 2)</code> lo muestra en la consola;
+            <code>return numero * 2</code> lo entrega como resultado
+            de la función.
+          </p>
+
+          <h3>Devolver una promesa</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo adaptado a partir de las promesas del material.
+            Después de recibir el resultado de <code>p1</code>,
+            conectamos la cadena con el resultado de <code>p2</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Cadena que devuelve una promesa.
+            Este bloque incluye todas sus declaraciones:
+          </p>
+
+          <pre class="code-block"><code>let p1 = new Promise((resolve, reject) =&gt; {
+  resolve(5);
+});
+
+let p2 = new Promise((resolve, reject) =&gt; {
+  setTimeout(() =&gt; {
+    resolve(27);
+  }, 2000);
+});
+
+p1
+  .then((valor) =&gt; {
+    console.log("Primer resultado:", valor);
+    return p2;
+  })
+  .then((valor2) =&gt; {
+    console.log("Segundo resultado:", valor2);
+  })
+  .catch((error) =&gt; {
+    console.log("Ha ocurrido un error:", error);
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El primer <code>.then()</code> recibe <code>5</code> y devuelve
+            <code>p2</code>. La cadena espera a que <code>p2</code> termine,
+            si todavía está pendiente. Cuando se cumple, el siguiente
+            <code>.then()</code> recibe <code>27</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si <code>p2</code> se rechaza, se omite la función de éxito
+            del siguiente <code>.then()</code> y el motivo llega
+            a <code>.catch()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para entender la importancia de <code>return</code>,
+            podemos comparar qué recibiría el segundo <code>.then()</code>
+            si cambiásemos únicamente la línea <code>return p2</code>
+            del ejemplo:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">
+                    Qué podría devolver el primer <code>.then()</code>
+                  </th>
+                  <th scope="col">
+                    Qué recibiría el segundo <code>.then()</code>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>return valor</code></td>
+                  <td>
+                    Recibiría <code>5</code>, porque <code>valor</code>
+                    contiene el resultado de <code>p1</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>return p2</code></td>
+                  <td>
+                    Esperaría a <code>p2</code> y recibiría <code>27</code>
+                    cuando se cumpla. Esta es la opción utilizada
+                    en el código.
+                  </td>
+                </tr>
+                <tr>
+                  <td>No escribir <code>return</code></td>
+                  <td>
+                    Recibiría <code>undefined</code>, porque la función
+                    del primer <code>.then()</code> no devuelve ningún valor.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--key">
+            En el código del ejemplo se utiliza <code>return p2</code>,
+            por lo que el segundo <code>.then()</code> queda conectado
+            a esa promesa y recibe su resultado: <code>27</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si eliminamos <code>return p2</code>, la cadena deja de estar
+            conectada a su resultado. El segundo <code>.then()</code>
+            no espera a <code>p2</code> ni recibe el <code>27</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Encadenar promesas ya creadas no retrasa el inicio de sus
+            operaciones. En este ejemplo, el temporizador de <code>p2</code>
+            empieza al crearla; <code>return p2</code> conecta la cadena
+            con esa promesa.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="promise-reject">
+          <h2>6. Métodos estáticos: <code>Promise.reject()</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            Un método estático se llama directamente sobre
+            <code>Promise</code>, en lugar de sobre una promesa concreta.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            <code>Promise.reject(motivo)</code> crea y devuelve una promesa
+            que ya está rechazada.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos utilizarlo dentro de un <code>.then()</code> cuando
+            una condición no se cumple y queremos que la cadena continúe
+            por la vía del error.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Las dos formas de rechazo utilizadas se diferencian
+            en qué promesa rechazan:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Sintaxis</th>
+                  <th scope="col">Qué hace</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>reject(motivo)</code></td>
+                  <td>
+                    Rechaza la promesa que estamos creando con
+                    <code>new Promise()</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Promise.reject(motivo)</code></td>
+                  <td>Crea una nueva promesa que ya está rechazada.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Ejemplo: comprobar la edad y obtener una clave</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo del material: comprobamos una edad para decidir
+            si la cadena continúa con la obtención de una clave
+            o con un rechazo.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Primero se crean las dos promesas:
+          </p>
+
+          <pre class="code-block"><code>let pp1 = new Promise((resolve, reject) =&gt; {
+  resolve(18);
+});
+
+let pp2 = new Promise((resolve, reject) =&gt; {
+  console.log("Generando clave");
+
+  setTimeout(() =&gt; {
+    resolve("aklhdgsi4");
+  }, 5000);
+});</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Después se construye la cadena:
+          </p>
+
+          <pre class="code-block"><code>pp1
+  .then((edad) =&gt; {
+    if (edad &gt;= 18) {
+      console.log("Acceso autorizado");
+      return pp2;
+    } else {
+      return Promise.reject("Edad menor que 18");
+    }
+  })
+  .then((clave) =&gt; {
+    console.log("Tu clave es:", clave);
+  })
+  .catch((error) =&gt; {
+    console.log("Ha ocurrido un error:", error);
+  })
+  .finally(() =&gt; {
+    console.log("Cerrando la conexión");
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Con <code>18</code> años, se devuelve <code>pp2</code>.
+            La cadena espera su resultado y después muestra la clave.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si cambiamos <code>resolve(18)</code> por
+            <code>resolve(16)</code>, se devuelve una promesa rechazada.
+            Se omite el <code>.then()</code> que muestra la clave
+            y el motivo <code>"Edad menor que 18"</code>
+            llega a <code>.catch()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Si ejecutamos las declaraciones y la cadena juntas,
+            el orden de los mensajes es:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Con <code>18</code> años</th>
+                  <th scope="col">Con <code>16</code> años</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1. <code>Generando clave</code></td>
+                  <td>1. <code>Generando clave</code></td>
+                </tr>
+                <tr>
+                  <td>2. <code>Acceso autorizado</code></td>
+                  <td>
+                    2. <code>Ha ocurrido un error: Edad menor que 18</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    3. Tras la espera: <code>Tu clave es: aklhdgsi4</code>
+                  </td>
+                  <td>3. <code>Cerrando la conexión</code></td>
+                </tr>
+                <tr>
+                  <td>4. <code>Cerrando la conexión</code></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>pp2</code> se crea antes de comprobar la edad.
+            Por eso, <code>"Generando clave"</code> se muestra
+            y el temporizador comienza en ambos casos. Si la edad
+            es menor que <code>18</code>, la cadena no espera
+            a <code>pp2</code>, pero su temporizador sigue ejecutándose.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Este ejemplo sirve para entender el recorrido de la cadena.
+            Para que la generación de la clave dependiera realmente
+            de la edad, habría que iniciar esa operación dentro
+            de la rama autorizada.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>"Cerrando la conexión"</code> solo es un mensaje
+            de consola: el ejemplo no abre ni cierra una conexión real.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · Promesas y asincronía · Clase 37
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
