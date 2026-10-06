@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Clase 38: promesas en serie, Promise.all, race, any, allSettled y funciones que devuelven promesas."
+    />
+    <title>Promesas en serie y métodos de coordinación | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a Promesas y asincronía
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#organizar-operaciones">1. Organizar operaciones</a>
+          <a href="#promesas-ejemplo">2. Promesas de los ejemplos</a>
+          <a href="#promesas-serie">3. Promesas en serie</a>
+          <a href="#coordinar-operaciones">4. Coordinar operaciones</a>
+          <a href="#promise-all">5. Promise.all()</a>
+          <a href="#promise-race">6. Promise.race()</a>
+          <a href="#promise-any">7. Promise.any()</a>
+          <a href="#promise-allsettled">8. Promise.allSettled()</a>
+          <a href="#comparativa-metodos">9. Comparativa de métodos</a>
+          <a href="#funciones-promesas">
+            10. Funciones que devuelven promesas
+          </a>
+          <a href="#operaciones-dependientes">
+            11. Operaciones dependientes
+          </a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Promesas en serie y métodos de coordinación</h1>
+          <p>
+            Clase 38 · Encadenar operaciones dependientes, coordinar resultados
+            y utilizar funciones que reciben argumentos y devuelven promesas.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="organizar-operaciones">
+          <h2>1. Organizar varias operaciones asíncronas</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando necesitamos realizar varias operaciones asíncronas,
+            debemos decidir si unas dependen de otras o si pueden ejecutarse
+            de forma independiente.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Organización</th>
+                  <th scope="col">Cuándo se utiliza</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>En serie</td>
+                  <td>
+                    Cuando una operación necesita el resultado de la anterior.
+                  </td>
+                </tr>
+                <tr>
+                  <td>En paralelo</td>
+                  <td>
+                    Cuando las operaciones son independientes y queremos
+                    coordinar sus resultados.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--example">Por ejemplo:</p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              Para consultar la actividad de un usuario, primero necesitamos
+              encontrar al usuario. Son operaciones dependientes.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Para solicitar datos independientes a varios servidores, podemos
+              iniciar todas las operaciones y coordinar sus resultados.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Si una operación necesita el resultado de otra, debemos iniciarla
+            después de recibir ese resultado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="promesas-ejemplo">
+          <h2>2. Promesas y valores utilizados en los ejemplos</h2>
+
+          <p class="lesson-note lesson-note--example">
+            Creación de las promesas y del valor:
+          </p>
+
+          <pre class="code-block"><code>const promise1 = Promise.reject(55);
+
+const promise2 = 33;
+
+const promise3 = new Promise((resolve, reject) =&gt; {
+  setTimeout(resolve, 1000, "Se ha ejecutado la promesa 3");
+});</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Elemento</th>
+                  <th scope="col">Qué contiene</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>promise1</code></td>
+                  <td>
+                    Una promesa ya rechazada cuyo motivo es <code>55</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>promise2</code></td>
+                  <td>El valor normal <code>33</code>; no es una promesa.</td>
+                </tr>
+                <tr>
+                  <td><code>promise3</code></td>
+                  <td>
+                    Una promesa que se cumple aproximadamente un segundo
+                    después con el texto
+                    <code>"Se ha ejecutado la promesa 3"</code>.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            La sintaxis utilizada en el temporizador equivale a llamar
+            a <code>resolve()</code> después de un segundo pasándole
+            el texto como argumento:
+          </p>
+
+          <pre class="code-block"><code>setTimeout(() =&gt; {
+  resolve("Se ha ejecutado la promesa 3");
+}, 1000);</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Métodos como <code>Promise.all()</code> también pueden recibir
+            valores normales. El valor <code>33</code> se trata como
+            un resultado cumplido.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>promise1</code> y <code>promise3</code> comienzan al crearse.
+            Añadirlas posteriormente a una cadena o a un método estático
+            no inicia sus operaciones: únicamente conecta o coordina
+            sus resultados.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="promesas-serie">
+          <h2>3. Promesas en serie</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Utilizamos una cadena cuando el siguiente paso debe trabajar
+            con el resultado del anterior.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Encadenamiento de los resultados:
+          </p>
+
+          <pre class="code-block"><code>promise1
+  .then((valor) =&gt; {
+    console.log("valor", valor);
+    return promise2;
+  })
+  .then((valor2) =&gt; {
+    console.log("valor2", valor2);
+    return promise3;
+  })
+  .then((valor3) =&gt; {
+    console.log("valor3", valor3);
+  })
+  .catch((error) =&gt; {
+    console.error("Error", error);
+  })
+  .finally(() =&gt; {
+    console.log("Finally");
+  });</code></pre>
+
+          <h3>Recorrido cuando <code>promise1</code> está rechazada</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>promise1</code> está rechazada con <code>55</code>.
+            Por tanto, las funciones de éxito de los tres
+            <code>.then()</code> se omiten hasta encontrar
+            <code>.catch()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">La salida es:</p>
+
+          <pre class="diagram-block">Error 55
+Finally</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>.catch()</code> recibe el motivo <code>55</code>
+            y <code>.finally()</code> se ejecuta al terminar la cadena.
+          </p>
+
+          <h3>Recorrido cuando <code>promise1</code> se cumple</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo adaptado para observar el recorrido de éxito.
+            Cambiamos únicamente la declaración de <code>promise1</code>:
+          </p>
+
+          <pre class="code-block"><code>const promise1 = Promise.resolve(55);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La cadena seguiría estos pasos:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--example">
+              El primer <code>.then()</code> recibe <code>55</code>,
+              lo muestra y devuelve <code>promise2</code>.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Como <code>promise2</code> contiene el valor normal
+              <code>33</code>, el segundo <code>.then()</code>
+              recibe <code>33</code>.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              El segundo <code>.then()</code> devuelve <code>promise3</code>.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Si <code>promise3</code> continúa pendiente, la cadena espera
+              hasta que se cumpla.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              El tercer <code>.then()</code> recibe
+              <code>"Se ha ejecutado la promesa 3"</code>.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Como no hay ningún rechazo, <code>.catch()</code> se omite.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Finalmente se ejecuta <code>.finally()</code>.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--example">La salida sería:</p>
+
+          <pre class="diagram-block">valor 55
+valor2 33
+valor3 Se ha ejecutado la promesa 3
+Finally</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Devolver una promesa conecta la cadena con su resultado;
+            devolver un valor normal entrega ese valor al siguiente
+            <code>.then()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            En este ejemplo, <code>promise3</code> ya fue creada
+            y su temporizador ya empezó. La cadena procesa los resultados
+            en orden, pero no provoca que todas las operaciones comiencen
+            en ese orden.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="coordinar-operaciones">
+          <h2>4. Coordinar operaciones independientes</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los métodos estáticos permiten coordinar varias promesas
+            y valores mediante una única llamada.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Sintaxis general:</p>
+
+          <pre class="code-block"><code>Promise.metodo([promesa1, promesa2, promesa3]);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En esta clase se utilizan cuatro métodos:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              <code>Promise.all()</code>
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>Promise.race()</code>
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>Promise.any()</code>
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>Promise.allSettled()</code>
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--key">
+            Estos métodos no ponen en marcha las promesas recibidas.
+            Las promesas creadas anteriormente ya han comenzado;
+            los métodos coordinan sus resultados.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="promise-all">
+          <h2>
+            5. <code>Promise.all()</code>: necesitamos todos los resultados
+          </h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>Promise.all()</code> espera a que todos sus elementos
+            se cumplan. Cuando lo consigue, devuelve un array con todos
+            los resultados.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Si cualquiera de las promesas se rechaza,
+            <code>Promise.all()</code> también se rechaza.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Coordinación de todos los resultados:
+          </p>
+
+          <pre class="code-block"><code>Promise.all([promise1, promise2, promise3])
+  .then((valoresRetornados) =&gt; {
+    console.log(valoresRetornados);
+  })
+  .catch((error) =&gt; {
+    console.error("Alguna promesa ha sido rechazada", error);
+  });</code></pre>
+
+          <h3>Resultado cuando una promesa se rechaza</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>promise1</code> ya está rechazada con <code>55</code>.
+            Por tanto, <code>Promise.all()</code> también se rechaza
+            y el motivo llega a <code>.catch()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">La salida es:</p>
+
+          <pre class="diagram-block">Alguna promesa ha sido rechazada 55</pre>
+
+          <h3>Resultado cuando todas se cumplen</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo adaptado para comprobar el resultado conjunto.
+            Cambiamos <code>promise1</code> por una promesa cumplida:
+          </p>
+
+          <pre class="code-block"><code>const promise1 = Promise.resolve(55);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>Promise.all()</code> espera a <code>promise3</code>
+            y después devuelve:
+          </p>
+
+          <pre class="code-block"><code>[
+  55,
+  33,
+  "Se ha ejecutado la promesa 3"
+]</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los resultados conservan el orden de entrada, aunque las promesas
+            no terminen en ese mismo orden.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si una promesa provoca el rechazo de <code>Promise.all()</code>,
+            las demás operaciones no se cancelan automáticamente; pueden
+            continuar ejecutándose aunque su resultado ya no se utilice
+            en ese <code>Promise.all()</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="promise-race">
+          <h2>
+            6. <code>Promise.race()</code>: importa la primera que termine
+          </h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>Promise.race()</code> observa todas las promesas
+            y toma el resultado de la primera que termine.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La primera promesa que se cumpla o se rechace determina
+            el resultado de <code>Promise.race()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Carrera entre los resultados:
+          </p>
+
+          <pre class="code-block"><code>Promise.race([promise1, promise2, promise3])
+  .then((valor) =&gt; {
+    console.log("Race", valor);
+  })
+  .catch((error) =&gt; {
+    console.error("Error", error);
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Con las declaraciones iniciales, <code>promise1</code>
+            ya está rechazada. Al ser el primer resultado atendido
+            por la carrera, <code>Promise.race()</code> se rechaza
+            con <code>55</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">La salida es:</p>
+
+          <pre class="diagram-block">Error 55</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            No debemos definir <code>Promise.race()</code> como
+            «la primera promesa que se resuelve correctamente».
+            También puede ganar un rechazo.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aunque una promesa gane la carrera, las demás
+            no se cancelan automáticamente.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="promise-any">
+          <h2>
+            7. <code>Promise.any()</code>: necesitamos el primer éxito
+          </h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>Promise.any()</code> busca la primera promesa
+            que se cumpla correctamente.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los rechazos se ignoran mientras todavía exista
+            otra operación que pueda cumplirse.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Obtención del primer resultado correcto:
+          </p>
+
+          <pre class="code-block"><code>Promise.any([promise1, promise2, promise3])
+  .then((valor) =&gt; {
+    console.log("Any", valor);
+  })
+  .catch((error) =&gt; {
+    console.error("Error", error);
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Con las declaraciones iniciales:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--example">
+              <code>promise1</code> está rechazada con <code>55</code>,
+              por lo que <code>Promise.any()</code> ignora ese rechazo.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>promise2</code> contiene el valor cumplido <code>33</code>.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>Promise.any()</code> se cumple con <code>33</code>
+              sin necesitar esperar el resultado de <code>promise3</code>.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--example">La salida es:</p>
+
+          <pre class="diagram-block">Any 33</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Si todas las promesas se rechazan, <code>Promise.any()</code>
+            también se rechaza y el error llega a <code>.catch()</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="promise-allsettled">
+          <h2>
+            8. <code>Promise.allSettled()</code>: conocer todos los resultados
+          </h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>Promise.allSettled()</code> espera hasta que todos
+            los elementos hayan terminado, tanto si se cumplen
+            como si se rechazan.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Comprobación del estado de todas las operaciones:
+          </p>
+
+          <pre class="code-block"><code>Promise.allSettled([promise1, promise2, promise3])
+  .then((valores) =&gt; {
+    console.log("allSettled", valores);
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los rechazos individuales no provocan el rechazo de
+            <code>Promise.allSettled()</code>. Cada resultado aparece
+            descrito dentro del array final.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Con las declaraciones iniciales, el resultado tiene
+            esta estructura:
+          </p>
+
+          <pre class="code-block"><code>[
+  {
+    status: "rejected",
+    reason: 55
+  },
+  {
+    status: "fulfilled",
+    value: 33
+  },
+  {
+    status: "fulfilled",
+    value: "Se ha ejecutado la promesa 3"
+  }
+]</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Propiedad</th>
+                  <th scope="col">Cuándo aparece</th>
+                  <th scope="col">Qué contiene</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>status</code></td>
+                  <td>En todos los resultados.</td>
+                  <td><code>"fulfilled"</code> o <code>"rejected"</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>value</code></td>
+                  <td>Cuando el resultado se ha cumplido.</td>
+                  <td>El valor obtenido.</td>
+                </tr>
+                <tr>
+                  <td><code>reason</code></td>
+                  <td>Cuando el resultado se ha rechazado.</td>
+                  <td>El motivo del rechazo.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>Promise.allSettled()</code> permite inspeccionar todos
+            los éxitos y todos los fallos sin detenerse al encontrar
+            el primer rechazo.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Decir que <code>Promise.allSettled()</code> «no ejecuta
+            <code>.catch()</code>» es demasiado absoluto. Lo correcto
+            es que el rechazo de una de las promesas recibidas se incluye
+            en el array de resultados y no rechaza por sí solo
+            el <code>Promise.allSettled()</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="comparativa-metodos">
+          <h2>9. Diferencias entre los métodos estáticos</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Método</th>
+                  <th scope="col">Cuándo termina</th>
+                  <th scope="col">Qué sucede ante un rechazo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Promise.all()</code></td>
+                  <td>
+                    Cuando todas se cumplen o cuando aparece
+                    el primer rechazo.
+                  </td>
+                  <td>
+                    Un solo rechazo hace que el resultado conjunto
+                    se rechace.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Promise.race()</code></td>
+                  <td>
+                    Cuando termina la primera, sea éxito o rechazo.
+                  </td>
+                  <td>
+                    Si el primer resultado es un rechazo,
+                    la carrera se rechaza.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Promise.any()</code></td>
+                  <td>Cuando encuentra el primer resultado cumplido.</td>
+                  <td>
+                    Ignora los rechazos mientras pueda encontrar un éxito;
+                    se rechaza si todas fallan.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>Promise.allSettled()</code></td>
+                  <td>Cuando todas han terminado.</td>
+                  <td>
+                    Incluye cada rechazo en el array mediante
+                    <code>status</code> y <code>reason</code>.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--key">
+            La pregunta que diferencia los métodos es qué resultados
+            necesitamos:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Necesidad</th>
+                  <th scope="col">Método</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Necesito que todas salgan bien.</td>
+                  <td><code>Promise.all()</code></td>
+                </tr>
+                <tr>
+                  <td>
+                    Necesito el primer resultado que termine,
+                    sea bueno o malo.
+                  </td>
+                  <td><code>Promise.race()</code></td>
+                </tr>
+                <tr>
+                  <td>Necesito el primer resultado correcto.</td>
+                  <td><code>Promise.any()</code></td>
+                </tr>
+                <tr>
+                  <td>Necesito saber cómo ha terminado cada operación.</td>
+                  <td><code>Promise.allSettled()</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="funciones-promesas">
+          <h2>10. Funciones que reciben argumentos y devuelven promesas</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Crear una promesa directamente hace que su función comience
+            a ejecutarse en ese momento. Si queremos decidir cuándo empieza
+            la operación, podemos crear una función que devuelva una promesa.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Declarar una función que devuelve una promesa no inicia
+            la operación; la promesa se crea cuando llamamos a la función.
+          </p>
+
+          <h3>Buscar un usuario</h3>
+
+          <p class="lesson-note lesson-note--example">
+            El ejemplo simula una búsqueda mediante el nombre
+            recibido como argumento.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Función que busca un usuario:
+          </p>
+
+          <pre class="code-block"><code>const buscarUsuario = (nombre) =&gt;
+  new Promise((resolve, reject) =&gt; {
+    console.log("Buscando un usuario con el nombre:", nombre);
+
+    let user = {
+      name: "Antonio Pérez",
+      dni: 12345678,
+      edad: 19
+    };
+
+    resolve(user);
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>buscarUsuario</code> guarda una función.
+            La promesa no se crea hasta que llamamos, por ejemplo, a:
+          </p>
+
+          <pre class="code-block"><code>buscarUsuario("Antonio");</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El argumento <code>"Antonio"</code> llega al parámetro
+            <code>nombre</code>. La promesa se cumple con el objeto
+            <code>user</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            La búsqueda está simulada: el objeto se encuentra escrito
+            directamente en el código y no se consulta ningún servidor real.
+          </p>
+
+          <h3>Buscar la actividad del usuario</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Esta segunda función recibe el usuario encontrado y una fecha,
+            y devuelve una promesa con sus actividades.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Función que construye la actividad del usuario:
+          </p>
+
+          <pre class="code-block"><code>const buscarActividad = (user, fechaActual) =&gt;
+  new Promise((resolve, reject) =&gt; {
+    const actions = {
+      user: user,
+      activities: [
+        {
+          date: fechaActual,
+          text: "entrar"
+        },
+        {
+          date: fechaActual,
+          text: "nadar"
+        },
+        {
+          date: fechaActual,
+          text: "caminar"
+        }
+      ]
+    };
+
+    resolve(actions);
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El resultado contiene dos propiedades:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Propiedad</th>
+                  <th scope="col">Contenido</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>user</code></td>
+                  <td>El objeto del usuario recibido como argumento.</td>
+                </tr>
+                <tr>
+                  <td><code>activities</code></td>
+                  <td>
+                    Un array con las actividades asociadas a la fecha recibida.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="operaciones-dependientes">
+          <h2>11. Encadenar operaciones que dependen entre sí</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            No podemos buscar la actividad concreta hasta obtener primero
+            el usuario. Por eso llamamos a <code>buscarActividad()</code>
+            dentro del <code>.then()</code> que recibe ese usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Búsqueda encadenada del usuario y su actividad:
+          </p>
+
+          <pre class="code-block"><code>buscarUsuario("Antonio")
+  .then((user) =&gt; {
+    console.log("El usuario que se ha encontrado es:", user);
+    return buscarActividad(user, new Date());
+  })
+  .then((activities) =&gt; {
+    console.log(activities);
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El recorrido es:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--example">
+              Se llama a <code>buscarUsuario("Antonio")</code>
+              y en ese momento se crea la primera promesa.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              La primera promesa se cumple con el objeto <code>user</code>.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              El primer <code>.then()</code> recibe ese usuario.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Se llama a <code>buscarActividad(user, new Date())</code>
+              y en ese momento se crea la segunda promesa.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>return</code> conecta la cadena con la segunda promesa.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              El segundo <code>.then()</code> espera y recibe
+              el objeto <code>actions</code>.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La segunda operación comienza dentro del primer
+            <code>.then()</code> porque necesita el usuario obtenido
+            en el paso anterior.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>new Date()</code> crea un objeto con la fecha y la hora
+            actuales y se entrega como argumento a
+            <code>buscarActividad()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El parámetro <code>activities</code> del último
+            <code>.then()</code> recibe realmente el objeto completo
+            <code>actions</code>, que contiene tanto <code>user</code>
+            como <code>activities</code>. Un nombre como
+            <code>resultadoActividad</code> describiría el valor
+            con mayor precisión.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            La cadena del ejemplo no incluye <code>.catch()</code>.
+            Las dos funciones simuladas siempre llaman a
+            <code>resolve()</code>, pero una operación real que pudiera
+            rechazarse debería gestionar ese rechazo.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · Promesas y asincronía · Clase 38
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
