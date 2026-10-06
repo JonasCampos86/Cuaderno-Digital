@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# CSS generado localmente
+/css/main.css
+/css/main.css.map
