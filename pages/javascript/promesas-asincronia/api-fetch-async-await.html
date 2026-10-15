@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Clase 39: APIs, métodos HTTP, fetch, Response, response.json y funciones async con await."
+    />
+    <title>API, Fetch, Async y Await | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a Promesas y asincronía
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#api">1. ¿Qué es una API?</a>
+          <a href="#metodos-http">2. Métodos HTTP</a>
+          <a href="#fetch">3. Fetch</a>
+          <a href="#respuesta-promesas">4. Respuesta y promesas</a>
+          <a href="#response-ok">5. response.ok</a>
+          <a href="#response-json">6. response.json()</a>
+          <a href="#async-await">7. Async y await</a>
+          <a href="#then-await">8. Then y await</a>
+          <a href="#filtrar-coches">9. Obtener y filtrar coches</a>
+          <a href="#peticiones-consecutivas">10. Peticiones consecutivas</a>
+          <a href="#legibilidad">11. Legibilidad</a>
+          <a href="#resumen">12. Ideas esenciales</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>API, Fetch, Async y Await</h1>
+          <p>
+            Clase 39 · Consultar APIs, procesar respuestas HTTP y trabajar
+            con promesas mediante fetch, async y await.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="api">
+          <h2>1. ¿Qué es una API?</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando una aplicación necesita información que se encuentra
+            en otro sistema, puede comunicarse con él mediante una API.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una API es un conjunto de reglas y direcciones que permite
+            que distintas aplicaciones intercambien datos.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Por ejemplo, una aplicación puede pedir a un servidor:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              La información de un usuario.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Una lista de coches.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Los datos de una publicación.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cada dirección disponible dentro de una API se denomina
+            endpoint. Normalmente, combina la dirección base de la API
+            con la ruta del recurso que queremos utilizar.
+          </p>
+
+          <pre class="code-block"><code>https://jsonplaceholder.typicode.com/users/1</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este ejemplo:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              <code>https://jsonplaceholder.typicode.com</code>
+              es la dirección base de la API.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>/users/1</code> solicita el usuario cuyo identificador
+              es <code>1</code>.
+            </li>
+          </ul>
+        </section>
+
+        <section class="lesson-section" id="metodos-http">
+          <h2>2. Operaciones habituales de una API</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para indicar qué queremos hacer con un recurso se utilizan
+            métodos HTTP.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Operación</th>
+                  <th scope="col">Método</th>
+                  <th scope="col">Ejemplo de ruta</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Consultar información</td>
+                  <td><code>GET</code></td>
+                  <td><code>/todos/1</code></td>
+                </tr>
+                <tr>
+                  <td>Crear un recurso</td>
+                  <td><code>POST</code></td>
+                  <td><code>/todos</code></td>
+                </tr>
+                <tr>
+                  <td>Modificar un recurso</td>
+                  <td><code>PUT</code></td>
+                  <td><code>/todos/1</code></td>
+                </tr>
+                <tr>
+                  <td>Borrar un recurso</td>
+                  <td><code>DELETE</code></td>
+                  <td><code>/todos/1</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            En esta clase se trabaja con peticiones de consulta,
+            es decir, con <code>GET</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="fetch">
+          <h2>3. Fetch</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>fetch()</code> permite pedir o enviar datos a un servidor
+            desde JavaScript.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para hacer una petición, le pasamos la URL
+            a la que queremos acceder:
+          </p>
+
+          <pre class="code-block"><code>const URL = "https://jsonplaceholder.typicode.com/users/1";
+
+fetch(URL);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>fetch(URL)</code> inicia la petición y devuelve
+            inmediatamente una promesa. Los datos no se reciben
+            en ese mismo instante: hay que esperar a que el servidor responda.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            La sintaxis general de <code>fetch()</code> permite
+            pasarle dos argumentos:
+          </p>
+
+          <pre class="code-block"><code>fetch(url, opciones);</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Argumento</th>
+                  <th scope="col">Significado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>url</code></td>
+                  <td>Dirección a la que se realiza la petición.</td>
+                </tr>
+                <tr>
+                  <td><code>opciones</code></td>
+                  <td>
+                    Objeto opcional con la configuración de la petición.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La URL es obligatoria, pero el objeto de opciones es opcional.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El objeto de opciones permite especificar aspectos como
+            el método HTTP o los datos que queremos enviar.
+            En el primer ejemplo no hace falta utilizarlo porque
+            <code>fetch()</code> realiza una petición <code>GET</code>
+            de manera predeterminada.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="respuesta-promesas">
+          <h2>4. Procesar la respuesta con promesas</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Como <code>fetch()</code> devuelve una promesa, podemos trabajar
+            con los métodos ya conocidos:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              <code>.then()</code> para procesar el resultado.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>.catch()</code> para capturar un rechazo.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>.finally()</code> si necesitamos ejecutar algo
+              al terminar, independientemente del resultado.
+            </li>
+          </ul>
+
+          <pre class="code-block"><code>fetch(URL)
+  .then((response) =&gt; {
+    console.log(response);
+  })
+  .catch((error) =&gt; {
+    console.log(error);
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El primer <code>.then()</code> no recibe directamente
+            los datos solicitados: recibe un objeto <code>Response</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Este objeto contiene información sobre la respuesta HTTP,
+            como su estado y si la petición ha obtenido una respuesta
+            considerada correcta.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="response-ok">
+          <h2>5. Comprobar <code>response.ok</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            La propiedad <code>response.ok</code> indica si la respuesta
+            HTTP se considera correcta.
+          </p>
+
+          <pre class="code-block"><code>fetch(URL)
+  .then((response) =&gt; {
+    if (response.ok) {
+      return response.json();
+    }
+
+    return Promise.reject(
+      "No se ha encontrado el usuario con ese identificador"
+    );
+  })
+  .then((user) =&gt; console.log(user))
+  .catch((error) =&gt; console.log(error));</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El recorrido de este ejemplo es el siguiente:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--example">
+              <code>fetch(URL)</code> realiza la petición.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              El primer <code>.then()</code> recibe el objeto
+              <code>Response</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Si <code>response.ok</code> es <code>true</code>,
+              se procesa el cuerpo de la respuesta.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Si <code>response.ok</code> es <code>false</code>,
+              se devuelve una promesa rechazada.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              El segundo <code>.then()</code> recibe los datos
+              ya convertidos.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>.catch()</code> recibe cualquier rechazo
+              producido durante la cadena.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>fetch()</code> no rechaza automáticamente la promesa
+            solo porque el servidor responda con un error HTTP,
+            como <code>404</code> o <code>500</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una respuesta HTTP con error puede llegar al
+            <code>.then()</code>, por lo que debemos comprobar
+            <code>response.ok</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>fetch()</code> sí puede rechazar la promesa
+            si la petición no llega a completarse, por ejemplo,
+            debido a un problema de red.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="response-json">
+          <h2>6. Convertir la respuesta con <code>response.json()</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            El objeto <code>Response</code> no contiene directamente
+            un objeto de JavaScript preparado para utilizarse.
+            Para obtener los datos del cuerpo de la respuesta usamos:
+          </p>
+
+          <pre class="code-block"><code>response.json();</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>response.json()</code> lee el cuerpo de la respuesta,
+            lo interpreta como JSON y devuelve otra promesa.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Por eso se devuelve su resultado desde el primer
+            <code>.then()</code>:
+          </p>
+
+          <pre class="code-block"><code>return response.json();</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Al devolver esa promesa, el siguiente <code>.then()</code>
+            espera a que se resuelva y recibe los datos convertidos:
+          </p>
+
+          <pre class="code-block"><code>.then((user) =&gt; console.log(user))</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El recorrido completo puede representarse así:
+          </p>
+
+          <pre class="diagram-block">fetch()
+   ↓
+objeto Response
+   ↓
+response.json()
+   ↓
+datos de JavaScript</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>response.json()</code> no es una propiedad que ya contenga
+            los datos. Es un método asíncrono y debemos ejecutarlo
+            utilizando paréntesis.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="async-await">
+          <h2>7. Funciones <code>async</code> y uso de <code>await</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            La palabra <code>async</code> permite declarar
+            una función asíncrona.
+          </p>
+
+          <pre class="code-block"><code>const getUser = async () =&gt; {
+  // Operaciones asíncronas
+};</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una función declarada con <code>async</code>
+            siempre devuelve una promesa.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Dentro de una función <code>async</code> podemos utilizar
+            <code>await</code> para esperar la resolución de una promesa.
+          </p>
+
+          <pre class="code-block"><code>const getUser = async () =&gt; {
+  const response = await fetch(URL);
+};</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este ejemplo, <code>await</code> espera a que se resuelva
+            la promesa devuelta por <code>fetch(URL)</code>.
+            Cuando se resuelve, su resultado se guarda en
+            <code>response</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>await</code> pausa la ejecución de la función
+            <code>async</code> en la que se encuentra,
+            pero no bloquea todo JavaScript.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Mientras esa función espera, el resto del programa
+            puede seguir ejecutándose.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Normalmente, <code>await</code> debe utilizarse dentro
+            de una función declarada con <code>async</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="then-await">
+          <h2>
+            8. Relación entre las promesas, <code>.then()</code>
+            y <code>await</code>
+          </h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>.then()</code> y <code>await</code> permiten esperar
+            y procesar promesas, pero organizan el código
+            de manera diferente.
+          </p>
+
+          <h3>Utilizando <code>.then()</code></h3>
+
+          <pre class="code-block"><code>fetch(URL)
+  .then((response) =&gt; response.json())
+  .then((user) =&gt; console.log(user));</code></pre>
+
+          <h3>Utilizando <code>async</code> y <code>await</code></h3>
+
+          <pre class="code-block"><code>const getUser = async () =&gt; {
+  const response = await fetch(URL);
+  const user = await response.json();
+
+  console.log(user);
+};
+
+getUser();</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La versión con <code>async</code> y <code>await</code>
+            se puede leer de arriba abajo:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              Se espera la respuesta del servidor.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Se espera la conversión del cuerpo a JSON.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Se muestran los datos del usuario.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>async</code> y <code>await</code> no sustituyen
+            a las promesas: proporcionan otra sintaxis
+            para trabajar con ellas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aunque visualmente el código parezca síncrono,
+            las operaciones siguen siendo asíncronas y continúan
+            basándose en promesas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esta forma de escribir el código evita tener que encadenar
+            continuamente <code>.then()</code> y ayuda a que las operaciones
+            asíncronas resulten más fáciles de seguir.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="filtrar-coches">
+          <h2>9. Obtener una lista de coches y filtrarla</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            La API utilizada devuelve un objeto que contiene una propiedad
+            <code>cars</code>. Esta propiedad almacena el array de coches.
+          </p>
+
+          <pre class="code-block"><code>const URLCARS = "https://myfakeapi.com/api/cars/";</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La función recibe el año por el que queremos filtrar.
+            Si no proporcionamos ninguno, utiliza <code>2010</code>
+            como valor predeterminado.
+          </p>
+
+          <pre class="code-block"><code>const getCars = async (year = 2010) =&gt; {
+  const cars = await fetch(URLCARS)
+    .then((response) =&gt; response.json())
+    .then((data) =&gt;
+      data["cars"].filter(
+        (car) =&gt; car.car_model_year === year
+      )
+    );
+
+  console.log(cars);
+};
+
+getCars(2011);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este ejemplo, <code>await</code> espera el resultado final
+            de toda la cadena formada por <code>fetch()</code>
+            y los dos <code>.then()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El parámetro <code>year = 2010</code> tiene
+            un valor predeterminado:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              <code>getCars()</code> filtra los coches
+              del año <code>2010</code>.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>getCars(2011)</code> filtra los coches
+              del año <code>2011</code>.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esta expresión accede a la propiedad que contiene el array:
+          </p>
+
+          <pre class="code-block"><code>data["cars"]</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Después, <code>.filter()</code> recorre ese array y conserva
+            únicamente los coches que cumplen la condición:
+          </p>
+
+          <pre class="code-block"><code>.filter((car) =&gt; car.car_model_year === year)</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En cada vuelta:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              <code>car</code> representa el coche
+              que se está comprobando.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>car.car_model_year</code> accede al año de ese coche.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>car.car_model_year === year</code> comprueba
+              si coincide con el año solicitado.
+            </li>
+          </ul>
+        </section>
+
+        <section class="lesson-section" id="peticiones-consecutivas">
+          <h2>10. Peticiones consecutivas con <code>await</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            También podemos realizar varias operaciones asíncronas
+            de manera consecutiva.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En el siguiente ejemplo, primero se obtiene el año
+            del primer coche. Después, ese año se utiliza para filtrar
+            todos los coches que coinciden con él.
+          </p>
+
+          <pre class="code-block"><code>const getCarsFromFirstCarYear = async () =&gt; {
+  const firstCarYear = await fetch(URLCARS)
+    .then((response) =&gt; response.json())
+    .then((data) =&gt; data["cars"][0].car_model_year);
+
+  const allCarsFilterByYear = await fetch(URLCARS)
+    .then((response) =&gt; response.json())
+    .then((data) =&gt;
+      data["cars"].filter(
+        (car) =&gt; car.car_model_year === firstCarYear
+      )
+    );
+
+  console.log(allCarsFilterByYear);
+};
+
+getCarsFromFirstCarYear();</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La primera cadena obtiene el año del primer coche:
+          </p>
+
+          <pre class="code-block"><code>data["cars"][0].car_model_year</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El acceso se realiza por niveles:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Expresión</th>
+                  <th scope="col">Resultado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>data</code></td>
+                  <td>Objeto completo obtenido de la API.</td>
+                </tr>
+                <tr>
+                  <td><code>data["cars"]</code></td>
+                  <td>Array de coches.</td>
+                </tr>
+                <tr>
+                  <td><code>data["cars"][0]</code></td>
+                  <td>Primer coche del array.</td>
+                </tr>
+                <tr>
+                  <td><code>data["cars"][0].car_model_year</code></td>
+                  <td>Año del primer coche.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Ese año se guarda en la variable:
+          </p>
+
+          <pre class="code-block"><code>const firstCarYear = ...</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Después, la segunda petición vuelve a obtener los coches
+            y filtra los que tienen ese mismo año:
+          </p>
+
+          <pre class="code-block"><code>car.car_model_year === firstCarYear</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Las dos operaciones se ejecutan de manera secuencial:
+            primero termina la que obtiene el año y después continúa
+            la que realiza el filtro.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El primer <code>await</code> debe obtener el año antes
+            de que el código pueda utilizarlo en la segunda operación.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="legibilidad">
+          <h2>11. Legibilidad del código asíncrono</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando un programa contiene muchas operaciones asíncronas,
+            puede acumular numerosos <code>.then()</code> o callbacks
+            anidados y resultar más difícil de leer.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>async</code> y <code>await</code> permiten organizar
+            esas operaciones en un orden más próximo a la forma
+            en la que razonamos:
+          </p>
+
+          <pre class="code-block"><code>const response = await fetch(URL);
+const data = await response.json();
+
+console.log(data);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aunque las instrucciones se lean de arriba abajo,
+            no dejan de ser operaciones asíncronas.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>await</code> espera el resultado dentro de la función,
+            pero no congela la ejecución completa del programa.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>12. Ideas esenciales de la clase</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una API permite que distintas aplicaciones intercambien datos.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los métodos HTTP indican qué operación queremos realizar
+            sobre un recurso.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>fetch()</code> inicia una petición y devuelve una promesa.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La URL es obligatoria y el objeto de opciones es opcional.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El primer resultado de <code>fetch()</code> es un objeto
+            <code>Response</code>, no los datos convertidos.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>response.json()</code> procesa el cuerpo JSON
+            y también devuelve una promesa.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un error HTTP no rechaza automáticamente <code>fetch()</code>;
+            debemos comprobar <code>response.ok</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una función declarada con <code>async</code>
+            siempre devuelve una promesa.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>await</code> pausa la función asíncrona actual
+            mientras espera la resolución de una promesa.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>async</code> y <code>await</code> ofrecen una sintaxis
+            más secuencial y legible para trabajar con promesas.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · Promesas y asincronía · Clase 39
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
