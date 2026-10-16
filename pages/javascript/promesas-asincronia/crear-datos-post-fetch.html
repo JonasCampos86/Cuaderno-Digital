@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Clase 40: crear tareas con POST y fetch, enviar JSON, controlar formularios y cargar usuarios desde una API."
+    />
+    <title>Crear datos con POST y Fetch | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a Promesas y asincronía
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#objetivo">1. Objetivo</a>
+          <a href="#metodos-http">2. Método y recurso</a>
+
+          <h2>Realizar una petición POST</h2>
+
+          <a href="#configuracion-fetch">3. Configurar fetch()</a>
+          <a href="#cuerpo-peticion">4. El cuerpo de la petición</a>
+          <a href="#encabezados">5. Los encabezados</a>
+          <a href="#respuesta">6. Procesar la respuesta</a>
+          <a href="#simulacion">7. Creación simulada</a>
+
+          <h2>Conectar el POST con un formulario</h2>
+
+          <a href="#formulario">8. El formulario</a>
+          <a href="#submit">9. Controlar submit</a>
+          <a href="#datos-formulario">10. Leer los datos</a>
+          <a href="#estado-envio">11. Estado del envío</a>
+          <a href="#enviar-formulario">12. Enviar la tarea</a>
+
+          <h2>Cargar los usuarios en el <code>&lt;select&gt;</code></h2>
+
+          <a href="#cargar-usuarios">13. Obtener los usuarios</a>
+          <a href="#opciones">14. Crear las opciones</a>
+          <a href="#codigo-completo">Código completo</a>
+          <a href="#esquema">Esquema del funcionamiento</a>
+          <a href="#resumen">Ideas esenciales</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Crear datos con POST y Fetch</h1>
+          <p>
+            Clase 40 · Enviar JSON a una API, crear tareas desde un formulario
+            y cargar usuarios para seleccionarlos en una lista.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="objetivo">
+          <h2>1. Objetivo de la clase</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Hasta ahora habíamos utilizado <code>fetch()</code> principalmente
+            para pedir información a una API mediante peticiones
+            <code>GET</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En esta clase damos el siguiente paso: enviar información desde
+            JavaScript para crear un recurso nuevo.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            El ejemplo consiste en crear una tarea en JSONPlaceholder:
+          </p>
+
+          <pre class="code-block"><code>const URL_TODOS =
+  "https://jsonplaceholder.typicode.com/todos";</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Para crear un recurso mediante una API se utiliza normalmente una
+            petición HTTP de tipo POST.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="metodos-http">
+          <h2>2. El método indica qué queremos hacer</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una misma API puede permitir varias operaciones. El método HTTP
+            comunica al servidor qué acción queremos realizar.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Operación</th>
+                  <th scope="col">Método</th>
+                  <th scope="col">Ejemplo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Consultar</td>
+                  <td><code>GET</code></td>
+                  <td><code>GET /todos/1</code></td>
+                </tr>
+                <tr>
+                  <td>Crear</td>
+                  <td><code>POST</code></td>
+                  <td><code>POST /todos</code></td>
+                </tr>
+                <tr>
+                  <td>Modificar</td>
+                  <td><code>PUT</code></td>
+                  <td><code>PUT /todos/1</code></td>
+                </tr>
+                <tr>
+                  <td>Borrar</td>
+                  <td><code>DELETE</code></td>
+                  <td><code>DELETE /todos/1</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            La dirección <code>/todos</code> representa la colección de tareas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            La dirección <code>/todos/1</code> representa una tarea concreta,
+            identificada con el número <code>1</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La URL identifica el recurso y el método HTTP indica la operación
+            que queremos realizar sobre él.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="configuracion-fetch">
+          <h2>3. El segundo argumento de <code>fetch()</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si llamamos a <code>fetch()</code> solamente con una URL, se realiza
+            una petición <code>GET</code>:
+          </p>
+
+          <pre class="code-block"><code>fetch(URL_TODOS);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para realizar un <code>POST</code>, añadimos un segundo argumento
+            con la configuración de la petición:
+          </p>
+
+          <pre class="code-block"><code>fetch(URL_TODOS, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    userId: 1,
+    title: "Estudiar JavaScript",
+    completed: false,
+  }),
+});</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Propiedad</th>
+                  <th scope="col">Significado</th>
+                  <th scope="col">Por qué se utiliza</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>method</code></td>
+                  <td>Método HTTP de la petición</td>
+                  <td>Para indicar que queremos crear un recurso</td>
+                </tr>
+                <tr>
+                  <td><code>headers</code></td>
+                  <td>Información adicional sobre la petición</td>
+                  <td>Para describir los datos enviados</td>
+                </tr>
+                <tr>
+                  <td><code>Content-Type</code></td>
+                  <td>Formato del contenido</td>
+                  <td>Para indicar que enviamos JSON</td>
+                </tr>
+                <tr>
+                  <td><code>body</code></td>
+                  <td>Cuerpo de la petición</td>
+                  <td>Para incluir los datos de la nueva tarea</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El segundo argumento de <code>fetch()</code> describe cómo debe
+            realizarse la petición.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="cuerpo-peticion">
+          <h2>4. El cuerpo de la petición</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            La información de la nueva tarea comienza siendo un objeto de
+            JavaScript:
+          </p>
+
+          <pre class="code-block"><code>const nuevaTarea = {
+  userId: 1,
+  title: "Estudiar JavaScript",
+  completed: false,
+};</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un objeto de JavaScript no se envía directamente en el cuerpo de la
+            petición. Primero debemos convertirlo en una cadena JSON:
+          </p>
+
+          <pre class="code-block"><code>const cuerpo = JSON.stringify(nuevaTarea);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Después colocamos esa cadena en la propiedad <code>body</code>:
+          </p>
+
+          <pre class="code-block"><code>fetch(URL_TODOS, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(nuevaTarea),
+});</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>JSON.stringify()</code> convierte un valor de JavaScript en
+            una cadena con formato JSON.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            El proceso puede representarse así:
+          </p>
+
+          <pre class="diagram-block">Objeto de JavaScript
+        ↓
+JSON.stringify()
+        ↓
+Cadena JSON
+        ↓
+body de la petición</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>JSON.stringify()</code> no modifica el objeto original.
+            Devuelve una cadena nueva.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="encabezados">
+          <h2>5. Los encabezados de la petición</h2>
+
+          <pre class="code-block"><code>headers: {
+  "Content-Type": "application/json",
+}</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los encabezados aportan información sobre la petición.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este caso, <code>Content-Type</code> comunica al servidor que el
+            contenido de <code>body</code> está escrito en formato JSON.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>Content-Type</code> indica el formato de los datos que estamos
+            enviando.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Enviar JSON en <code>body</code> y declarar
+            <code>Content-Type: application/json</code> son dos pasos
+            relacionados: uno prepara el contenido y el otro describe su formato.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="respuesta">
+          <h2>6. Procesar la respuesta</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>fetch()</code> devuelve una promesa. Cuando la petición recibe
+            una respuesta, obtenemos un objeto <code>Response</code>.
+          </p>
+
+          <pre class="code-block"><code>fetch(URL_TODOS, opciones)
+  .then((response) =&gt; {
+    if (!response.ok) {
+      throw new Error(
+        `Error HTTP: ${response.status}`
+      );
+    }
+
+    return response.json();
+  })
+  .then((todoCreado) =&gt; {
+    console.log(todoCreado);
+  })
+  .catch((error) =&gt; {
+    console.log(error);
+  });</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cada parte cumple una función diferente:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              <code>fetch()</code> realiza la petición.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              El primer <code>.then()</code> recibe el objeto
+              <code>Response</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>response.ok</code> indica si la respuesta HTTP ha sido
+              correcta.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>response.json()</code> procesa el cuerpo de la respuesta.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              El segundo <code>.then()</code> recibe los datos convertidos a
+              JavaScript.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>.catch()</code> recibe los errores lanzados o los rechazos
+              de la cadena.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>response.json()</code> devuelve una promesa con el contenido
+            de la respuesta convertido a JavaScript.
+          </p>
+
+          <h3>Envío y recepción de JSON</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Instrucción</th>
+                  <th scope="col">Dirección</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>JSON.stringify(datos)</code></td>
+                  <td>JavaScript → API</td>
+                  <td>Prepara los datos que enviamos</td>
+                </tr>
+                <tr>
+                  <td><code>response.json()</code></td>
+                  <td>API → JavaScript</td>
+                  <td>Procesa los datos que recibimos</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aunque sus nombres se parecen, realizan operaciones contrarias.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="simulacion">
+          <h2>7. JSONPlaceholder simula la creación</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            JSONPlaceholder permite practicar peticiones HTTP sin utilizar una
+            base de datos propia.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando recibe el <code>POST</code>, responde como si hubiese creado
+            la tarea y devuelve los datos enviados junto con un identificador.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Una respuesta puede tener esta forma:
+          </p>
+
+          <pre class="code-block"><code>{
+  userId: 1,
+  title: "Estudiar JavaScript",
+  completed: false,
+  id: 201
+}</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            La creación es simulada. El recurso no queda almacenado
+            permanentemente en la API.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una respuesta correcta confirma que la petición se ha procesado,
+            pero JSONPlaceholder no conserva realmente el nuevo recurso.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="formulario">
+          <h2>8. Formulario para crear una tarea</h2>
+
+          <pre class="code-block"><code>&lt;form id="createTodo"&gt;
+  &lt;label for="userTodo"&gt;Usuario&lt;/label&gt;
+
+  &lt;select id="userTodo" required&gt;
+    &lt;option value=""&gt;Selecciona un usuario&lt;/option&gt;
+  &lt;/select&gt;
+
+  &lt;label for="todoName"&gt;Nombre de la tarea&lt;/label&gt;
+
+  &lt;input
+    type="text"
+    id="todoName"
+    required
+  &gt;
+
+  &lt;input
+    type="checkbox"
+    id="todoCompleted"
+  &gt;
+
+  &lt;label for="todoCompleted"&gt;
+    Completada
+  &lt;/label&gt;
+
+  &lt;button type="submit" id="saveTodo"&gt;
+    Guardar
+  &lt;/button&gt;
+&lt;/form&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cada control representa una propiedad de la tarea que enviaremos.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Control</th>
+                  <th scope="col">Propiedad creada</th>
+                  <th scope="col">Dato obtenido</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>#userTodo</code></td>
+                  <td><code>userId</code></td>
+                  <td>Identificador del usuario</td>
+                </tr>
+                <tr>
+                  <td><code>#todoName</code></td>
+                  <td><code>title</code></td>
+                  <td>Nombre de la tarea</td>
+                </tr>
+                <tr>
+                  <td><code>#todoCompleted</code></td>
+                  <td><code>completed</code></td>
+                  <td><code>true</code> o <code>false</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            El botón tiene <code>type="submit"</code> porque su función es enviar
+            el formulario.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los campos obligatorios utilizan <code>required</code>, por lo que
+            el navegador comprueba que estén completos antes de producir el
+            envío válido.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="submit">
+          <h2>9. Controlar el evento <code>submit</code></h2>
+
+          <pre class="code-block"><code>const form =
+  document.getElementById("createTodo");
+
+form.addEventListener("submit", (event) =&gt; {
+  event.preventDefault();
+
+  // Crear y enviar la tarea
+});</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Escuchamos el evento <code>submit</code> porque representa el envío
+            del formulario completo.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            La función recibe un objeto <code>event</code> con información sobre
+            lo sucedido.
+          </p>
+
+          <pre class="code-block"><code>event.preventDefault();</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esta instrucción evita el comportamiento tradicional del
+            formulario, que recargaría o cambiaría la página.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>preventDefault()</code> evita la acción predeterminada del
+            formulario para que JavaScript pueda controlar el envío mediante
+            <code>fetch()</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="datos-formulario">
+          <h2>10. Leer los datos del formulario</h2>
+
+          <pre class="code-block"><code>const todoUser =
+  document.getElementById("userTodo");
+
+const todoName =
+  document.getElementById("todoName");
+
+const todoCompleted =
+  document.getElementById("todoCompleted");</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Estas constantes guardan referencias a los elementos HTML.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para obtener los datos introducidos utilizamos sus propiedades:
+          </p>
+
+          <pre class="code-block"><code>const nuevaTarea = {
+  userId: Number(todoUser.value),
+  title: todoName.value,
+  completed: todoCompleted.checked,
+};</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Propiedad</th>
+                  <th scope="col">Resultado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>.value</code></td>
+                  <td>Valor de un campo de texto o de una lista</td>
+                </tr>
+                <tr>
+                  <td><code>.checked</code></td>
+                  <td>Estado booleano de un checkbox</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los valores de los controles HTML se obtienen como texto. Por eso
+            convertimos el identificador del usuario con <code>Number()</code>:
+          </p>
+
+          <pre class="code-block"><code>Number(todoUser.value);</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Si <code>todoUser.value</code> contiene <code>"3"</code>, el resultado
+            será el número <code>3</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>.value</code> obtiene el valor de un control y
+            <code>.checked</code> obtiene el estado de una casilla.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="estado-envio">
+          <h2>11. Informar de que la petición está en curso</h2>
+
+          <pre class="code-block"><code>saveTodo.disabled = true;
+saveTodo.textContent = "Enviando...";</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Mientras la petición está pendiente, desactivamos el botón para
+            evitar varios envíos de la misma tarea.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            También cambiamos su texto para informar al usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando la operación termina, restauramos el botón:
+          </p>
+
+          <pre class="code-block"><code>.finally(() =&gt; {
+  saveTodo.disabled = false;
+  saveTodo.textContent = "Guardar";
+});</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>finally()</code> se ejecuta tanto si la promesa se resuelve
+            como si se rechaza.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>finally()</code> permite restaurar la interfaz
+            independientemente del resultado de la petición.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="enviar-formulario">
+          <h2>12. Enviar los datos del formulario</h2>
+
+          <pre class="code-block"><code>form.addEventListener("submit", (event) =&gt; {
+  event.preventDefault();
+
+  const nuevaTarea = {
+    userId: Number(todoUser.value),
+    title: todoName.value,
+    completed: todoCompleted.checked,
+  };
+
+  saveTodo.disabled = true;
+  saveTodo.textContent = "Enviando...";
+
+  fetch(URL_TODOS, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(nuevaTarea),
+  })
+    .then((response) =&gt; {
+      if (!response.ok) {
+        throw new Error(
+          `Error HTTP: ${response.status}`
+        );
+      }
+
+      return response.json();
+    })
+    .then((todoCreado) =&gt; {
+      console.log(todoCreado);
+      form.reset();
+    })
+    .catch((error) =&gt; {
+      console.log(error);
+    })
+    .finally(() =&gt; {
+      saveTodo.disabled = false;
+      saveTodo.textContent = "Guardar";
+    });
+});</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El orden es importante:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              Evitamos la recarga de la página.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Construimos el objeto con los valores actuales.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Desactivamos el botón.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Convertimos el objeto a JSON.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Enviamos la petición <code>POST</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Procesamos la respuesta.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Limpiamos el formulario si la operación termina correctamente.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Restauramos el botón en todos los casos.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>form.reset()</code> devuelve todos los controles del formulario
+            a sus valores iniciales.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El formulario se limpia únicamente después de recibir una respuesta
+            correcta. Si ocurre un error, los datos permanecen visibles para
+            que el usuario pueda intentarlo de nuevo.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="cargar-usuarios">
+          <h2>13. Obtener los usuarios</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para que el usuario no tenga que escribir manualmente un
+            identificador, obtenemos la lista de usuarios desde la API:
+          </p>
+
+          <pre class="code-block"><code>const URL_USERS =
+  "https://jsonplaceholder.typicode.com/users";
+
+const cargarUsuarios = async () =&gt; {
+  try {
+    const response = await fetch(URL_USERS);
+
+    if (!response.ok) {
+      throw new Error(
+        `Error HTTP: ${response.status}`
+      );
+    }
+
+    const users = await response.json();
+
+    // Crear las opciones
+  } catch (error) {
+    console.log(error);
+  }
+};</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>await fetch()</code> espera a que llegue el objeto
+            <code>Response</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>await response.json()</code> espera a que el cuerpo de la
+            respuesta se convierta en un array de usuarios.
+          </p>
+
+          <pre class="diagram-block">fetch()
+   ↓
+Response
+   ↓
+response.json()
+   ↓
+Array de usuarios</pre>
+        </section>
+
+        <section class="lesson-section" id="opciones">
+          <h2>14. Crear las opciones dinámicamente</h2>
+
+          <pre class="code-block"><code>users.forEach((user) =&gt; {
+  const option =
+    document.createElement("option");
+
+  option.value = user.id;
+  option.textContent = user.name;
+
+  todoUser.appendChild(option);
+});</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>forEach()</code> ejecuta la función una vez por cada usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En cada vuelta:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              <code>createElement()</code> crea un elemento
+              <code>&lt;option&gt;</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>value</code> guarda el identificador del usuario.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>textContent</code> establece el nombre visible.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>appendChild()</code> añade la opción al
+              <code>&lt;select&gt;</code>.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--example">
+            Si recibimos este usuario:
+          </p>
+
+          <pre class="code-block"><code>{
+  id: 1,
+  name: "Leanne Graham"
+}</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Se crea un elemento equivalente a:
+          </p>
+
+          <pre class="code-block"><code>&lt;option value="1"&gt;
+  Leanne Graham
+&lt;/option&gt;</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El identificador se utiliza como valor de la opción y el nombre se
+            muestra al usuario.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="codigo-completo">
+          <h2>Código completo</h2>
+
+          <pre class="code-block"><code>const URL_TODOS =
+  "https://jsonplaceholder.typicode.com/todos";
+
+const URL_USERS =
+  "https://jsonplaceholder.typicode.com/users";
+
+const form =
+  document.getElementById("createTodo");
+
+const todoUser =
+  document.getElementById("userTodo");
+
+const todoName =
+  document.getElementById("todoName");
+
+const todoCompleted =
+  document.getElementById("todoCompleted");
+
+const saveTodo =
+  document.getElementById("saveTodo");
+
+const cargarUsuarios = async () =&gt; {
+  try {
+    const response = await fetch(URL_USERS);
+
+    if (!response.ok) {
+      throw new Error(
+        `Error HTTP: ${response.status}`
+      );
+    }
+
+    const users = await response.json();
+
+    users.forEach((user) =&gt; {
+      const option =
+        document.createElement("option");
+
+      option.value = user.id;
+      option.textContent = user.name;
+
+      todoUser.appendChild(option);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+form.addEventListener("submit", (event) =&gt; {
+  event.preventDefault();
+
+  const nuevaTarea = {
+    userId: Number(todoUser.value),
+    title: todoName.value,
+    completed: todoCompleted.checked,
+  };
+
+  saveTodo.disabled = true;
+  saveTodo.textContent = "Enviando...";
+
+  fetch(URL_TODOS, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(nuevaTarea),
+  })
+    .then((response) =&gt; {
+      if (!response.ok) {
+        throw new Error(
+          `Error HTTP: ${response.status}`
+        );
+      }
+
+      return response.json();
+    })
+    .then((todoCreado) =&gt; {
+      console.log(todoCreado);
+      form.reset();
+    })
+    .catch((error) =&gt; {
+      console.log(error);
+    })
+    .finally(() =&gt; {
+      saveTodo.disabled = false;
+      saveTodo.textContent = "Guardar";
+    });
+});
+
+cargarUsuarios();</code></pre>
+        </section>
+
+        <section class="lesson-section" id="esquema">
+          <h2>Esquema del funcionamiento</h2>
+
+          <pre class="diagram-block">AL CARGAR LA PÁGINA
+
+GET /users
+      ↓
+Array de usuarios
+      ↓
+Creación de elementos &lt;option&gt;
+      ↓
+Usuarios disponibles en el &lt;select&gt;
+
+
+AL ENVIAR EL FORMULARIO
+
+Valores del formulario
+      ↓
+Objeto nuevaTarea
+      ↓
+JSON.stringify()
+      ↓
+POST /todos
+      ↓
+Comprobación de response.ok
+      ↓
+response.json()
+      ↓
+Tarea recibida en JavaScript</pre>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>Ideas esenciales</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>GET</code> solicita información y <code>POST</code> envía datos
+            para crear un recurso.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El segundo argumento de <code>fetch()</code> contiene la
+            configuración de la petición.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>method: "POST"</code> indica que queremos crear un recurso.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>Content-Type: application/json</code> describe el formato del
+            contenido enviado.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>JSON.stringify()</code> convierte un valor de JavaScript en
+            una cadena JSON.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>response.json()</code> procesa el JSON recibido y devuelve una
+            promesa.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El evento <code>submit</code> permite controlar el envío completo de
+            un formulario.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>preventDefault()</code> evita la recarga para que JavaScript
+            gestione el envío.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>.value</code> permite leer campos de texto y listas, mientras
+            que <code>.checked</code> permite leer un checkbox.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>createElement()</code> crea un elemento del DOM y
+            <code>appendChild()</code> lo añade al documento.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una interfaz debe informar al usuario mientras una operación
+            asíncrona está pendiente.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · Promesas y asincronía · Clase 40
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
