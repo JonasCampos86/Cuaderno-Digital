@@ -1,0 +1,1359 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Clase 41: autenticación y autorización, sesiones, cookies, tokens, estructura de JWT y verificación de peticiones."
+    />
+    <title>Autenticación, sesiones, tokens y JWT | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a Promesas y asincronía
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#identidad-permisos">1. Identidad y permisos</a>
+          <a href="#http">2. HTTP sin estado</a>
+          <a href="#sesiones">3. Sesiones</a>
+          <a href="#sistemas-distribuidos">4. Sistemas distribuidos</a>
+          <a href="#tokens">5. Tokens</a>
+          <a href="#jwt">6. Estructura de JWT</a>
+          <a href="#codificacion-firma-cifrado">7. Codificar, firmar y cifrar</a>
+          <a href="#verificacion">8. Crear, decodificar y verificar</a>
+          <a href="#autorizacion-jwt">9. Permisos con JWT</a>
+          <a href="#microservicios">10. Microservicios</a>
+          <a href="#comparacion">11. Sesiones frente a JWT</a>
+          <a href="#seguridad">12. Seguridad</a>
+          <a href="#peticion-token">13. Petición con token</a>
+          <a href="#flujo-completo">14. Flujo completo</a>
+          <a href="#resumen">15. Ideas esenciales</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Autenticación, sesiones, tokens y JWT</h1>
+          <p>
+            Clase 41 · Identificar al usuario, comprobar sus permisos y
+            autenticar peticiones a una API mediante sesiones y tokens.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="identidad-permisos">
+          <h2>1. Autenticación y autorización</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aunque están relacionadas, la autenticación y la autorización
+            responden a preguntas diferentes.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Concepto</th>
+                  <th scope="col">Pregunta que responde</th>
+                  <th scope="col">Ejemplo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Autenticación</td>
+                  <td>¿Quién eres?</td>
+                  <td>Iniciar sesión con correo y contraseña</td>
+                </tr>
+                <tr>
+                  <td>Autorización</td>
+                  <td>¿Qué puedes hacer?</td>
+                  <td>Comprobar si puedes acceder al panel de administración</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Primero se identifica al usuario y después se comprueba qué acciones
+            tiene permitidas.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La autenticación confirma la identidad del usuario; la autorización
+            determina sus permisos.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Por ejemplo, dos personas pueden iniciar sesión correctamente, pero
+            tener permisos diferentes:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              Un usuario normal puede consultar su perfil.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Un administrador también puede gestionar otros usuarios.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--warning">
+            Estar autenticado no significa tener acceso a todos los recursos de
+            la aplicación.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="http">
+          <h2>2. HTTP y la necesidad de identificar al usuario</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            HTTP funciona mediante peticiones y respuestas independientes:
+          </p>
+
+          <pre class="diagram-block">Cliente  →  petición  →  Servidor
+Cliente  ←  respuesta ←  Servidor</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando el navegador realiza una nueva petición, el servidor no
+            recuerda automáticamente quién hizo las peticiones anteriores.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            HTTP es un protocolo sin estado: cada petición se procesa de manera
+            independiente.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Imaginemos el siguiente proceso:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--example">
+              El usuario envía su correo y contraseña.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              El servidor comprueba que son correctos.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Más tarde, el usuario solicita sus datos privados.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--explanation">
+            En la tercera operación, el servidor necesita algún mecanismo para
+            reconocer al usuario sin pedirle de nuevo la contraseña.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Dos estrategias habituales son:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Autenticación basada en sesiones.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Autenticación basada en tokens.
+            </li>
+          </ul>
+        </section>
+
+        <section class="lesson-section" id="sesiones">
+          <h2>3. Autenticación basada en sesiones</h2>
+
+          <h3>3.1. Funcionamiento general</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Después de validar las credenciales, el servidor crea una sesión
+            para el usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los datos asociados a esa sesión podrían ser:
+          </p>
+
+          <pre class="code-block"><code>{
+  sessionId: "abc123",
+  userId: 27,
+  role: "admin"
+}</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El servidor almacena esos datos en algún sistema preparado para
+            ello, como la memoria, una base de datos o un almacén de sesiones.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El cliente recibe normalmente solo el identificador:
+          </p>
+
+          <pre class="diagram-block">abc123</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Este identificador suele guardarse en una cookie.
+          </p>
+
+          <h4>Inicio de sesión</h4>
+
+          <p class="lesson-note lesson-note--explanation">
+            El proceso de inicio de sesión sigue este flujo:
+          </p>
+
+          <pre class="diagram-block">1. Cliente → correo y contraseña → Servidor
+2. Servidor comprueba las credenciales
+3. Servidor crea una sesión
+4. Servidor → cookie con el ID de sesión → Cliente</pre>
+
+          <h4>Peticiones posteriores</h4>
+
+          <p class="lesson-note lesson-note--explanation">
+            En las siguientes peticiones se utiliza el identificador para
+            recuperar la sesión:
+          </p>
+
+          <pre class="diagram-block">1. Cliente → petición + cookie → Servidor
+2. Servidor busca los datos de la sesión
+3. Servidor identifica al usuario
+4. Servidor comprueba sus permisos
+5. Servidor devuelve la respuesta</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En la autenticación por sesiones, el cliente conserva normalmente un
+            identificador y el servidor mantiene los datos asociados a esa sesión.
+          </p>
+
+          <h3>3.2. La cookie de sesión</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            El servidor puede enviar el identificador de sesión mediante una
+            cabecera HTTP:
+          </p>
+
+          <pre class="code-block"><code>Set-Cookie: sessionId=abc123; HttpOnly; Secure</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Configuración</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>HttpOnly</code></td>
+                  <td>Impide que el código JavaScript del navegador lea la cookie</td>
+                </tr>
+                <tr>
+                  <td><code>Secure</code></td>
+                  <td>Hace que la cookie solo se envíe mediante HTTPS</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            En las peticiones posteriores, el navegador puede enviar
+            automáticamente esa cookie al servidor.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Estas configuraciones mejoran la seguridad, pero no solucionan por
+            sí solas todos los posibles riesgos.
+          </p>
+
+          <h3>3.3. Cierre de sesión</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para cerrar una sesión, el servidor puede eliminar o invalidar los
+            datos asociados a su identificador:
+          </p>
+
+          <pre class="diagram-block">sessionId abc123 → sesión eliminada</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aunque el cliente intentara utilizar de nuevo ese identificador, el
+            servidor ya no encontraría una sesión válida.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En un sistema de sesiones, el servidor puede invalidar
+            inmediatamente una sesión concreta.
+          </p>
+
+          <h3>3.4. Ventajas e inconvenientes de las sesiones</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Ventajas</th>
+                  <th scope="col">Inconvenientes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>El servidor mantiene el control sobre las sesiones activas</td>
+                  <td>Es necesario almacenar información por cada sesión</td>
+                </tr>
+                <tr>
+                  <td>Las sesiones pueden invalidarse inmediatamente</td>
+                  <td>El almacenamiento consume recursos</td>
+                </tr>
+                <tr>
+                  <td>El cliente solo necesita conservar un identificador</td>
+                  <td>Varios servidores deben coordinar el acceso a las sesiones</td>
+                </tr>
+                <tr>
+                  <td>Muchos frameworks incluyen sistemas de sesión</td>
+                  <td>Una arquitectura distribuida requiere soluciones adicionales</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="sistemas-distribuidos">
+          <h2>4. Sesiones en sistemas distribuidos</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una aplicación puede estar formada por distintos servicios:
+          </p>
+
+          <pre class="diagram-block">                 Aplicación
+                      │
+        ┌─────────────┼─────────────┐
+        │             │             │
+   Conductores    Pasajeros       Pagos
+                                      │
+                               Notificaciones</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si cada servicio almacena sus propias sesiones, una sesión creada
+            en uno de ellos no tiene por qué estar disponible en los demás.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Por ejemplo:</p>
+
+          <ol>
+            <li class="lesson-note lesson-note--example">
+              El usuario inicia sesión en el servicio de pasajeros.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Ese servicio crea y almacena su sesión.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              El usuario intenta realizar un pago.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              El servicio de pagos también necesita identificarlo.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para coordinar las sesiones pueden utilizarse distintas soluciones:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              Un almacenamiento de sesiones compartido.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Un servicio central encargado de gestionarlas.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Afinidad de sesión o <code>sticky sessions</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Un sistema de autenticación basado en tokens.
+            </li>
+          </ul>
+
+          <h3>Sticky sessions</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            La afinidad se aplica entre réplicas del mismo servicio; no comparte
+            por sí sola la sesión con otros servicios.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una <code>sticky session</code> intenta dirigir las peticiones de un
+            usuario al mismo servidor que creó su sesión.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esto puede simplificar la gestión porque el usuario vuelve al
+            servidor que ya conoce su sesión.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            También aumenta la dependencia respecto a ese servidor. Si deja de
+            estar disponible, será necesario recuperar la sesión mediante otro
+            mecanismo.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="tokens">
+          <h2>5. Autenticación basada en tokens</h2>
+
+          <h3>5.1. ¿Qué es un token?</h3>
+
+          <p class="lesson-note lesson-note--key">
+            Un token es un valor que el cliente presenta al servidor como
+            credencial.
+          </p>
+
+          <pre class="diagram-block">Cliente → petición + token → Servidor</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un token es una credencial que el cliente presenta al servidor; JWT
+            es solo uno de los formatos que puede utilizar ese token.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Por tanto, no todos los tokens son JWT. Algunos tokens son
+            identificadores opacos cuyos datos se consultan en el servidor.
+          </p>
+
+          <h3>5.2. Funcionamiento general</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Después de comprobar las credenciales, el servidor genera un token
+            y se lo entrega al cliente.
+          </p>
+
+          <pre class="diagram-block">1. Cliente → correo y contraseña → Servidor
+2. Servidor comprueba las credenciales
+3. Servidor genera un token
+4. Servidor → token → Cliente</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En las peticiones posteriores, el cliente envía ese token:
+          </p>
+
+          <pre class="diagram-block">1. Cliente → petición + token → Servidor
+2. Servidor comprueba el token
+3. Servidor identifica al usuario
+4. Servidor comprueba sus permisos
+5. Servidor devuelve la respuesta</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El token se envía frecuentemente mediante la cabecera
+            <code>Authorization</code>:
+          </p>
+
+          <pre class="code-block"><code>Authorization: Bearer eyJhbGciOiJIUzI1NiIs...</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Elemento</th>
+                  <th scope="col">Significado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Authorization</code></td>
+                  <td>Cabecera utilizada para enviar las credenciales</td>
+                </tr>
+                <tr>
+                  <td><code>Bearer</code></td>
+                  <td>Indica que el cliente presenta un token de acceso</td>
+                </tr>
+                <tr>
+                  <td><code>eyJ...</code></td>
+                  <td>Valor concreto del token</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El cliente debe enviar el token en cada petición que necesite
+            autenticación.
+          </p>
+
+          <h3>5.3. Autenticación sin estado</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un sistema de tokens puede funcionar sin almacenar en el servidor
+            una sesión individual para cada usuario.
+          </p>
+
+          <pre class="diagram-block">Petición
+   │
+   ├── token
+   │     ├── identidad
+   │     ├── permisos o rol
+   │     └── fecha de expiración
+   │
+   └── el servidor verifica el token</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cada petición lleva la información necesaria para comprobar la
+            identidad del usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En un sistema stateless, el servidor no necesita recuperar una
+            sesión almacenada para identificar cada petición.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Esto no significa que el servidor deje de utilizar bases de datos.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El servidor puede seguir necesitándolas para consultar usuarios,
+            productos, pedidos o cualquier otro dato de la aplicación.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="jwt">
+          <h2>6. ¿Qué es JWT?</h2>
+
+          <p class="lesson-note lesson-note--key">
+            JWT significa <code>JSON Web Token</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Es un formato estandarizado y compacto para representar información
+            que puede ser verificada.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Se utiliza con frecuencia en sistemas de autenticación y
+            autorización, especialmente cuando intervienen diferentes servicios.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un JWT suele tener este aspecto:
+          </p>
+
+          <pre class="diagram-block">xxxxx.yyyyy.zzzzz</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El JWT firmado en formato compacto que estudiamos aquí está formado
+            por tres partes separadas mediante puntos:
+          </p>
+
+          <pre class="diagram-block">header.payload.signature</pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Parte</th>
+                  <th scope="col">Contenido</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Header</td>
+                  <td>Tipo de token y algoritmo de firma</td>
+                </tr>
+                <tr>
+                  <td>Payload</td>
+                  <td>Información o declaraciones del token</td>
+                </tr>
+                <tr>
+                  <td>Signature</td>
+                  <td>Firma utilizada para comprobar su autenticidad e integridad</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>6.1. Header</h3>
+
+          <p class="lesson-note lesson-note--key">
+            El header o encabezado describe el token y el algoritmo empleado
+            para firmarlo.
+          </p>
+
+          <pre class="code-block"><code>{
+  "alg": "HS256",
+  "typ": "JWT"
+}</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Propiedad</th>
+                  <th scope="col">Significado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>alg</code></td>
+                  <td>Algoritmo utilizado para crear la firma</td>
+                </tr>
+                <tr>
+                  <td><code>typ</code></td>
+                  <td>Tipo de token</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>6.2. Payload</h3>
+
+          <p class="lesson-note lesson-note--key">
+            El payload contiene información sobre el usuario y sobre el propio
+            token.
+          </p>
+
+          <pre class="code-block"><code>{
+  "sub": "27",
+  "role": "admin",
+  "exp": 1760812800
+}</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Estos datos reciben el nombre de <code>claims</code>.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Claim</th>
+                  <th scope="col">Significado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>sub</code></td>
+                  <td>Identificador del sujeto al que pertenece el token</td>
+                </tr>
+                <tr>
+                  <td><code>role</code></td>
+                  <td>Rol asignado al usuario</td>
+                </tr>
+                <tr>
+                  <td><code>exp</code></td>
+                  <td>Momento en el que expira el token</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            No es necesario introducir todos los datos del usuario. Normalmente
+            se incluye solo la información necesaria.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Nunca deben almacenarse contraseñas ni otros datos sensibles en el
+            payload.
+          </p>
+
+          <h3>6.3. Signature</h3>
+
+          <p class="lesson-note lesson-note--key">
+            La signature es la firma del token.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para calcularla se utilizan:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              El header codificado.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              El payload codificado.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Una clave conocida por el sistema que firma el token.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--explanation">
+            De manera conceptual, la operación sería semejante a esta:
+          </p>
+
+          <pre class="code-block"><code>firma = firmar(header + "." + payload, clave);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando el servidor recibe el token, comprueba su firma.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si alguien modifica el header o el payload, la firma deja de coincidir.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La firma permite comprobar que el contenido no ha sido modificado
+            y que el token procede de una fuente que conoce la clave adecuada.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="codificacion-firma-cifrado">
+          <h2>7. Codificación, firma y cifrado</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Estos tres conceptos no significan lo mismo.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Operación</th>
+                  <th scope="col">Finalidad</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Codificación</td>
+                  <td>Representar los datos en otro formato</td>
+                </tr>
+                <tr>
+                  <td>Firma</td>
+                  <td>Comprobar la autenticidad y la integridad</td>
+                </tr>
+                <tr>
+                  <td>Cifrado</td>
+                  <td>Ocultar la información para que no pueda leerse sin la clave necesaria</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            En un JWT firmado habitual, el header y el payload están
+            codificados, pero no cifrados.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esto significa que una persona que consiga el token puede
+            decodificar y leer esas partes.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un JWT firmado normalmente puede leerse, aunque no pueda modificarse
+            sin invalidar la firma.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            La herramienta <code>jwt.io</code> permite observar el header y el
+            payload decodificados. Para practicar, utiliza tokens de ejemplo
+            sin acceso a cuentas reales.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El contenido de un JWT no debe considerarse secreto simplemente
+            porque parezca una cadena incomprensible.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="verificacion">
+          <h2>8. Crear, decodificar y verificar un JWT</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Estas operaciones deben distinguirse claramente:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Operación</th>
+                  <th scope="col">Qué hace</th>
+                  <th scope="col">¿Demuestra que el token es auténtico?</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Crear y firmar</td>
+                  <td>Genera el JWT y su firma</td>
+                  <td>El emisor utiliza su clave para producirlo</td>
+                </tr>
+                <tr>
+                  <td>Decodificar</td>
+                  <td>Permite leer el header y el payload</td>
+                  <td>No</td>
+                </tr>
+                <tr>
+                  <td>Verificar</td>
+                  <td>Comprueba la firma y las condiciones del token</td>
+                  <td>Sí, si todas las comprobaciones son correctas</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Decodificar solo transforma la información para poder leerla.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Decodificar no comprueba quién creó el token ni si ha sido manipulado.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Antes de confiar en un JWT hay que verificarlo, no solo decodificarlo.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            La verificación debe utilizar los algoritmos y claves permitidos por
+            la aplicación. También comprueba la expiración y las condiciones
+            requeridas, como el emisor (<code>iss</code>) y el destinatario
+            (<code>aud</code>).
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El proceso puede representarse así:
+          </p>
+
+          <pre class="diagram-block">JWT recibido
+     │
+     ├── ¿La firma es válida?
+     ├── ¿El token ha expirado?
+     └── ¿Es válido para esta aplicación?
+              │
+              ├── Sí → continuar
+              └── No → rechazar la petición</pre>
+        </section>
+
+        <section class="lesson-section" id="autorizacion-jwt">
+          <h2>9. Autenticación y autorización con JWT</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un JWT puede incluir información como la identidad y el rol del usuario:
+          </p>
+
+          <pre class="code-block"><code>{
+  "sub": "27",
+  "role": "admin"
+}</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El token permite identificar al usuario y conocer determinados datos
+            sobre él.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Sin embargo, el servidor todavía debe decidir si ese usuario tiene
+            permiso para realizar la acción solicitada.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Por ejemplo:</p>
+
+          <ol>
+            <li class="lesson-note lesson-note--example">
+              El servidor verifica el JWT.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Obtiene el identificador y el rol del usuario.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Comprueba si ese rol permite eliminar usuarios.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Autoriza o rechaza la operación.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Presentar un JWT válido no garantiza que la operación esté permitida.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="microservicios">
+          <h2>10. JWT en una arquitectura de microservicios</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            En una aplicación distribuida puede existir un servicio central de
+            autenticación:
+          </p>
+
+          <pre class="diagram-block">Usuario
+   │
+   └── inicia sesión
+             │
+             ▼
+   Servicio de autenticación
+             │
+             └── genera JWT
+                       │
+        ┌──────────────┼──────────────┐
+        ▼              ▼              ▼
+   Conductores      Pasajeros       Pagos</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El usuario puede presentar el mismo token ante distintos servicios
+            si ha sido emitido para que esos servicios lo acepten.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cada servicio debe:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              Recibir el token.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Verificarlo.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Extraer la identidad y la información necesaria.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Comprobar si la operación está autorizada.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--explanation">
+            De esta forma, los servicios no necesitan compartir una sesión
+            individual para identificar al usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El servicio de autenticación genera el token, pero cada servicio
+            protege sus propios recursos y comprueba los permisos necesarios.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="comparacion">
+          <h2>11. Sesiones frente a JWT</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Aspecto</th>
+                  <th scope="col">Sesiones</th>
+                  <th scope="col">JWT</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Estado</td>
+                  <td>Los datos de la sesión se guardan en el servidor</td>
+                  <td>La información necesaria viaja en el token</td>
+                </tr>
+                <tr>
+                  <td>Datos del cliente</td>
+                  <td>Normalmente un ID de sesión</td>
+                  <td>El propio token</td>
+                </tr>
+                <tr>
+                  <td>Envío habitual</td>
+                  <td>Cookie</td>
+                  <td>Cabecera <code>Authorization</code></td>
+                </tr>
+                <tr>
+                  <td>Invalidación</td>
+                  <td>El servidor puede eliminar la sesión</td>
+                  <td>El token puede continuar siendo válido hasta expirar</td>
+                </tr>
+                <tr>
+                  <td>Sistemas distribuidos</td>
+                  <td>Requieren coordinar o compartir las sesiones</td>
+                  <td>Varios servicios pueden verificar el token</td>
+                </tr>
+                <tr>
+                  <td>Cambio de datos</td>
+                  <td>El servidor puede actualizar la sesión</td>
+                  <td>El token conserva su contenido original</td>
+                </tr>
+                <tr>
+                  <td>Recursos</td>
+                  <td>Requieren almacenar sesiones activas</td>
+                  <td>Pueden evitar el almacenamiento individual de sesiones</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            La cookie y la cabecera son mecanismos de transporte: un JWT también
+            puede enviarse en una cookie. La tabla compara configuraciones
+            habituales.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Ningún sistema es siempre superior: la elección depende de las
+            necesidades y de la arquitectura de la aplicación.
+          </p>
+
+          <h3>11.1. Escalabilidad</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando se utilizan sesiones, todos los servidores que atienden al
+            usuario deben poder acceder a los datos de su sesión.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esto puede requerir:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              Un almacenamiento compartido.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Coordinación entre servidores.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Afinidad de sesión o <code>sticky sessions</code>.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--explanation">
+            Con JWT, diferentes servicios pueden verificar el token recibido sin
+            consultar una sesión central en cada petición.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Utilizar JWT no convierte automáticamente una aplicación en escalable.
+            El resto de la arquitectura también debe estar preparado.
+          </p>
+
+          <h3>11.2. Invalidación y cierre de sesión</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Con sesiones, cerrar sesión puede eliminar los datos almacenados en
+            el servidor:
+          </p>
+
+          <pre class="diagram-block">ID de sesión → invalidado</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Con JWT, el cliente puede eliminar su copia del token y dejar de
+            enviarlo.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Sin embargo, si alguien hubiera robado otra copia, podría seguir
+            utilizándola mientras el token continuara siendo válido.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Eliminar un JWT del cliente no invalida automáticamente todas las
+            copias existentes.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Por eso, los tokens suelen tener una fecha de expiración y, cuando
+            es necesario, se acompañan de mecanismos adicionales de revocación.
+          </p>
+
+          <h3>11.3. Datos desactualizados</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Supongamos que un JWT contiene este rol:
+          </p>
+
+          <pre class="code-block"><code>{
+  "sub": "27",
+  "role": "admin"
+}</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Después de emitirlo, el usuario deja de ser administrador.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El token existente continúa conteniendo:
+          </p>
+
+          <pre class="code-block"><code>"role": "admin"</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los cambios realizados en el servidor no modifican automáticamente
+            los tokens que ya fueron emitidos.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para reducir este problema pueden utilizarse tokens de corta duración
+            o volver a consultar información crítica antes de autorizar
+            determinadas operaciones.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="seguridad">
+          <h2>12. Seguridad de sesiones y tokens</h2>
+
+          <h3>12.1. Seguridad de las sesiones</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una implementación con sesiones debe proteger:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              El identificador de sesión.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              La cookie que lo transporta.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Los datos almacenados en el servidor.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              El proceso de cierre de sesión.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las opciones <code>HttpOnly</code>, <code>Secure</code> y el uso de
+            HTTPS ayudan a proteger la cookie y su transmisión.
+          </p>
+
+          <h3>12.2. Seguridad de los JWT</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un token válido funciona como una credencial.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si otra persona lo obtiene, podría intentar utilizarlo mientras siga
+            siendo aceptado.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Quien posee un bearer token puede presentarlo ante el servidor como
+            credencial.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para reducir los riesgos es necesario:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              Utilizar HTTPS.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Definir una fecha de expiración.
+            </li>
+            <li class="lesson-note lesson-note--warning">
+              No incluir información sensible.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Verificar la firma.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Proteger las claves utilizadas para firmar.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Guardar el token cuidadosamente en el cliente.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--warning">
+            La firma impide modificar el contenido sin ser detectado, pero no
+            evita que el token pueda ser robado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="peticion-token">
+          <h2>13. Ejemplo de petición con un token</h2>
+
+          <p class="lesson-note lesson-note--example">
+            Una petición autenticada podría realizarse así:
+          </p>
+
+          <pre class="code-block"><code>fetch("https://api.ejemplo.com/perfil", {
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+});</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La plantilla literal introduce el contenido de la variable
+            <code>token</code> después de la palabra <code>Bearer</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El servidor seguirá un proceso semejante a este:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              Recibe la petición.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Extrae el token de <code>Authorization</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Verifica el token.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Identifica al usuario.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Comprueba sus permisos.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Devuelve o rechaza el recurso.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--example">
+            Si todo es correcto, podría responder:
+          </p>
+
+          <pre class="code-block"><code>{
+  "id": 27,
+  "nombre": "Lucía"
+}</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Si faltan credenciales válidas, podría devolver:
+          </p>
+
+          <pre class="diagram-block">401 Unauthorized</pre>
+
+          <p class="lesson-note lesson-note--example">
+            Si el usuario está identificado, pero no tiene permiso, podría
+            devolver:
+          </p>
+
+          <pre class="diagram-block">403 Forbidden</pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Código</th>
+                  <th scope="col">Significado habitual</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>401 Unauthorized</code></td>
+                  <td>No se han proporcionado credenciales válidas</td>
+                </tr>
+                <tr>
+                  <td><code>403 Forbidden</code></td>
+                  <td>Las credenciales son válidas, pero no permiten realizar la acción</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            A pesar de su nombre, el código <code>401 Unauthorized</code> suele
+            indicar un problema de autenticación. El código
+            <code>403 Forbidden</code> suele indicar un problema de autorización.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="flujo-completo">
+          <h2>14. Flujo completo con JWT</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            El proceso completo puede representarse así:
+          </p>
+
+          <pre class="diagram-block">1. El usuario envía sus credenciales
+                    │
+                    ▼
+2. El servidor comprueba su identidad
+                    │
+                    ▼
+3. El servidor genera y firma un JWT
+                    │
+                    ▼
+4. El cliente recibe y conserva el token
+                    │
+                    ▼
+5. El cliente lo envía en otra petición
+                    │
+                    ▼
+6. El servidor verifica el token
+                    │
+          ┌─────────┴─────────┐
+          ▼                   ▼
+       Válido              No válido
+          │                   │
+7. Comprueba permisos      Rechaza la petición
+          │
+8. Devuelve el recurso</pre>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>15. Ideas esenciales</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Autenticar consiste en comprobar quién es el usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Autorizar consiste en decidir qué puede hacer ese usuario.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            HTTP no recuerda automáticamente las peticiones anteriores.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En un sistema de sesiones, el cliente suele guardar un identificador
+            y el servidor mantiene los datos asociados.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En un sistema basado en tokens, el cliente presenta el token en cada
+            petición protegida.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Token y JWT no son sinónimos: JWT es un formato concreto de token.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un JWT firmado en formato compacto está compuesto por header,
+            payload y signature.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El contenido de un JWT firmado está codificado, pero no
+            necesariamente cifrado.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La firma permite comprobar la autenticidad y la integridad, pero
+            no oculta los datos.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Decodificar un token no significa verificarlo.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un JWT válido identifica al usuario, pero el servidor todavía debe
+            comprobar sus permisos.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Las sesiones permiten una invalidación directa; los JWT facilitan el
+            trabajo entre servicios, pero requieren controlar cuidadosamente su
+            expiración y posible revocación.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · Promesas y asincronía · Clase 41
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
