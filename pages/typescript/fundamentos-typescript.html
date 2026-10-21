@@ -1,0 +1,1575 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Guía inicial e intermedia de TypeScript: tipos, interfaces, narrowing, validación, enums, genéricos y tipos derivados."
+    />
+    <title>TypeScript: lo que añade a JavaScript | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a TypeScript
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la guía">
+          <h2>Índice</h2>
+
+          <a href="#presentacion">Antes de empezar</a>
+          <a href="#modelo-mental">1. Modelo mental de TypeScript</a>
+          <a href="#anotaciones-inferencia">2. Anotaciones e inferencia</a>
+          <a href="#tipos-especiales">3. Tipos especiales</a>
+          <a href="#interfaces-aliases">4. Interfaces, aliases y shapes</a>
+          <a href="#union-intersection">5. Union e intersection</a>
+          <a href="#narrowing">6. Narrowing y type guards</a>
+          <a href="#datos-externos">7. Datos externos y validación</a>
+          <a href="#enums">8. Enums</a>
+          <a href="#genericos">9. Genéricos</a>
+          <a href="#sobrecargas">10. Sobrecarga de funciones</a>
+          <a href="#tipos-derivados">11. typeof y ReturnType</a>
+          <a href="#utility-types">12. Utility types</a>
+          <a href="#as-const">13. as const</a>
+          <a href="#mapped-types">14. Indexed access y mapped types</a>
+          <a href="#errores-frecuentes">15. Errores frecuentes</a>
+          <a href="#resumen">16. Resumen final</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>TypeScript: lo que añade a JavaScript</h1>
+          <p>
+            Guía del módulo · Tipos, contratos y herramientas para construir
+            programas sobre una base de JavaScript.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="presentacion">
+          <h2>Antes de empezar</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            TypeScript añade a JavaScript un sistema de tipos estático.
+            Analiza el código antes de ejecutarlo, avisa de posibles errores
+            y después genera JavaScript.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los tipos ayudan durante el desarrollo, pero normalmente desaparecen
+            al compilar y no validan datos durante la ejecución.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Alcance: estos apuntes cubren el bloque inicial e intermedio
+            estudiado en el módulo. Están pensados como material autónomo
+            de consulta, pero no pretenden incluir todavía todas las funciones
+            avanzadas del lenguaje.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los ejemplos son independientes y reutilizan algunos nombres.
+            Practícalos por separado; no copies toda la guía en un único archivo
+            TypeScript. Cuando un apartado necesita una definición anterior,
+            se indica en el texto.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las explicaciones sobre <code>null</code> y <code>undefined</code>
+            presuponen la comprobación estricta de tipos. Utiliza la
+            configuración del proyecto de prácticas para comparar los resultados.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="modelo-mental">
+          <h2>1. Modelo mental de TypeScript</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            En el flujo de compilación habitual se comprueban los tipos y se
+            genera JavaScript para ejecutarlo. Algunas herramientas permiten
+            ejecutar archivos TypeScript directamente, pero eso no implica
+            que comprueben sus tipos.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Esquema del proceso:
+          </p>
+
+          <pre class="diagram-block">Código TypeScript → comprobación de tipos → código JavaScript → ejecución</pre>
+
+          <h3>Análisis frente a ejecución</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Elemento</th>
+                  <th scope="col">Durante el análisis</th>
+                  <th scope="col">Durante la ejecución</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>interface</code></td>
+                  <td>Comprueba la forma de los valores</td>
+                  <td>Desaparece</td>
+                </tr>
+                <tr>
+                  <td><code>type</code></td>
+                  <td>Crea aliases y combinaciones de tipos</td>
+                  <td>Desaparece</td>
+                </tr>
+                <tr>
+                  <td><code>as</code></td>
+                  <td>Modifica la información aceptada por TypeScript</td>
+                  <td>No convierte el valor</td>
+                </tr>
+                <tr>
+                  <td><code>enum</code></td>
+                  <td>Define miembros tipados</td>
+                  <td>Genera un objeto real</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>// @ts-nocheck</code> desactiva la comprobación del archivo.
+            Si un ejercicio pide encontrar errores de tipos, hay que retirar
+            esa línea.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Comprobar los tipos sin generar JavaScript:
+          </p>
+
+          <pre class="code-block"><code>npx tsc --noEmit</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Ejecutar directamente un archivo TypeScript durante las prácticas:
+          </p>
+
+          <pre class="code-block"><code>npx tsx ejercicios-clase-1/inicio.ts</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>tsx</code> ejecuta el código sin comprobar los tipos.
+            Utiliza también <code>npx tsc --noEmit</code> en el proyecto de
+            prácticas. Estos comandos presuponen que sus herramientas están
+            instaladas en ese proyecto.
+          </p>
+
+          <h3>La carpeta del proyecto y <code>tsconfig.json</code></h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>tsconfig.json</code> contiene las reglas con las que TypeScript
+            analiza el proyecto. Opciones como <code>strict</code> o
+            <code>noUncheckedIndexedAccess</code> pueden cambiar los avisos
+            que aparecen.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Conviene abrir en VS Code la carpeta completa del proyecto,
+            no solamente un archivo suelto. De lo contrario, el editor puede
+            no localizar su <code>tsconfig.json</code> y mostrar comprobaciones
+            diferentes.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>npx tsc --noEmit</code> debe ejecutarse desde la carpeta del
+            proyecto que contiene —o queda incluida por— el
+            <code>tsconfig.json</code> correspondiente.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="anotaciones-inferencia">
+          <h2>2. Anotaciones e inferencia</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una anotación indica explícitamente qué tipo admite una variable.
+            La inferencia permite que TypeScript lo deduzca a partir del valor.
+          </p>
+
+          <pre class="code-block"><code>let disponible: boolean = true; // anotación explícita
+let cantidad = 5;               // TypeScript infiere number
+let nombre: string = "Juan";</code></pre>
+
+          <h3>Arrays y tuplas</h3>
+
+          <pre class="code-block"><code>let numeros: number[] = [1, 2, 3];
+let otrosNumeros: Array&lt;number&gt; = [4, 5, 6];
+
+let coordenada: [number, string] = [1, "norte"];</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            <code>number[]</code> y <code>Array&lt;number&gt;</code>
+            representan un array de números.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>[number, string]</code> es una tupla: cada posición tiene
+            un tipo determinado y la longitud está controlada.
+          </p>
+
+          <h3>Propiedades opcionales</h3>
+
+          <pre class="code-block"><code>interface Producto {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+}</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            El símbolo <code>?</code> indica que la propiedad puede no existir.
+            Cuando intentamos leerla, su tipo es
+            <code>string | undefined</code>.
+          </p>
+
+          <h3>Funciones</h3>
+
+          <pre class="code-block"><code>function calcularTotal(precio: number, unidades: number): number {
+  return precio * unidades;
+}
+
+const saludar = (nombre: string): string =&gt; `Hola, ${nombre}`;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            En una función se pueden tipar por separado los parámetros que
+            entran y el valor que devuelve.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="tipos-especiales">
+          <h2>3. Tipos especiales</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Uso</th>
+                  <th scope="col">Precaución</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>any</code></td>
+                  <td>Desactiva prácticamente la comprobación</td>
+                  <td>Oculta errores futuros</td>
+                </tr>
+                <tr>
+                  <td><code>unknown</code></td>
+                  <td>Representa un valor cuyo tipo todavía no conocemos</td>
+                  <td>Hay que comprobarlo antes de usarlo</td>
+                </tr>
+                <tr>
+                  <td><code>void</code></td>
+                  <td>La función no entrega un valor útil</td>
+                  <td>
+                    No significa que una función <code>async</code> deje de
+                    devolver una promesa
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>never</code></td>
+                  <td>
+                    Algo que no puede suceder o una función que nunca termina
+                    normalmente
+                  </td>
+                  <td>No es el texto <code>"never"</code></td>
+                </tr>
+                <tr>
+                  <td><code>null</code></td>
+                  <td>Ausencia intencionada de valor</td>
+                  <td>Es un valor real de JavaScript</td>
+                </tr>
+                <tr>
+                  <td><code>undefined</code></td>
+                  <td>Valor no definido</td>
+                  <td>Puede aparecer al acceder a datos inexistentes</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3><code>any</code> frente a <code>unknown</code></h3>
+
+          <pre class="code-block"><code>let datoAny: any = "hola";
+datoAny.metodoQueNoExiste(); // TypeScript no avisa
+
+let datoUnknown: unknown = "hola";
+// datoUnknown.toUpperCase(); // Error: todavía no está comprobado
+
+if (typeof datoUnknown === "string") {
+  datoUnknown.toUpperCase(); // Permitido
+}</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>unknown</code> obliga a demostrar qué tipo contiene;
+            <code>any</code> evita que TypeScript haga su trabajo.
+          </p>
+
+          <h3><code>void</code></h3>
+
+          <pre class="code-block"><code>function mostrarMensaje(mensaje: string): void {
+  console.log(mensaje);
+}
+
+async function cargarDatos(): Promise&lt;void&gt; {
+  console.log("Cargando...");
+}</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Una función <code>async</code> siempre devuelve una promesa.
+            <code>Promise&lt;void&gt;</code> significa que esa promesa no
+            entregará un valor útil.
+          </p>
+
+          <h3><code>never</code></h3>
+
+          <pre class="code-block"><code>function lanzarError(mensaje: string): never {
+  throw new Error(mensaje);
+}</code></pre>
+        </section>
+
+        <section class="lesson-section" id="interfaces-aliases">
+          <h2>4. Interfaces, type aliases y shapes</h2>
+
+          <h3>Interfaces</h3>
+
+          <pre class="code-block"><code>interface Producto {
+  id: number;
+  nombre: string;
+  precio: number;
+  disponible: boolean;
+  descripcion?: string;
+}
+
+const teclado: Producto = {
+  id: 1,
+  nombre: "Teclado mecánico",
+  precio: 149.99,
+  disponible: true,
+};</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una interfaz describe la forma que debe tener un valor.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            La interfaz no crea el objeto, no transforma sus propiedades y
+            no existe durante la ejecución.
+          </p>
+
+          <h3>Type aliases y tipos literales</h3>
+
+          <pre class="code-block"><code>type Rol = "admin" | "lector";
+type EstadoPeticion = "cargando" | "exito" | "error";
+
+let estado: EstadoPeticion = "cargando";
+// estado = "terminado"; // Error</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            TypeScript permite crear tipos propios para representar las reglas
+            del programa, no solo usar <code>string</code>,
+            <code>number</code> o <code>boolean</code>.
+          </p>
+
+          <h3><code>interface</code> frente a <code>type</code></h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Necesidad</th>
+                  <th scope="col">Opción habitual</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Describir la estructura de un objeto o una clase</td>
+                  <td><code>interface</code></td>
+                </tr>
+                <tr>
+                  <td>Crear una unión de valores</td>
+                  <td><code>type</code></td>
+                </tr>
+                <tr>
+                  <td>Crear una tupla o un alias para otro tipo</td>
+                  <td><code>type</code></td>
+                </tr>
+                <tr>
+                  <td>Ampliar una estructura</td>
+                  <td>
+                    <code>interface A extends B</code> o una intersección
+                    con <code>&amp;</code>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--key">
+            Ambos pueden describir objetos. No es necesario convertir la
+            elección en una regla absoluta: lo importante es utilizar cada
+            herramienta de forma coherente.
+          </p>
+
+          <h3>Shapes y tipado estructural</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            TypeScript comprueba la forma del valor: qué propiedades y métodos
+            contiene. No necesita que proceda de una clase concreta.
+          </p>
+
+          <pre class="code-block"><code>interface PersonaInterface {
+  nombre: string;
+  getNombre: () =&gt; string;
+  setNombre: (nombre: string) =&gt; void;
+}
+
+class Persona {
+  nombre: string;
+
+  constructor(nombre: string) {
+    this.nombre = nombre;
+  }
+
+  getNombre(): string {
+    return this.nombre;
+  }
+
+  setNombre(nombre: string): void {
+    this.nombre = nombre;
+  }
+}
+
+const recibirPersona = (persona: PersonaInterface): void =&gt; {
+  console.log(persona.getNombre());
+};
+
+recibirPersona(new Persona("Gentleman"));
+
+recibirPersona({
+  nombre: "Gentleman",
+  getNombre: () =&gt; "Gentleman",
+  setNombre: (nombre: string) =&gt; console.log(nombre),
+});</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            La instancia y el objeto literal son compatibles porque ambos
+            cumplen la misma shape.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En el tipado estructural importa qué contiene un valor,
+            no de dónde procede.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="union-intersection">
+          <h2>5. Union e intersection</h2>
+
+          <pre class="code-block"><code>interface Alumno {
+  nombre: string;
+  nota: number;
+}
+
+interface Profesor {
+  nombre: string;
+  legajo: number;
+}</code></pre>
+
+          <h3>Union: <code>|</code></h3>
+
+          <pre class="code-block"><code>type AlumnoOProfesor = Alumno | Profesor;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El valor puede ser un <code>Alumno</code> o un
+            <code>Profesor</code>. Sin comprobar cuál ha llegado, solamente
+            podemos utilizar directamente las propiedades comunes.
+          </p>
+
+          <pre class="code-block"><code>function mostrarEntidad(entidad: AlumnoOProfesor): void {
+  console.log(entidad.nombre); // Existe en ambos
+
+  if ("nota" in entidad) {
+    console.log(entidad.nota); // Alumno
+  } else {
+    console.log(entidad.legajo); // Profesor
+  }
+}</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Una unión no mezcla automáticamente las propiedades:
+            representa distintas posibilidades.
+          </p>
+
+          <h3>Intersection: <code>&amp;</code></h3>
+
+          <pre class="code-block"><code>type AlumnoYProfesor = Alumno &amp; Profesor;
+
+const ayudante: AlumnoYProfesor = {
+  nombre: "Ana",
+  nota: 9,
+  legajo: 42,
+};</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El valor debe cumplir simultáneamente los dos contratos.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una unión representa posibilidades; una intersección acumula
+            requisitos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="narrowing">
+          <h2>6. Narrowing y type guards</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Narrowing es el proceso por el que TypeScript reduce un tipo
+            amplio después de una comprobación.
+          </p>
+
+          <h3>Narrowing con <code>typeof</code></h3>
+
+          <pre class="code-block"><code>function procesarEntrada(entrada: string | number | boolean): string {
+  if (typeof entrada === "string") {
+    return entrada.toUpperCase();
+  }
+
+  if (typeof entrada === "boolean") {
+    return entrada ? "Sí" : "No";
+  }
+
+  return entrada.toFixed(2); // Aquí solamente puede ser number
+}</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            La comprobación correcta es
+            <code>typeof entrada === "string"</code>. Comparar
+            <code>entrada === "string"</code> pregunta si el valor contiene
+            literalmente ese texto.
+          </p>
+
+          <h3>Accesos mediante índices</h3>
+
+          <pre class="code-block"><code>const valores = [
+  { numero: 1, label: "número 1" },
+  { numero: 2 },
+];
+
+const indices = [1, 2];
+
+indices.forEach((index) =&gt; {
+  const value = valores[index];
+
+  if (value?.label) {
+    console.log(value.label);
+  }
+});</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Guardar el acceso en una variable estable y comprobarlo con
+            <code>?.</code> permite que TypeScript conserve el narrowing.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El índice <code>2</code> no existe en un array de dos elementos:
+            sus índices válidos son <code>0</code> y <code>1</code>.
+            La comprobación también evita un fallo real durante la ejecución.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Para que TypeScript añada <code>undefined</code> al tipo de un
+            acceso como <code>valores[index]</code>, el proyecto debe tener
+            activada la opción <code>noUncheckedIndexedAccess</code> en su
+            <code>tsconfig.json</code>. Aunque no esté activada, el riesgo
+            durante la ejecución sigue existiendo.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>value?.label</code> comprueba que <code>value</code> exista
+            y que <code>label</code> sea un valor verdadero. Si una cadena
+            vacía también fuese válida, convendría comprobar
+            <code>value?.label !== undefined</code>.
+          </p>
+
+          <h3>Type guard personalizado</h3>
+
+          <pre class="code-block"><code>interface UsuarioAPI {
+  id: number;
+  name: string;
+  email: string;
+}
+
+function esArrayDeUsuarioAPI(x: unknown): x is UsuarioAPI[] {
+  if (!Array.isArray(x)) return false;
+
+  return x.every((item) =&gt; {
+    if (typeof item !== "object" || item === null) return false;
+
+    const obj = item as Record&lt;string, unknown&gt;;
+
+    return (
+      typeof obj["id"] === "number" &amp;&amp;
+      typeof obj["name"] === "string" &amp;&amp;
+      typeof obj["email"] === "string"
+    );
+  });
+}</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            <code>Array.isArray(x)</code> solo demuestra que <code>x</code>
+            es un array; no demuestra qué contienen sus elementos.
+            Esa es la razón por la que después se utiliza <code>every()</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Un array vacío supera <code>every()</code> porque no contiene
+            ningún elemento inválido. Si la aplicación exigiera al menos
+            un usuario, habría que comprobar también <code>x.length &gt; 0</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Durante la ejecución esta función devuelve un booleano.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>x is UsuarioAPI[]</code> informa a TypeScript de que,
+            cuando el resultado sea <code>true</code>, puede tratar
+            <code>x</code> como <code>UsuarioAPI[]</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El predicado no convierte ni modifica físicamente el valor.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            TypeScript confía en lo que afirma un type guard personalizado.
+            Si la función devuelve <code>true</code> sin haber validado
+            correctamente los datos, el compilador creerá una información falsa.
+          </p>
+
+          <h3>Aserciones con <code>as</code></h3>
+
+          <pre class="code-block"><code>const obj = item as Record&lt;string, unknown&gt;;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esta aserción permite consultar las propiedades para realizar
+            las comprobaciones posteriores.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>as</code> no valida, no transforma y no garantiza que
+            nuestra afirmación sea verdadera durante la ejecución.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="datos-externos">
+          <h2>7. Datos externos: unknown, validación y modelo interno</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Este apartado reutiliza <code>UsuarioAPI</code> y
+            <code>esArrayDeUsuarioAPI</code> del apartado 6.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una respuesta externa puede contener cualquier cosa. Tiparla
+            directamente como nuestro modelo sería confiar sin comprobar.
+          </p>
+
+          <pre class="code-block"><code>type Rol = "admin" | "lector";
+
+interface Usuario {
+  id: number;
+  nombre: string;
+  email: string;
+  rol: Rol;
+}</code></pre>
+
+          <h3>Mapper</h3>
+
+          <pre class="code-block"><code>function mapearUsuario(u: UsuarioAPI, indice: number): Usuario {
+  return {
+    id: u.id,
+    nombre: u.name,
+    email: u.email,
+    rol: indice === 0 ? "admin" : "lector",
+  };
+}</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            El mapper recibe un modelo y devuelve otro objeto con la forma
+            del modelo interno.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Asignar el rol por la posición del array es una regla del ejercicio.
+            Los permisos reales deben decidirse y comprobarse en el servidor.
+          </p>
+
+          <h3>Filtro tipado</h3>
+
+          <pre class="code-block"><code>function filtrarPorRol(usuarios: Usuario[], rol: Rol): Usuario[] {
+  return usuarios.filter((u) =&gt; u.rol === rol);
+}</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Recibe un array de usuarios y un rol permitido. Devuelve un nuevo
+            array de usuarios.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>filter()</code> crea un array nuevo, pero conserva las
+            referencias a los mismos objetos que superan el filtro.
+          </p>
+
+          <h3>Proceso completo</h3>
+
+          <pre class="code-block"><code>async function cargarYFiltrar(): Promise&lt;void&gt; {
+  let usuarios: Usuario[];
+
+  try {
+    const res = await fetch("https://jsonplaceholder.typicode.com/users");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const crudo: unknown = await res.json();
+
+    if (!esArrayDeUsuarioAPI(crudo)) {
+      throw new Error("La respuesta no contiene usuarios válidos");
+    }
+
+    usuarios = crudo.map(mapearUsuario);
+
+    const administradores = filtrarPorRol(usuarios, "admin");
+    const lectores = filtrarPorRol(usuarios, "lector");
+
+    console.log(administradores, lectores);
+  } catch (error: unknown) {
+    const mensaje =
+      error instanceof Error ? error.message : "Error desconocido";
+
+    console.error(mensaje);
+  }
+}</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Flujo de los datos:
+          </p>
+
+          <pre class="diagram-block">JSON externo       Type guard          Mapper
+unknown       →    UsuarioAPI[]    →   Usuario[]</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El type guard valida; el mapper transforma. Son responsabilidades
+            diferentes.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="enums">
+          <h2>8. Enums</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un enum agrupa un conjunto cerrado de valores con nombres
+            reconocibles.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            A diferencia de la mayoría de construcciones de tipos, un enum
+            genera código JavaScript y existe durante la ejecución.
+          </p>
+
+          <h3>Enum numérico</h3>
+
+          <pre class="code-block"><code>enum Color {
+  RED,
+  GREEN,
+  BLUE,
+}
+
+Color.RED; // 0
+Color.GREEN; // 1
+Color.BLUE; // 2
+Color[0]; // "RED"</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Si no se especifican números, empiezan en <code>0</code> y
+            se incrementan automáticamente.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Los enums numéricos generan mapeo directo e inverso:
+          </p>
+
+          <pre class="diagram-block">RED → 0
+0   → RED</pre>
+
+          <p class="lesson-note lesson-note--example">
+            De forma aproximada, durante la ejecución existe un objeto con
+            las dos direcciones:
+          </p>
+
+          <pre class="code-block"><code>{
+  0: "RED",
+  1: "GREEN",
+  2: "BLUE",
+  RED: 0,
+  GREEN: 1,
+  BLUE: 2,
+}</code></pre>
+
+          <h3>Enum de texto</h3>
+
+          <pre class="code-block"><code>enum ColorTexto {
+  RED = "red",
+  GREEN = "green",
+  BLUE = "blue",
+}
+
+ColorTexto.RED; // "red"</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Los enums de texto no generan el mapeo inverso de valor a nombre.
+          </p>
+
+          <h3>Enum frente a unión literal</h3>
+
+          <pre class="code-block"><code>enum ColorEnum {
+  RED = "red",
+  GREEN = "green",
+}
+
+type ColorUnion = "red" | "green";</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Opción</th>
+                  <th scope="col">Uso</th>
+                  <th scope="col">Ejecución</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Enum</td>
+                  <td><code>ColorEnum.RED</code></td>
+                  <td>Existe como objeto real</td>
+                </tr>
+                <tr>
+                  <td>Unión literal</td>
+                  <td><code>const color: ColorUnion = "red"</code></td>
+                  <td>El alias desaparece</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Alternativa con un objeto <code>as const</code></h3>
+
+          <pre class="code-block"><code>const Colores = {
+  RED: "red",
+  GREEN: "green",
+} as const;
+
+type Color = (typeof Colores)[keyof typeof Colores];
+// "red" | "green"</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            <code>keyof typeof Colores</code> obtiene la unión de sus claves
+            y el acceso indexado obtiene los tipos de sus valores.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Esta alternativa crea un objeto JavaScript normal y deriva de él
+            una unión literal. No significa que los enums sean incorrectos;
+            son dos herramientas con resultados de ejecución distintos.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Excepción avanzada: un <code>const enum</code> puede eliminarse
+            al compilar e insertar sus valores directamente. Estos apuntes
+            utilizan enums normales, que sí generan un objeto.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="genericos">
+          <h2>9. Genéricos</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un genérico representa un tipo que todavía no conocemos y mantiene
+            relaciones entre varias partes del contrato sin recurrir a
+            <code>any</code>.
+          </p>
+
+          <h3>Función genérica</h3>
+
+          <pre class="code-block"><code>const identidad = &lt;T&gt;(valor: T): T =&gt; valor;
+
+const texto = identidad("hola");      // T se infiere como el literal "hola"
+const numero = identidad&lt;number&gt;(42); // T es number
+
+// identidad&lt;number&gt;("hola");
+// Error: se prometió que T sería number</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El mismo <code>T</code> relaciona el tipo del argumento con el
+            tipo del retorno: entra un tipo y sale ese mismo tipo.
+          </p>
+
+          <h3>Interface genérica</h3>
+
+          <pre class="code-block"><code>interface Pais&lt;T&gt; {
+  nombre: string;
+  nip: T;
+}
+
+const argentina: Pais&lt;number&gt; = {
+  nombre: "Argentina",
+  nip: 1234,
+};
+
+const espana: Pais&lt;string&gt; = {
+  nombre: "España",
+  nip: "ES-28001",
+};</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Al utilizar <code>Pais&lt;number&gt;</code>, todas las apariciones
+            de <code>T</code> dentro del contrato se interpretan como
+            <code>number</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="sobrecargas">
+          <h2>10. Sobrecarga de funciones</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            La sobrecarga describe varias formas válidas de llamar a una misma
+            función y relaciona cada entrada con un retorno preciso.
+          </p>
+
+          <h3>Ejemplo básico</h3>
+
+          <pre class="code-block"><code>// Firmas de sobrecarga
+function convertir(param: string): number;
+function convertir(param: number): string;
+
+// Única implementación real
+function convertir(param: string | number): string | number {
+  if (typeof param === "string") {
+    return param.length;
+  }
+
+  return param.toString();
+}
+
+const longitud = convertir("hello"); // number
+const texto = convertir(25);         // string</code></pre>
+
+          <h3>Sobrecarga con modelos diferentes</h3>
+
+          <pre class="code-block"><code>interface AlumnoCompleto {
+  id: number;
+  nombre: string;
+  apellidos: string;
+  nota: number;
+}
+
+interface ProfesorCompleto {
+  id: number;
+  nombre: string;
+  apellidos: string;
+  legajo: number;
+}
+
+function obtenerDato(param: AlumnoCompleto): number;
+function obtenerDato(param: ProfesorCompleto): string;
+
+function obtenerDato(
+  param: AlumnoCompleto | ProfesorCompleto
+): string | number {
+  if ("nota" in param) return param.nota;
+  return param.nombre;
+}
+
+const alumno: AlumnoCompleto = {
+  id: 1,
+  nombre: "Luis",
+  apellidos: "Pérez",
+  nota: 8,
+};
+
+const nota = obtenerDato(alumno); // TypeScript sabe que es number</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Las sobrecargas son contratos alternativos, pero solo existe
+            una implementación durante la ejecución.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            La firma de implementación debe ser compatible con todas las
+            sobrecargas. No se utiliza como una firma adicional desde fuera.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="tipos-derivados">
+          <h2>11. Tipos derivados: typeof y ReturnType</h2>
+
+          <h3><code>typeof</code> en una posición de tipo</h3>
+
+          <pre class="code-block"><code>const calificacion = {
+  a: 1,
+  b: 2,
+  nota: 4,
+  setNota(n: number) {
+    this.nota = n;
+  },
+};
+
+type Parametro = typeof calificacion;
+
+const sumar = (param: Parametro): number =&gt;
+  param.a + param.b + param.nota;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            En una posición de tipo, <code>typeof</code> obtiene el tipo
+            que TypeScript ha inferido para una variable.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            No es la operación de JavaScript que devuelve textos como
+            <code>"object"</code> o <code>"string"</code>.
+          </p>
+
+          <h3><code>ReturnType</code></h3>
+
+          <pre class="code-block"><code>const crearCalificacion = () =&gt; ({
+    a: 1,
+    b: 2,
+    nota: 4,
+    setNota(n: number) {
+      this.nota = n;
+    },
+    getNota() {
+      return this.nota;
+    },
+});
+
+type CalificacionCreada = ReturnType&lt;typeof crearCalificacion&gt;;
+
+function utilizarCalificacion(param: CalificacionCreada): number {
+  param.setNota(8);
+  return param.getNota();
+}</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>typeof</code> obtiene el tipo de la función;
+            <code>ReturnType</code> extrae el tipo que devuelve esa función.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si se aplica <code>ReturnType</code> a una función sobrecargada,
+            TypeScript toma el retorno de la última firma disponible;
+            no genera automáticamente una unión de todos los retornos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="utility-types">
+          <h2>12. Utility types o tipos de utilidad</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los utility types reciben un tipo y producen otro. Evitan copiar
+            contratos para realizar pequeñas variaciones.
+          </p>
+
+          <pre class="code-block"><code>interface Usuario {
+  nombre: string;
+  apellidos: string;
+  edad: number;
+}</code></pre>
+
+          <h3>Utilidades sobre propiedades</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Utility type</th>
+                  <th scope="col">Transformación</th>
+                  <th scope="col">Ejemplo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Partial&lt;T&gt;</code></td>
+                  <td>Convierte todas las propiedades en opcionales</td>
+                  <td><code>Partial&lt;Usuario&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><code>Required&lt;T&gt;</code></td>
+                  <td>Convierte todas las propiedades en obligatorias</td>
+                  <td><code>Required&lt;Partial&lt;Usuario&gt;&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><code>Readonly&lt;T&gt;</code></td>
+                  <td>Impide reasignar las propiedades mediante TypeScript</td>
+                  <td><code>Readonly&lt;Usuario&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><code>Pick&lt;T, K&gt;</code></td>
+                  <td>Conserva únicamente las claves seleccionadas</td>
+                  <td><code>Pick&lt;Usuario, "nombre" | "apellidos"&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><code>Omit&lt;T, K&gt;</code></td>
+                  <td>Elimina las claves seleccionadas</td>
+                  <td><code>Omit&lt;Usuario, "edad"&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><code>Record&lt;K, V&gt;</code></td>
+                  <td>Crea un objeto con claves K y valores V</td>
+                  <td><code>Record&lt;string, string | number&gt;</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <pre class="code-block"><code>type UsuarioOpcional = Partial&lt;Usuario&gt;;
+type UsuarioObligatorio = Required&lt;UsuarioOpcional&gt;;
+type UsuarioSoloLectura = Readonly&lt;UsuarioObligatorio&gt;;
+type NombreCompleto = Pick&lt;Usuario, "nombre" | "apellidos"&gt;;
+type UsuarioSinEdad = Omit&lt;Usuario, "edad"&gt;;</code></pre>
+
+          <h3><code>Record</code> y la corrección del ejemplo de clase</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>Record&lt;K, V&gt;</code> resulta especialmente útil para
+            representar diccionarios: objetos cuyas claves siguen un patrón
+            y cuyos valores comparten un tipo.
+          </p>
+
+          <pre class="code-block"><code>const notas: Record&lt;string, number&gt; = {
+  Ana: 9,
+  Luis: 7,
+};</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            El ejemplo de clase era incorrecto porque
+            <code>Record&lt;string, string&gt;</code> exige que todos los
+            valores sean <code>string</code>, pero <code>edad: 25</code>
+            contiene un <code>number</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Esta sería su corrección mínima:
+          </p>
+
+          <pre class="code-block"><code>type RegistroMixto = Record&lt;string, string | number&gt;;
+
+const registroMixto: RegistroMixto = {
+  nombre: "Juan",
+  apellidos: "Pérez",
+  edad: 25,
+};</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Aunque <code>RegistroMixto</code> compila, es demasiado permisivo
+            para representar un usuario: admite cualquier clave y permite que
+            todas las propiedades sean <code>string</code> o
+            <code>number</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Cuando conocemos las propiedades y cada una tiene un significado
+            diferente, una <code>interface</code> conserva un contrato
+            más preciso.
+          </p>
+
+          <pre class="code-block"><code>interface UsuarioPreciso {
+  nombre: string;
+  apellidos: string;
+  edad: number;
+}</code></pre>
+
+          <h3>Utilidades sobre uniones</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Este ejemplo usa la interfaz <code>Usuario</code> de este apartado
+            y la interfaz <code>Alumno</code> del apartado 5.
+          </p>
+
+          <pre class="code-block"><code>type Persona = Usuario | Alumno;
+
+type SoloAlumno = Exclude&lt;Persona, Usuario&gt;;
+type SoloUsuario = Extract&lt;Persona, Usuario&gt;;
+
+type Complejo = string | number | boolean | null | undefined;
+type Definido = NonNullable&lt;Complejo&gt;;
+// string | number | boolean</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Utility type</th>
+                  <th scope="col">Resultado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Exclude&lt;A | B, A&gt;</code></td>
+                  <td>Elimina de la unión los miembros compatibles con A</td>
+                </tr>
+                <tr>
+                  <td><code>Extract&lt;A | B, A&gt;</code></td>
+                  <td>Conserva los miembros compatibles con A</td>
+                </tr>
+                <tr>
+                  <td><code>NonNullable&lt;T&gt;</code></td>
+                  <td>Elimina null y undefined</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>Readonly&lt;T&gt;</code> es superficial y pertenece al
+            sistema de tipos. No sustituye a <code>Object.freeze()</code>
+            ni congela físicamente el objeto.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="as-const">
+          <h2>13. Const assertions: as const</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>as const</code> pide a TypeScript que conserve los valores
+            literales más concretos y marque la estructura como de solo lectura.
+          </p>
+
+          <pre class="code-block"><code>const configuracion = {
+  modo: "oscuro",
+  intentos: 3,
+} as const;
+
+// Tipo inferido:
+// {
+//   readonly modo: "oscuro";
+//   readonly intentos: 3;
+// }
+
+const numeros = [1, 2, 3] as const;
+// readonly [1, 2, 3]</code></pre>
+
+          <h3><code>const</code> frente a <code>as const</code></h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Código</th>
+                  <th scope="col">Qué impide</th>
+                  <th scope="col">Qué infiere</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>const objeto = { modo: "oscuro" }</code></td>
+                  <td>Reasignar la variable</td>
+                  <td><code>modo</code> suele ampliarse a <code>string</code></td>
+                </tr>
+                <tr>
+                  <td><code>{ modo: "oscuro" } as const</code></td>
+                  <td>También marca la propiedad como <code>readonly</code></td>
+                  <td>Conserva el literal <code>"oscuro"</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>as const</code> no congela el valor durante la ejecución.
+            Es una const assertion, no una llamada a <code>Object.freeze()</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="mapped-types">
+          <h2>14. Indexed access, mapped types y combinación de enums</h2>
+
+          <pre class="code-block"><code>enum Keys {
+  A = "a",
+  B = "b",
+}
+
+enum Keys2 {
+  C = "c",
+  D = "d",
+}
+
+const myKeys = { ...Keys, ...Keys2 };
+const keyValues = Object.values(myKeys);
+
+type AllKeys = (typeof keyValues)[number];
+
+type CustomType = {
+  [key in AllKeys]: string;
+};
+
+const customValue: CustomType = {
+  a: "valor de a",
+  b: "valor de b",
+  c: "valor de c",
+  d: "valor de d",
+};</code></pre>
+
+          <h3>Proceso paso a paso</h3>
+
+          <ol>
+            <li class="lesson-note lesson-note--example">
+              <code>{ ...Keys, ...Keys2 }</code> combina los dos objetos
+              que existen durante la ejecución.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>Object.values(myKeys)</code> obtiene un array con
+              sus valores.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>typeof keyValues</code> obtiene el tipo de ese array.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>[number]</code> extrae la unión de los tipos que pueden
+              aparecer en cualquier posición.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>[key in AllKeys]</code> recorre esa unión y exige una
+              propiedad por cada clave.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>T[number]</code> significa «el tipo de los elementos de
+            este array», no «el elemento que ocupa una posición concreta».
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            La construcción <code>[K in Union]</code> es un mapped type:
+            genera propiedades recorriendo una unión de claves.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Aquí no se fusionan declaraciones de enum. Se combinan sus objetos
+            con spread y después se deriva un tipo a partir del resultado.
+          </p>
+
+          <h3>Si solo necesitamos combinar los tipos</h3>
+
+          <pre class="code-block"><code>type AllKeysDirecto = Keys | Keys2;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            La unión directa es suficiente cuando solo necesitamos el tipo.
+            El proceso con spread y <code>Object.values()</code> tiene sentido
+            cuando también necesitamos disponer del objeto combinado durante
+            la ejecución.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="errores-frecuentes">
+          <h2>15. Errores frecuentes y cómo razonarlos</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Situación</th>
+                  <th scope="col">Error conceptual</th>
+                  <th scope="col">Pregunta útil</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>entrada === "string"</code></td>
+                  <td>Se compara el valor con un texto</td>
+                  <td>¿Quiero comparar el valor o averiguar su tipo?</td>
+                </tr>
+                <tr>
+                  <td>Retorno string en una función que usa filter()</td>
+                  <td>Se confunde el contenido con el tipo del resultado</td>
+                  <td>¿Devuelve un texto o un array?</td>
+                </tr>
+                <tr>
+                  <td><code>Usuario</code> frente a <code>Usuario[]</code></td>
+                  <td>Se confunde un elemento con una colección</td>
+                  <td>¿Tengo un usuario o varios?</td>
+                </tr>
+                <tr>
+                  <td><code>crudo.map(...)</code></td>
+                  <td><code>crudo</code> continúa siendo <code>unknown</code></td>
+                  <td>¿Qué comprobación demuestra que es un array válido?</td>
+                </tr>
+                <tr>
+                  <td><code>x as Usuario</code></td>
+                  <td>Se confunde una aserción con una validación</td>
+                  <td>¿Qué código ha comprobado realmente sus propiedades?</td>
+                </tr>
+                <tr>
+                  <td><code>Readonly&lt;T&gt;</code></td>
+                  <td>Se interpreta como protección física</td>
+                  <td>¿Quiero ayuda del compilador o impedir cambios en ejecución?</td>
+                </tr>
+                <tr>
+                  <td><code>Promise&lt;void&gt;</code></td>
+                  <td>Se piensa que no se devuelve nada</td>
+                  <td>¿Es async? Entonces devuelve siempre una promesa</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            Un mensaje de TypeScript no significa automáticamente que la
+            solución sea escribir <code>as</code>. Primero hay que comprobar
+            si ha descubierto un fallo real de lógica, como un índice
+            inexistente o un dato externo sin validar.
+          </p>
+
+          <h3>Método para investigar cualquier duda</h3>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              Identifica el valor: ¿qué contiene realmente durante la ejecución?
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Lee su tipo actual: coloca el cursor sobre la variable en
+              VS Code o anótalo mentalmente.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Lee el tipo esperado: ¿qué exige la función, propiedad o retorno?
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Localiza la diferencia: elemento frente a array, propiedad
+              opcional, unión sin estrechar, dato externo, etc.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Elige la operación correcta: validar, estrechar, transformar
+              o corregir el contrato. Usa <code>as</code> únicamente cuando
+              poseas información real que TypeScript no puede deducir.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Comprueba ambos mundos: ejecuta <code>npx tsc --noEmit</code>
+              para los tipos y después prueba el comportamiento durante
+              la ejecución.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Pregunta decisiva: «¿mi código ha demostrado esto o solamente
+            se lo he afirmado a TypeScript?»
+          </p>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>16. Resumen final</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            TypeScript no cambia lo que JavaScript sabe hacer durante la
+            ejecución: añade información y comprobaciones para construir
+            el programa con contratos más precisos.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Necesidad</th>
+                  <th scope="col">Herramienta</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Describir la forma de un objeto</td>
+                  <td><code>interface</code> o <code>type</code></td>
+                </tr>
+                <tr>
+                  <td>Limitar valores concretos</td>
+                  <td><code>"admin" | "lector"</code></td>
+                </tr>
+                <tr>
+                  <td>Aceptar distintas posibilidades</td>
+                  <td><code>A | B</code></td>
+                </tr>
+                <tr>
+                  <td>Exigir varios contratos simultáneamente</td>
+                  <td><code>A &amp; B</code></td>
+                </tr>
+                <tr>
+                  <td>Reducir un tipo amplio</td>
+                  <td>
+                    <code>typeof</code>, <code>in</code>,
+                    <code>Array.isArray</code>, type guards
+                  </td>
+                </tr>
+                <tr>
+                  <td>Trabajar con datos aún no validados</td>
+                  <td><code>unknown</code></td>
+                </tr>
+                <tr>
+                  <td>Relacionar tipos sin perder información</td>
+                  <td>Genéricos <code>&lt;T&gt;</code></td>
+                </tr>
+                <tr>
+                  <td>Relacionar distintas entradas y retornos</td>
+                  <td>Sobrecargas</td>
+                </tr>
+                <tr>
+                  <td>Derivar un tipo desde código existente</td>
+                  <td><code>typeof</code>, <code>ReturnType</code>, acceso indexado</td>
+                </tr>
+                <tr>
+                  <td>Transformar contratos existentes</td>
+                  <td>
+                    <code>Partial</code>, <code>Pick</code>,
+                    <code>Omit</code> y otros utilities
+                  </td>
+                </tr>
+                <tr>
+                  <td>Conservar literales y readonly</td>
+                  <td><code>as const</code></td>
+                </tr>
+                <tr>
+                  <td>Generar propiedades desde una unión</td>
+                  <td>Mapped type <code>[K in Union]</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--key">
+            Regla práctica: cuando TypeScript no permita una operación,
+            identifica primero el tipo actual, después el tipo que necesitas
+            y, por último, qué comprobación o transformación demuestra el cambio.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Apuntes elaborados a partir del material de clase, reorganizados
+            y corregidos para estudiar TypeScript desde una base sólida
+            de JavaScript.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · TypeScript · Fundamentos y tipos
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
