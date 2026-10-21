@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Clase 1 de SQL: bases de datos relacionales y no relacionales, tablas, claves, MySQL y MySQL Workbench."
+    />
+    <title>Introducción a las bases de datos y MySQL | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a SQL
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#base-datos">1. ¿Qué es una base de datos?</a>
+          <a href="#relacionales">2. Bases de datos relacionales</a>
+          <a href="#primer-sql">3. Una primera muestra de SQL</a>
+          <a href="#no-relacionales">4. Bases de datos no relacionales</a>
+          <a href="#comparacion">5. Comparación y escalabilidad</a>
+          <a href="#mysql">6. ¿Qué es MySQL?</a>
+          <a href="#alternativas">7. Otras alternativas</a>
+          <a href="#sql-mysql-workbench">8. SQL, MySQL y Workbench</a>
+          <a href="#mapa">9. Mapa general</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Introducción a las bases de datos y MySQL</h1>
+          <p>
+            Clase 1 · Organizar información, relacionar tablas y distinguir
+            el lenguaje SQL, el gestor MySQL y la herramienta MySQL Workbench.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="base-datos">
+          <h2>1. ¿Qué es una base de datos?</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Una base de datos es un conjunto organizado de datos que permite
+            almacenar información, consultarla y mantenerla actualizada.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Una tienda puede guardar información sobre sus clientes, productos
+            y pedidos. Una aplicación de reservas puede almacenar usuarios,
+            alojamientos y fechas disponibles.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Lo importante no es solamente guardar datos. También necesitamos
+            encontrarlos, relacionarlos y modificarlos de forma controlada.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Necesidad</th>
+                  <th scope="col">Qué aporta una base de datos</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Organización</td>
+                  <td>Estructura la información para facilitar su gestión.</td>
+                </tr>
+                <tr>
+                  <td>Consulta</td>
+                  <td>Permite localizar datos mediante diferentes condiciones.</td>
+                </tr>
+                <tr>
+                  <td>Integridad</td>
+                  <td>
+                    Permite establecer reglas para mantener datos válidos
+                    y coherentes.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Seguridad</td>
+                  <td>
+                    Permite controlar quién puede acceder a los datos y qué
+                    operaciones puede realizar.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            Una base de datos no evita automáticamente los datos duplicados
+            o incorrectos. Para conseguirlo también necesitamos diseñarla
+            correctamente y establecer las reglas adecuadas.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="relacionales">
+          <h2>2. Bases de datos relacionales</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Una base de datos relacional organiza la información en tablas
+            que pueden relacionarse entre sí.
+          </p>
+
+          <h3>2.1. Tabla, columna y fila</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Imaginemos una tabla llamada <code>clientes</code>:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">id</th>
+                  <th scope="col">nombre</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>Ana</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>Luis</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Tabla: organiza datos de una misma clase. En este ejemplo
+              contiene clientes.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Columna: representa una característica de los datos, como
+              el identificador o el nombre.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Fila o registro: reúne toda la información de un elemento concreto.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Base de datos: contiene las tablas y otros elementos necesarios
+              para organizar la información.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--example">
+            La primera fila representa a Ana. Su <code>id</code> es
+            <code>1</code> y su <code>nombre</code> es <code>"Ana"</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una base de datos puede contener varias tablas; cada tabla contiene
+            filas y cada fila está formada por columnas.
+          </p>
+
+          <h3>2.2. El esquema de una tabla</h3>
+
+          <p class="lesson-note lesson-note--key">
+            El esquema define la estructura que deben respetar los datos
+            de una tabla.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En él se establecen sus columnas, los tipos de datos que admite
+            cada una y las reglas que deben cumplirse.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Podemos establecer que:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              <code>id</code> almacene números enteros.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>nombre</code> almacene texto.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Cada cliente tenga un identificador diferente.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--warning">
+            Un esquema definido no significa que la estructura nunca pueda
+            cambiar. Significa que los datos deben respetar la estructura
+            establecida en ese momento.
+          </p>
+
+          <h3>2.3. Claves y relaciones</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Añadimos una tabla llamada <code>pedidos</code>:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">id</th>
+                  <th scope="col">cliente_id</th>
+                  <th scope="col">producto</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>101</td>
+                  <td>1</td>
+                  <td>Teclado</td>
+                </tr>
+                <tr>
+                  <td>102</td>
+                  <td>1</td>
+                  <td>Ratón</td>
+                </tr>
+                <tr>
+                  <td>103</td>
+                  <td>2</td>
+                  <td>Monitor</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            El valor de <code>cliente_id</code> indica qué cliente ha
+            realizado cada pedido.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Los pedidos <code>101</code> y <code>102</code> pertenecen a Ana
+            porque contienen el valor <code>1</code>, que coincide con
+            su identificador en la tabla <code>clientes</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Una clave es una columna, o un conjunto de columnas, utilizada
+            para identificar filas o establecer relaciones entre tablas.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Clave</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>PRIMARY KEY</code></td>
+                  <td>
+                    La clave primaria identifica de forma única cada fila
+                    de una tabla.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>FOREIGN KEY</code></td>
+                  <td>
+                    La clave foránea guarda una referencia a una fila
+                    de otra tabla.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--example">
+            En este ejemplo:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              <code>clientes.id</code> es la clave primaria de la tabla
+              <code>clientes</code>.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>pedidos.cliente_id</code> es una clave foránea que hace
+              referencia a <code>clientes.id</code>.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una relación conecta filas de diferentes tablas mediante valores
+            que hacen referencia unos a otros.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Gracias a esta relación, cada pedido solo necesita guardar
+            el identificador del cliente. No necesita repetir también su nombre.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="primer-sql">
+          <h2>3. Una primera muestra de SQL</h2>
+
+          <p class="lesson-note lesson-note--example">
+            Las siguientes instrucciones crean la estructura de las tablas
+            anteriores:
+          </p>
+
+          <pre class="code-block"><code>CREATE TABLE clientes (
+    id INT PRIMARY KEY,
+    nombre VARCHAR(50)
+);
+
+CREATE TABLE pedidos (
+    id INT PRIMARY KEY,
+    cliente_id INT,
+    producto VARCHAR(50),
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id)
+);</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Sintaxis</th>
+                  <th scope="col">Significado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>CREATE TABLE</code></td>
+                  <td>Crea una tabla.</td>
+                </tr>
+                <tr>
+                  <td><code>INT</code></td>
+                  <td>Indica que la columna almacena números enteros.</td>
+                </tr>
+                <tr>
+                  <td><code>VARCHAR(50)</code></td>
+                  <td>
+                    Indica que la columna almacena texto de longitud variable,
+                    con un máximo de 50 caracteres.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>PRIMARY KEY</code></td>
+                  <td>Define la clave primaria de la tabla.</td>
+                </tr>
+                <tr>
+                  <td><code>FOREIGN KEY</code></td>
+                  <td>Define una clave foránea.</td>
+                </tr>
+                <tr>
+                  <td><code>REFERENCES</code></td>
+                  <td>
+                    Indica la tabla y la columna a las que hace referencia
+                    la clave foránea.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Primero se crea <code>clientes</code> porque la tabla
+            <code>pedidos</code> necesita hacer referencia a ella.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            El resultado son dos tablas vacías con su estructura definida.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Estas instrucciones crean las tablas, pero todavía no introducen
+            las filas de Ana, Luis y sus pedidos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="no-relacionales">
+          <h2>4. Bases de datos no relacionales</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Las bases de datos no relacionales utilizan modelos diferentes
+            al formado por tablas relacionadas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Pueden organizar la información mediante documentos, pares
+            clave-valor, grafos u otros modelos.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Una base de datos orientada a documentos podría representar a Ana
+            y sus pedidos de esta manera:
+          </p>
+
+          <pre class="code-block"><code>{
+  "id": 1,
+  "nombre": "Ana",
+  "pedidos": [
+    {
+      "id": 101,
+      "producto": "Teclado"
+    },
+    {
+      "id": 102,
+      "producto": "Ratón"
+    }
+  ]
+}</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este ejemplo, los pedidos están incluidos dentro del documento
+            del cliente, en lugar de guardarse en una tabla separada.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            <code>JSON</code> es un formato utilizado para representar datos.
+            Este ejemplo no es una consulta SQL.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Muchas bases de datos no relacionales ofrecen una estructura
+            flexible, por lo que diferentes documentos pueden contener
+            campos distintos.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            NoSQL no significa que los datos carezcan de estructura o de reglas.
+            La forma de organizarlos depende del sistema utilizado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="comparacion">
+          <h2>5. Bases de datos relacionales y no relacionales</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Aspecto</th>
+                  <th scope="col">Bases relacionales</th>
+                  <th scope="col">Bases no relacionales</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Organización</td>
+                  <td>Tablas formadas por filas y columnas.</td>
+                  <td>Documentos, clave-valor, grafos u otros modelos.</td>
+                </tr>
+                <tr>
+                  <td>Estructura</td>
+                  <td>Esquema definido con tipos de datos y reglas.</td>
+                  <td>Generalmente ofrecen una estructura más flexible.</td>
+                </tr>
+                <tr>
+                  <td>Relaciones</td>
+                  <td>Conectan tablas mediante claves.</td>
+                  <td>Dependen del modelo utilizado.</td>
+                </tr>
+                <tr>
+                  <td>Lenguaje</td>
+                  <td>
+                    Utilizan SQL, aunque existen diferencias entre motores.
+                  </td>
+                  <td>
+                    Utilizan lenguajes de consulta o APIs propios de cada sistema.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Ejemplos</td>
+                  <td>MySQL, PostgreSQL y SQLite.</td>
+                  <td>MongoDB.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>5.1. ¿Cuál debemos elegir?</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una base de datos relacional suele ser adecuada cuando los datos
+            tienen una estructura predecible, existen relaciones claras
+            y necesitamos mantener su coherencia.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Algunos ejemplos son la gestión de clientes y pedidos,
+            la contabilidad o un sistema de reservas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una base de datos no relacional puede ser adecuada cuando el modelo
+            de documentos, grafos o clave-valor encaja mejor con la información
+            y con la manera de consultarla.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Algunos ejemplos son los documentos con campos variables,
+            las redes de relaciones o determinados sistemas que manejan
+            grandes cantidades de eventos.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La elección depende de las necesidades del proyecto;
+            ningún modelo es siempre mejor que el otro.
+          </p>
+
+          <h3>5.2. ¿Qué significa escalar?</h3>
+
+          <p class="lesson-note lesson-note--key">
+            Escalar significa aumentar la capacidad de un sistema para
+            soportar más datos, usuarios o trabajo.
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Escalado vertical: aumentar los recursos de una máquina.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Escalado horizontal: repartir el trabajo entre varias máquinas.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--warning">
+            Aunque determinados sistemas favorezcan una forma de escalado,
+            la capacidad real depende del motor, de su configuración
+            y de la arquitectura utilizada.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="mysql">
+          <h2>6. ¿Qué es MySQL?</h2>
+
+          <p class="lesson-note lesson-note--key">
+            MySQL es un sistema gestor de bases de datos relacionales.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Es el programa encargado de crear y administrar las bases de datos,
+            almacenar su información y procesar las instrucciones SQL.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Un sistema gestor de bases de datos también puede denominarse
+            <code>SGBD</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            En inglés se utiliza <code>RDBMS</code>, que significa
+            <code>Relational Database Management System</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La base de datos contiene la información; MySQL es el programa
+            que la gestiona.
+          </p>
+
+          <h3>6.1. Características principales de MySQL</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Característica</th>
+                  <th scope="col">Explicación</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Código abierto</td>
+                  <td>
+                    Dispone de una edición comunitaria gratuita
+                    y de ediciones comerciales.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Rendimiento</td>
+                  <td>
+                    Está preparado para gestionar consultas y cantidades
+                    importantes de datos.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Seguridad</td>
+                  <td>Permite administrar usuarios, contraseñas y permisos.</td>
+                </tr>
+                <tr>
+                  <td>Multiplataforma</td>
+                  <td>
+                    Puede utilizarse en diferentes sistemas operativos y entornos.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Uso de SQL</td>
+                  <td>
+                    Procesa instrucciones escritas en SQL e incorpora algunas
+                    características propias.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Uso habitual</td>
+                  <td>
+                    Es ampliamente utilizado en aplicaciones web y sistemas
+                    de gestión.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            El rendimiento y la seguridad no dependen únicamente del gestor.
+            También influyen el diseño de la base de datos, las consultas
+            y la configuración del sistema.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="alternativas">
+          <h2>7. MySQL y otras alternativas</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Sistema</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Característica principal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>MySQL</td>
+                  <td>Relacional</td>
+                  <td>Muy utilizado en aplicaciones web y sistemas de gestión.</td>
+                </tr>
+                <tr>
+                  <td>PostgreSQL</td>
+                  <td>Relacional</td>
+                  <td>
+                    Destaca por sus numerosas funciones y posibilidades
+                    de ampliación.
+                  </td>
+                </tr>
+                <tr>
+                  <td>SQLite</td>
+                  <td>Relacional</td>
+                  <td>
+                    Se integra dentro de la aplicación y no necesita
+                    un servidor independiente.
+                  </td>
+                </tr>
+                <tr>
+                  <td>MongoDB</td>
+                  <td>No relacional</td>
+                  <td>Organiza la información mediante documentos flexibles.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            No existe un motor adecuado para todos los proyectos.
+            Cada uno resuelve necesidades diferentes.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="sql-mysql-workbench">
+          <h2>8. SQL, MySQL y MySQL Workbench</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Aunque están relacionados, SQL, MySQL y MySQL Workbench
+            no son lo mismo.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Elemento</th>
+                  <th scope="col">Qué es</th>
+                  <th scope="col">Para qué se utiliza</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>SQL</td>
+                  <td>Un lenguaje.</td>
+                  <td>
+                    Permite dar instrucciones para crear estructuras,
+                    consultar datos y modificarlos.
+                  </td>
+                </tr>
+                <tr>
+                  <td>MySQL</td>
+                  <td>Un sistema gestor de bases de datos.</td>
+                  <td>Almacena los datos y procesa las instrucciones SQL.</td>
+                </tr>
+                <tr>
+                  <td>MySQL Workbench</td>
+                  <td>Una herramienta gráfica.</td>
+                  <td>
+                    Facilita la conexión con MySQL y permite escribir,
+                    ejecutar y visualizar consultas.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            SQL es el lenguaje, MySQL es el gestor y MySQL Workbench
+            es una herramienta para trabajar con ese gestor.
+          </p>
+
+          <h3>8.1. Flujo de funcionamiento</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando ejecutamos una instrucción desde MySQL Workbench,
+            ocurre este proceso:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--example">
+              Escribimos una instrucción utilizando el lenguaje SQL.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              MySQL Workbench envía la instrucción al servidor MySQL.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              MySQL procesa la instrucción y trabaja con la base de datos.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              MySQL devuelve el resultado o un mensaje de error.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              MySQL Workbench muestra la respuesta en pantalla.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--key">
+            El servidor MySQL es el programa que recibe y procesa las peticiones.
+            Puede ejecutarse en nuestro ordenador o en otra máquina.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Instalar MySQL Workbench no significa necesariamente que el servidor
+            MySQL también esté instalado y funcionando.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="mapa">
+          <h2>9. Mapa general de conceptos</h2>
+
+          <pre class="diagram-block">MySQL Workbench
+permite escribir y enviar instrucciones en
+↓
+SQL
+que son procesadas por
+↓
+MySQL
+para trabajar con una
+↓
+Base de datos
+que contiene
+↓
+Tablas
+formadas por
+↓
+Filas y columnas
+que pueden conectarse mediante
+↓
+Claves primarias y claves foráneas</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Base de datos, SQL, MySQL y MySQL Workbench son conceptos
+            relacionados, pero cada uno cumple una función diferente.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · SQL · Clase 1
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
