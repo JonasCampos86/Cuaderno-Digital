@@ -1,0 +1,1386 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Clase 2 de SQL: crear una base de datos y una tabla en MySQL, definir tipos y restricciones, insertar registros y consultar los resultados."
+    />
+    <title>Creación y manipulación inicial de tablas | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a SQL
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#objetivo">1. Objetivo y recorrido</a>
+          <a href="#sintaxis">2. Leer y escribir SQL</a>
+          <a href="#crear-base-datos">3. CREATE DATABASE</a>
+          <a href="#seleccionar-base-datos">4. USE</a>
+          <a href="#tipos-datos">5. Tipos de datos</a>
+          <a href="#restricciones">6. Restricciones y AUTO_INCREMENT</a>
+          <a href="#crear-tabla">7. CREATE TABLE</a>
+          <a href="#insertar-registros">8. INSERT INTO</a>
+          <a href="#consultar-datos">9. SELECT</a>
+          <a href="#recorrido-completo">10. Recorrido completo</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Creación y manipulación inicial de tablas</h1>
+          <p>
+            Clase 2 · Crear una base de datos, definir la tabla empleados,
+            insertar registros y consultar la información con MySQL.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="objetivo">
+          <h2>1. Objetivo y recorrido de la clase</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Vamos a preparar una base de datos para almacenar empleados
+            y consultar después la información introducida.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El recorrido será:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--example">
+              <code>CREATE DATABASE</code>: crear la base de datos.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>USE</code>: seleccionarla para trabajar con ella.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>CREATE TABLE</code>: definir una tabla.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>INSERT INTO</code>: añadir registros.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>SELECT</code>: consultar los datos.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--example">
+            Utilizaremos una base de datos llamada <code>mi_empresa</code>
+            y una tabla llamada <code>empleados</code>.
+          </p>
+
+          <h3>Estructura y datos</h3>
+
+          <p class="lesson-note lesson-note--key">
+            La estructura de una tabla establece sus columnas, sus tipos
+            de datos y sus reglas.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Los datos son los valores almacenados en las filas de esa tabla.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Por ejemplo:</p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Elemento</th>
+                  <th scope="col">Ejemplo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Nombre de la tabla</td>
+                  <td><code>empleados</code></td>
+                </tr>
+                <tr>
+                  <td>Columnas</td>
+                  <td><code>id</code>, <code>nombre</code>, <code>anio_incorporacion</code></td>
+                </tr>
+                <tr>
+                  <td>Tipo de una columna</td>
+                  <td><code>VARCHAR(50)</code> para <code>nombre</code></td>
+                </tr>
+                <tr>
+                  <td>Valores de una fila</td>
+                  <td><code>1</code>, <code>Ana</code>, <code>2024</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Crear una tabla define su estructura; insertar registros añade
+            datos a esa estructura.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Todos los ejemplos pertenecen al mismo recorrido. Los resultados
+            mostrados parten de una tabla nueva, con la configuración habitual
+            de MySQL para generar identificadores.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="sintaxis">
+          <h2>2. Cómo leer y escribir las instrucciones</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Una instrucción o sentencia SQL expresa una operación que queremos
+            que MySQL ejecute.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Por ejemplo:</p>
+
+          <pre class="code-block"><code>USE mi_empresa;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La instrucción indica a MySQL que seleccione
+            <code>mi_empresa</code> como base de datos actual.
+          </p>
+
+          <h3>Elementos básicos de la sintaxis</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Elemento</th>
+                  <th scope="col">Para qué sirve</th>
+                  <th scope="col">Ejemplo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Palabras clave</td>
+                  <td>Expresan la operación y sus componentes.</td>
+                  <td><code>CREATE TABLE</code>, <code>VALUES</code></td>
+                </tr>
+                <tr>
+                  <td>Identificadores</td>
+                  <td>Nombran bases de datos, tablas o columnas.</td>
+                  <td><code>mi_empresa</code>, <code>empleados</code>, <code>nombre</code></td>
+                </tr>
+                <tr>
+                  <td>Comillas simples</td>
+                  <td>Delimitan valores de texto.</td>
+                  <td><code>'Ana'</code></td>
+                </tr>
+                <tr>
+                  <td>Comas</td>
+                  <td>Separan elementos de una lista.</td>
+                  <td><code>nombre, anio_incorporacion</code></td>
+                </tr>
+                <tr>
+                  <td>Paréntesis</td>
+                  <td>Agrupan definiciones, columnas o valores, según la instrucción.</td>
+                  <td><code>('Ana', 2024)</code></td>
+                </tr>
+                <tr>
+                  <td>Punto y coma</td>
+                  <td>Marca el final de cada sentencia en nuestros scripts.</td>
+                  <td><code>;</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Escribiremos las palabras clave en mayúsculas para reconocerlas
+            fácilmente. MySQL también las reconoce en minúsculas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los nombres elegidos por nosotros se escribirán en minúsculas
+            y con guiones bajos cuando tengan varias palabras.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Mantén la misma escritura en los nombres de tablas: la distinción
+            entre mayúsculas y minúsculas puede depender del sistema
+            y de la configuración.
+          </p>
+
+          <h3>Nombres y valores no son lo mismo</h3>
+
+          <p class="lesson-note lesson-note--example">En una inserción:</p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              <code>nombre</code> identifica una columna.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>'Ana'</code> es un valor que queremos almacenar en ella.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El nombre de una columna indica dónde se guarda el dato;
+            el valor indica qué dato se guarda.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una sentencia puede ocupar varias líneas. Los saltos de línea
+            y la sangría facilitan su lectura; no la convierten en varias
+            sentencias.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="crear-base-datos">
+          <h2>3. Crear la base de datos: CREATE DATABASE</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>CREATE DATABASE</code> crea una base de datos.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            La necesitamos para agrupar las tablas de nuestra empresa.
+            Crearla todavía no introduce empleados ni define sus columnas.
+          </p>
+
+          <h3>Sintaxis básica</h3>
+
+          <pre class="code-block"><code>CREATE DATABASE mi_empresa;</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Fragmento</th>
+                  <th scope="col">Significado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>CREATE DATABASE</code></td>
+                  <td>Solicita crear una base de datos.</td>
+                </tr>
+                <tr>
+                  <td><code>mi_empresa</code></td>
+                  <td>Es el nombre elegido.</td>
+                </tr>
+                <tr>
+                  <td><code>;</code></td>
+                  <td>Finaliza la sentencia.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Qué ocurre al ejecutarla</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Antes: no existe <code>mi_empresa</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Después: existe la base de datos <code>mi_empresa</code>,
+            pero todavía no hemos creado ninguna tabla dentro de ella.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL devuelve una confirmación si la operación se realiza
+            correctamente.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si ya existe una base de datos con ese nombre, esta instrucción
+            produce un error.
+          </p>
+
+          <h3>La condición IF NOT EXISTS</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para solicitar la creación únicamente cuando la base de datos
+            todavía no existe, utilizamos:
+          </p>
+
+          <pre class="code-block"><code>CREATE DATABASE IF NOT EXISTS mi_empresa;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            <code>IF NOT EXISTS</code> significa «si no existe».
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Estado anterior</th>
+                  <th scope="col">Comportamiento</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>No existe <code>mi_empresa</code>.</td>
+                  <td>MySQL la crea.</td>
+                </tr>
+                <tr>
+                  <td>Ya existe <code>mi_empresa</code>.</td>
+                  <td>
+                    MySQL conserva la existente y genera una advertencia
+                    por esa circunstancia, en lugar del error por nombre duplicado.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            IF NOT EXISTS conserva una base de datos existente;
+            no la vacía ni la reinicia.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En el resto de la clase utilizaremos esta segunda forma.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="seleccionar-base-datos">
+          <h2>4. Seleccionar la base de datos: USE</h2>
+
+          <p class="lesson-note lesson-note--key">
+            La base de datos actual es la que MySQL utiliza por defecto
+            cuando una instrucción no especifica otra.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un servidor puede contener varias bases de datos. Antes de crear
+            nuestra tabla, debemos indicar en cuál vamos a trabajar.
+          </p>
+
+          <h3>Instrucción</h3>
+
+          <pre class="code-block"><code>USE mi_empresa;</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Fragmento</th>
+                  <th scope="col">Significado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>USE</code></td>
+                  <td>Selecciona la base de datos actual.</td>
+                </tr>
+                <tr>
+                  <td><code>mi_empresa</code></td>
+                  <td>Identifica la base de datos que queremos seleccionar.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Qué ocurre al ejecutarla</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Antes: <code>mi_empresa</code> existe, pero puede haber otra
+            base de datos seleccionada o ninguna.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Después: <code>mi_empresa</code> queda seleccionada para las
+            instrucciones posteriores de esa conexión.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Por ejemplo, cuando escribamos <code>CREATE TABLE empleados (...)</code>,
+            MySQL creará la tabla dentro de <code>mi_empresa</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            CREATE DATABASE crea una base de datos; USE selecciona
+            una base de datos existente.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            La selección se mantiene en la conexión hasta que se cambia o esta
+            termina. Al abrir otra conexión, no debemos dar por supuesto que
+            conserva esa selección.
+            <a href="https://dev.mysql.com/doc/refman/8.4/en/creating-database.html">
+              Referencia: documentación de MySQL
+            </a>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>USE</code> no crea una base de datos ni modifica sus tablas
+            o registros. Si el nombre indicado no existe, la instrucción falla.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esta es la instrucción que utilizamos en MySQL para seleccionar
+            la base de datos; no debe suponerse que todos los motores utilizan
+            el mismo mecanismo.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="tipos-datos">
+          <h2>5. Tipos de datos de las columnas</h2>
+
+          <p class="lesson-note lesson-note--key">
+            El tipo de datos determina qué clase de valores puede almacenar
+            una columna.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para elegirlo, primero debemos pensar qué representa el dato.
+          </p>
+
+          <p class="lesson-note lesson-note--example">En nuestra tabla:</p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Columna</th>
+                  <th scope="col">Información que representa</th>
+                  <th scope="col">Tipo elegido</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>id</code></td>
+                  <td>Un identificador numérico entero.</td>
+                  <td><code>INT</code></td>
+                </tr>
+                <tr>
+                  <td><code>nombre</code></td>
+                  <td>El nombre del empleado.</td>
+                  <td><code>VARCHAR(50)</code></td>
+                </tr>
+                <tr>
+                  <td><code>anio_incorporacion</code></td>
+                  <td>El año en que se incorporó.</td>
+                  <td><code>YEAR</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>5.1. INT: números enteros</h3>
+
+          <pre class="code-block"><code>id INT</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>INT</code> permite almacenar números enteros, como
+            <code>1</code>, <code>25</code> o <code>300</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El tipo numérico no convierte la columna en identificador por sí
+            solo. Tampoco lo hace el nombre <code>id</code>: las reglas
+            se establecen expresamente al definirla.
+          </p>
+
+          <h3>5.2. VARCHAR(n): texto de longitud variable</h3>
+
+          <pre class="code-block"><code>nombre VARCHAR(50)</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>VARCHAR(50)</code> permite almacenar texto de hasta
+            50 caracteres.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            <code>'Ana'</code> ocupa 3 caracteres y <code>'Luis'</code> ocupa 4.
+            Ambos valores caben en esa columna.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El número de VARCHAR indica el máximo de caracteres de cada valor,
+            no el número de filas de la tabla.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si un texto supera ese máximo, MySQL puede rechazarlo o recortarlo
+            con una advertencia, según su configuración. Debemos proporcionar
+            valores que respeten el límite.
+          </p>
+
+          <h3>5.3. YEAR: años en MySQL</h3>
+
+          <pre class="code-block"><code>anio_incorporacion YEAR</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>YEAR</code> es un tipo de MySQL para representar años.
+            Admite los años comprendidos entre <code>1901</code> y
+            <code>2155</code>, además del valor especial <code>0000</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En nuestros ejemplos utilizaremos años completos, como
+            <code>2024</code>, y declararemos el tipo como <code>YEAR</code>,
+            sin añadir un tamaño.
+            <a href="https://docs.oracle.com/cd/E17952_01/mysql-8.4-en/year.html">
+              Referencia: documentación de MySQL
+            </a>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>YEAR</code> no admite cualquier número de cuatro cifras
+            y tampoco representa una fecha completa: no incluye mes ni día.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="restricciones">
+          <h2>6. Restricciones y generación automática</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Una restricción establece una condición que deben cumplir
+            los datos almacenados.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En esta clase utilizaremos <code>PRIMARY KEY</code> y
+            <code>NOT NULL</code>. También emplearemos
+            <code>AUTO_INCREMENT</code>, que es un atributo de generación
+            automática.
+          </p>
+
+          <h3>6.1. PRIMARY KEY: identificar las filas</h3>
+
+          <p class="lesson-note lesson-note--key">
+            La clave primaria identifica de forma única cada fila de una tabla.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los nombres no son adecuados para identificar por sí solos a
+            nuestros empleados, porque dos personas pueden llamarse igual.
+            Utilizaremos una columna <code>id</code>.
+          </p>
+
+          <pre class="code-block"><code>id INT PRIMARY KEY</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En esta definición, <code>PRIMARY KEY</code> impide que
+            <code>id</code> contenga valores repetidos o <code>NULL</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Estas filas serían válidas:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">id</th>
+                  <th scope="col">nombre</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>Ana</td></tr>
+                <tr><td>2</td><td>Ana</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los nombres coinciden, pero los identificadores son diferentes.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Una segunda fila con <code>id = 1</code> incumpliría
+            la clave primaria.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            PRIMARY KEY impide que la clave se repita o sea NULL;
+            no genera sus valores automáticamente.
+          </p>
+
+          <h3>6.2. NOT NULL: impedir la ausencia de valor</h3>
+
+          <p class="lesson-note lesson-note--key">
+            <code>NULL</code> representa la ausencia de un valor,
+            por ejemplo porque se desconoce.
+          </p>
+
+          <pre class="code-block"><code>nombre VARCHAR(50) NOT NULL</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esta definición impide que <code>nombre</code> almacene
+            <code>NULL</code>.
+          </p>
+
+          <h3>NULL y texto vacío</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Valor</th>
+                  <th scope="col">Qué representa</th>
+                  <th scope="col">¿Lo admite NOT NULL?</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>NULL</code></td>
+                  <td>Ausencia de valor.</td>
+                  <td>No.</td>
+                </tr>
+                <tr>
+                  <td><code>''</code></td>
+                  <td>Un texto de cero caracteres.</td>
+                  <td>Sí.</td>
+                </tr>
+                <tr>
+                  <td><code>'Ana'</code></td>
+                  <td>Un texto con contenido.</td>
+                  <td>Sí.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            NOT NULL impide NULL, pero no impide una cadena vacía
+            ni un texto formado por espacios.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Por tanto, esta restricción no basta para garantizar que un nombre
+            tenga contenido útil.
+            <a href="https://dev.mysql.com/doc/refman/8.4/en/problems-with-null.html">
+              Referencia: documentación de MySQL
+            </a>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>NULL</code> se escribe sin comillas.
+            <code>'NULL'</code> sería un texto de cuatro caracteres,
+            no la ausencia de un valor.
+          </p>
+
+          <h3>6.3. AUTO_INCREMENT: generar identificadores</h3>
+
+          <p class="lesson-note lesson-note--key">
+            <code>AUTO_INCREMENT</code> permite que MySQL genere
+            automáticamente valores para una columna numérica.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Lo utilizaremos para no tener que calcular y escribir
+            el identificador de cada empleado.
+          </p>
+
+          <pre class="code-block"><code>id INT AUTO_INCREMENT PRIMARY KEY</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Parte</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>INT</code></td>
+                  <td>Establece el tipo numérico entero.</td>
+                </tr>
+                <tr>
+                  <td><code>AUTO_INCREMENT</code></td>
+                  <td>Genera el identificador cuando omitimos esa columna al insertar.</td>
+                </tr>
+                <tr>
+                  <td><code>PRIMARY KEY</code></td>
+                  <td>
+                    Garantiza que el identificador almacenado no se repita
+                    ni sea <code>NULL</code>.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--example">
+            En una tabla nueva y con la configuración habitual, los primeros
+            identificadores generados serán <code>1</code>, <code>2</code>,
+            <code>3</code>…
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Pueden existir saltos en la numeración. Los identificadores sirven
+            para identificar filas, no para contar cuántas hay.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            AUTO_INCREMENT genera valores y PRIMARY KEY establece
+            las reglas de identificación.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>AUTO_INCREMENT</code> es sintaxis específica de MySQL;
+            otros motores pueden utilizar mecanismos diferentes.
+            <a href="https://dev.mysql.com/doc/refman/8.4/en/example-auto-increment.html">
+              Referencia: documentación de MySQL
+            </a>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="crear-tabla">
+          <h2>7. Crear la tabla: CREATE TABLE</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>CREATE TABLE</code> crea una tabla y define su estructura.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Antes de insertar empleados, debemos establecer qué columnas
+            tendrá cada fila y qué reglas se aplicarán.
+          </p>
+
+          <h3>Diseño de nuestra tabla</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Columna</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Restricciones o atributos</th>
+                  <th scope="col">Finalidad</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>id</code></td>
+                  <td><code>INT</code></td>
+                  <td><code>AUTO_INCREMENT PRIMARY KEY</code></td>
+                  <td>
+                    Identificar cada empleado mediante un número generado
+                    automáticamente.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>nombre</code></td>
+                  <td><code>VARCHAR(50)</code></td>
+                  <td><code>NOT NULL</code></td>
+                  <td>Guardar el nombre sin admitir <code>NULL</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>anio_incorporacion</code></td>
+                  <td><code>YEAR</code></td>
+                  <td>Admite <code>NULL</code>.</td>
+                  <td>Guardar el año cuando lo conocemos.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Instrucción completa</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Primero debe estar seleccionada la base de datos
+            <code>mi_empresa</code>.
+          </p>
+
+          <pre class="code-block"><code>CREATE TABLE empleados (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    anio_incorporacion YEAR
+);</code></pre>
+
+          <h3>Cómo se interpreta</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Fragmento</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>CREATE TABLE empleados</code></td>
+                  <td>Solicita crear la tabla con ese nombre.</td>
+                </tr>
+                <tr>
+                  <td>Paréntesis exteriores</td>
+                  <td>Contienen las definiciones de las columnas.</td>
+                </tr>
+                <tr>
+                  <td>Cada definición</td>
+                  <td>
+                    Indica el nombre, el tipo y las reglas o atributos
+                    de una columna.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Comas</td>
+                  <td>Separan las definiciones.</td>
+                </tr>
+                <tr>
+                  <td><code>);</code></td>
+                  <td>Cierra la definición y finaliza la sentencia.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            La última definición no lleva una coma antes del paréntesis
+            de cierre.
+          </p>
+
+          <h3>Estado anterior y posterior</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Antes: existe <code>mi_empresa</code>, pero todavía no existe
+            nuestra tabla <code>empleados</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Después: existe <code>empleados</code> con tres columnas
+            y cero filas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL confirma la creación. Todavía no hay ningún empleado almacenado.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una tabla vacía ya tiene estructura, aunque no contenga registros.
+          </p>
+
+          <h3>Por qué el año puede ser NULL</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            En <code>anio_incorporacion</code> no hemos establecido
+            <code>NOT NULL</code>. Por eso admite la ausencia de valor.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Además, con esta definición, si omitimos esa columna al insertar,
+            MySQL utilizará <code>NULL</code>. Esto nos permitirá guardar
+            un empleado aunque todavía no conozcamos su año de incorporación.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si ejecutas otra vez este mismo <code>CREATE TABLE</code> cuando
+            <code>empleados</code> ya existe, MySQL devuelve un error.
+            La sentencia no reinicia la tabla.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="insertar-registros">
+          <h2>8. Añadir registros: INSERT INTO</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>INSERT INTO</code> añade filas a una tabla existente.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            La estructura ya está preparada. Ahora introduciremos
+            los datos de los empleados.
+          </p>
+
+          <h3>8.1. Insertar el primer empleado</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Estado inicial: <code>empleados</code> está vacía.
+          </p>
+
+          <pre class="code-block"><code>INSERT INTO empleados (nombre, anio_incorporacion)
+VALUES ('Ana', 2024);</code></pre>
+
+          <h3>Qué hace cada parte</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Fragmento</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>INSERT INTO empleados</code></td>
+                  <td>Indica la tabla que recibirá la fila.</td>
+                </tr>
+                <tr>
+                  <td><code>(nombre, anio_incorporacion)</code></td>
+                  <td>Enumera las columnas a las que proporcionaremos valores.</td>
+                </tr>
+                <tr>
+                  <td><code>VALUES</code></td>
+                  <td>Introduce los valores de la nueva fila.</td>
+                </tr>
+                <tr>
+                  <td><code>('Ana', 2024)</code></td>
+                  <td>Proporciona un valor para cada columna enumerada.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Correspondencia entre columnas y valores</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Posición</th>
+                  <th scope="col">Columna</th>
+                  <th scope="col">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Primera</td>
+                  <td><code>nombre</code></td>
+                  <td><code>'Ana'</code></td>
+                </tr>
+                <tr>
+                  <td>Segunda</td>
+                  <td><code>anio_incorporacion</code></td>
+                  <td><code>2024</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Cada valor corresponde a la columna situada en la misma
+            posición de la lista.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El texto <code>'Ana'</code> lleva comillas simples.
+            El año <code>2024</code> se proporciona como número, sin comillas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Omitimos <code>id</code> porque MySQL generará su valor
+            mediante <code>AUTO_INCREMENT</code>.
+          </p>
+
+          <h3>Resultado esperado</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">id</th>
+                  <th scope="col">nombre</th>
+                  <th scope="col">anio_incorporacion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>Ana</td><td>2024</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            La estructura sigue siendo la misma. Lo que ha cambiado
+            es el contenido: ahora hay una fila.
+          </p>
+
+          <h3>8.2. Insertar otro empleado</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Estado inicial: la tabla contiene a Ana.
+          </p>
+
+          <pre class="code-block"><code>INSERT INTO empleados (nombre, anio_incorporacion)
+VALUES ('Luis', 2025);</code></pre>
+
+          <p class="lesson-note lesson-note--example">Resultado esperado:</p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">id</th>
+                  <th scope="col">nombre</th>
+                  <th scope="col">anio_incorporacion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>Ana</td><td>2024</td></tr>
+                <tr><td>2</td><td>Luis</td><td>2025</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            La nueva fila se añade a las existentes. La información de Ana
+            permanece almacenada.
+          </p>
+
+          <h3>8.3. Insertar sin conocer el año</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Queremos guardar a Marta, pero todavía no conocemos
+            su año de incorporación.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Como esa columna permite <code>NULL</code>, podemos omitirla:
+          </p>
+
+          <pre class="code-block"><code>INSERT INTO empleados (nombre)
+VALUES ('Marta');</code></pre>
+
+          <p class="lesson-note lesson-note--example">Resultado esperado:</p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">id</th>
+                  <th scope="col">nombre</th>
+                  <th scope="col">anio_incorporacion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>Ana</td><td>2024</td></tr>
+                <tr><td>2</td><td>Luis</td><td>2025</td></tr>
+                <tr><td>3</td><td>Marta</td><td><code>NULL</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            En esta inserción:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              <code>id</code> recibe un valor generado automáticamente.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>nombre</code> recibe el valor proporcionado.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              <code>anio_incorporacion</code> recibe <code>NULL</code>,
+              según la definición de nuestra tabla.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Omitir una columna no elimina esa columna:
+            su valor se determina según su definición.
+          </p>
+
+          <h3>Precauciones al insertar</h3>
+
+          <ul>
+            <li class="lesson-note lesson-note--warning">
+              El número de valores debe coincidir con el número
+              de columnas enumeradas.
+            </li>
+            <li class="lesson-note lesson-note--warning">
+              El orden de los valores debe coincidir con el de esas columnas.
+            </li>
+            <li class="lesson-note lesson-note--warning">
+              Los datos deben respetar los tipos y las restricciones.
+            </li>
+            <li class="lesson-note lesson-note--warning">
+              Repetir una inserción puede añadir otra fila con los mismos
+              datos y un identificador diferente.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--example">
+            Por ejemplo, nuestra tabla permite guardar otra persona llamada Ana.
+            La clave primaria es <code>id</code>; no hemos establecido que
+            <code>nombre</code> sea único.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Indicaremos expresamente las columnas para que la correspondencia
+            sea visible y no dependa del orden completo de la tabla.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="consultar-datos">
+          <h2>9. Consultar la información: SELECT</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>SELECT</code> permite obtener información mediante una consulta.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una inserción comunica que se han añadido datos. Para pedir
+            que MySQL nos devuelva esos datos, utilizamos una consulta.
+          </p>
+
+          <h3>9.1. Consultar todas las columnas</h3>
+
+          <pre class="code-block"><code>SELECT *
+FROM empleados;</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Fragmento</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>SELECT</code></td>
+                  <td>Indica qué información queremos obtener.</td>
+                </tr>
+                <tr>
+                  <td><code>*</code></td>
+                  <td>Selecciona todas las columnas de la tabla en esta consulta.</td>
+                </tr>
+                <tr>
+                  <td><code>FROM empleados</code></td>
+                  <td>Indica de qué tabla se obtienen los datos.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Como no hemos añadido ninguna condición para filtrar filas,
+            la consulta solicita todas las filas de <code>empleados</code>.
+          </p>
+
+          <h3>Resultado esperado</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">id</th>
+                  <th scope="col">nombre</th>
+                  <th scope="col">anio_incorporacion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>Ana</td><td>2024</td></tr>
+                <tr><td>2</td><td>Luis</td><td>2025</td></tr>
+                <tr><td>3</td><td>Marta</td><td><code>NULL</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            El resultado tiene tres columnas y tres filas. En MySQL Workbench
+            se muestra como un resultado de consulta.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>NULL</code> indica que no tenemos un año almacenado para Marta.
+            No significa que su año sea cero ni que se haya guardado
+            el texto <code>'NULL'</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Esta consulta devuelve información sin modificar la tabla
+            ni sus registros.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El asterisco selecciona columnas. La ausencia de un filtro
+            es lo que hace que aquí se soliciten todas las filas.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Esta consulta no garantiza el orden de las filas.
+            Las mostramos ordenadas por identificador para facilitar la lectura.
+          </p>
+
+          <h3>9.2. Consultar columnas concretas</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si solo necesitamos los nombres y los años,
+            los indicamos expresamente:
+          </p>
+
+          <pre class="code-block"><code>SELECT nombre, anio_incorporacion
+FROM empleados;</code></pre>
+
+          <p class="lesson-note lesson-note--example">Resultado esperado:</p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">nombre</th>
+                  <th scope="col">anio_incorporacion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Ana</td><td>2024</td></tr>
+                <tr><td>Luis</td><td>2025</td></tr>
+                <tr><td>Marta</td><td><code>NULL</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            La columna <code>id</code> continúa existiendo y conservando sus
+            valores. Simplemente no forma parte del resultado solicitado.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Las columnas seleccionadas determinan qué devuelve la consulta,
+            no qué columnas conserva la tabla.
+            <a href="https://dev.mysql.com/doc/refman/8.4/en/select.html">
+              Referencia: documentación de MySQL
+            </a>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="recorrido-completo">
+          <h2>10. Recorrido completo para practicar y repasar</h2>
+
+          <h3>Condición inicial</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            El siguiente bloque parte de que todavía no existe la tabla
+            <code>empleados</code> dentro de <code>mi_empresa</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Ejecutaremos las instrucciones en el orden en que aparecen.
+          </p>
+
+          <pre class="code-block"><code>CREATE DATABASE IF NOT EXISTS mi_empresa;
+
+USE mi_empresa;
+
+CREATE TABLE empleados (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    anio_incorporacion YEAR
+);
+
+INSERT INTO empleados (nombre, anio_incorporacion)
+VALUES ('Ana', 2024);
+
+INSERT INTO empleados (nombre, anio_incorporacion)
+VALUES ('Luis', 2025);
+
+INSERT INTO empleados (nombre)
+VALUES ('Marta');
+
+SELECT *
+FROM empleados;</code></pre>
+
+          <h3>Qué produce cada paso</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Paso</th>
+                  <th scope="col">Instrucción</th>
+                  <th scope="col">Efecto</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td><code>CREATE DATABASE IF NOT EXISTS</code></td>
+                  <td>Crea la base de datos si no existe.</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td><code>USE</code></td>
+                  <td>Selecciona la base de datos para trabajar en esa conexión.</td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td><code>CREATE TABLE</code></td>
+                  <td>Crea la estructura de la tabla, inicialmente vacía.</td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>Primer <code>INSERT INTO</code></td>
+                  <td>Añade la fila de Ana.</td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td>Segundo <code>INSERT INTO</code></td>
+                  <td>Añade la fila de Luis.</td>
+                </tr>
+                <tr>
+                  <td>6</td>
+                  <td>Tercer <code>INSERT INTO</code></td>
+                  <td>Añade la fila de Marta con el año en <code>NULL</code>.</td>
+                </tr>
+                <tr>
+                  <td>7</td>
+                  <td><code>SELECT</code></td>
+                  <td>Devuelve los datos solicitados sin modificar los registros.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Qué sucede al trabajar desde MySQL Workbench</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL Workbench envía las instrucciones al servidor MySQL.
+            MySQL las procesa sobre la base de datos y devuelve:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              Una confirmación cuando realiza correctamente una operación.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Una advertencia cuando hay una circunstancia que debe comunicarse.
+            </li>
+            <li class="lesson-note lesson-note--warning">
+              Un error cuando no puede realizar la operación.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Un conjunto de resultados cuando ejecutamos una consulta
+              como la anterior.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--warning">
+            El bloque no está preparado para ejecutarse repetidamente sin
+            revisar el estado previo. Una tabla ya existente provoca un error
+            en ese <code>CREATE TABLE</code>, y repetir los
+            <code>INSERT INTO</code> puede añadir más filas.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>IF NOT EXISTS</code> solo afecta aquí a la creación de
+            la base de datos. No protege las demás instrucciones frente
+            a repeticiones.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Antes de ejecutar SQL, identifica sobre qué base de datos y tabla
+            actúa, qué estado espera encontrar y qué cambiará al ejecutarse.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · SQL · Clase 2
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
