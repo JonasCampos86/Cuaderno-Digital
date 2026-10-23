@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Clase 3 de SQL: consultas SELECT, filtros WHERE, operadores, patrones, ordenación, límites, alias, cálculos y una subconsulta con IN."
+    />
+    <title>Consultas y filtros básicos en SQL | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a SQL
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#objetivos">1. Objetivos</a>
+          <a href="#world">2. Base de datos world</a>
+          <a href="#consulta">3. Qué hace una consulta</a>
+          <a href="#estructura">4. Estructura y orden</a>
+          <a href="#select-from">5. SELECT y FROM</a>
+          <a href="#where">6. WHERE</a>
+          <a href="#comparacion">7. Comparaciones</a>
+          <a href="#condiciones">8. AND, OR y NOT</a>
+          <a href="#like">9. LIKE y patrones</a>
+          <a href="#in">10. IN</a>
+          <a href="#between">11. BETWEEN</a>
+          <a href="#null">12. IS NULL</a>
+          <a href="#order-by">13. ORDER BY</a>
+          <a href="#limit">14. LIMIT</a>
+          <a href="#alias">15. Alias con AS</a>
+          <a href="#calculos">16. Cálculos</a>
+          <a href="#subconsulta">17. Subconsulta con IN</a>
+          <a href="#consulta-completa">18. Consulta completa</a>
+          <a href="#errores">19. Errores frecuentes</a>
+          <a href="#resumen">20. Resumen</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Consultas y filtros básicos en SQL</h1>
+          <p>
+            Clase 3 · Consultar, filtrar, ordenar y calcular resultados con
+            MySQL y la base de datos de ejemplo world.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="objetivos">
+          <h2>1. Objetivos del tema</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Este tema explica cómo:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              Recuperar datos mediante <code>SELECT</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Elegir la tabla mediante <code>FROM</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Filtrar filas mediante <code>WHERE</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Comparar valores mediante operadores.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Combinar condiciones con <code>AND</code>, <code>OR</code>
+              y <code>NOT</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Buscar patrones de texto mediante <code>LIKE</code>
+              y <code>%</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Comprobar varios valores mediante <code>IN</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Seleccionar valores incluidos en un intervalo mediante
+              <code>BETWEEN</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Comprobar valores nulos mediante <code>IS NULL</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Ordenar resultados mediante <code>ORDER BY</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Limitar la cantidad de filas mediante <code>LIMIT</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Crear alias mediante <code>AS</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Realizar cálculos sencillos con columnas.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Utilizar una subconsulta básica dentro de <code>IN</code>.
+            </li>
+          </ul>
+        </section>
+
+        <section class="lesson-section" id="world">
+          <h2>2. Base de datos de ejemplo: <code>world</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            La base de datos de ejemplo <code>world</code> contiene información
+            sobre países, ciudades e idiomas.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Antes de empezar, <code>world</code> debe estar importada en tu
+            servidor MySQL. <code>USE</code> selecciona una base existente;
+            no la descarga ni la crea. Puedes consultar la
+            <a
+              href="https://dev.mysql.com/doc/world-setup/en/world-setup-installation.html"
+            >guía oficial de instalación de world</a>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para seleccionarla:
+          </p>
+
+          <pre class="code-block"><code>USE world;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las tablas utilizadas como referencia son:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Tabla</th>
+                  <th scope="col">Contenido</th>
+                  <th scope="col">Columnas utilizadas</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>country</code></td>
+                  <td>Información sobre países</td>
+                  <td>
+                    <code>Code</code>, <code>Name</code>,
+                    <code>Continent</code>, <code>IndepYear</code>,
+                    <code>Population</code>, <code>GNP</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>city</code></td>
+                  <td>Información sobre ciudades</td>
+                  <td>
+                    <code>ID</code>, <code>Name</code>,
+                    <code>CountryCode</code>, <code>District</code>,
+                    <code>Population</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>countrylanguage</code></td>
+                  <td>Idiomas hablados en cada país</td>
+                  <td>
+                    <code>CountryCode</code>, <code>Language</code>,
+                    <code>IsOfficial</code>, <code>Percentage</code>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los resultados de esta lección son muestras del conjunto de
+            ejemplo: no representan necesariamente todas las filas ni su
+            orden. Las cifras corresponden a los datos de <code>world</code>,
+            no a estadísticas actuales.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En los ejemplos posteriores también aparecerá esta correspondencia:
+          </p>
+
+          <pre class="code-block"><code>city.CountryCode → country.Code</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El valor almacenado en <code>city.CountryCode</code> permite
+            identificar el país correspondiente dentro de
+            <code>country.Code</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="consulta">
+          <h2>3. Qué hace una consulta</h2>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una consulta <code>SELECT</code> lee datos y produce una tabla
+            de resultados, pero no modifica los datos almacenados.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos entender las consultas de esta clase con este recorrido
+            lógico:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              MySQL localiza la tabla indicada.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Examina sus filas.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Aplica los filtros solicitados.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Selecciona las columnas correspondientes.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Ordena o limita el resultado si se lo pedimos.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Devuelve una tabla de resultados.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--explanation">
+            Este recorrido explica el resultado; el optimizador puede elegir
+            otra estrategia interna de ejecución. La estructura y los datos
+            originales permanecen intactos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="estructura">
+          <h2>4. Estructura general de una consulta</h2>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla
+WHERE condicion
+ORDER BY columna ASC
+LIMIT cantidad;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            No todas las cláusulas son obligatorias. Esta es una plantilla:
+            sustituye <code>columnas</code>, <code>tabla</code>,
+            <code>condicion</code> y <code>cantidad</code> por valores concretos.
+            Los fragmentos que empiezan por <code>WHERE</code>,
+            <code>ORDER BY</code> o <code>IN</code> ilustran partes de una
+            consulta; no se ejecutan solos.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Elemento</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>SELECT</code></td>
+                  <td>Indica qué columnas o expresiones queremos mostrar.</td>
+                </tr>
+                <tr>
+                  <td><code>FROM</code></td>
+                  <td>Indica de qué tabla proceden los datos.</td>
+                </tr>
+                <tr>
+                  <td><code>WHERE</code></td>
+                  <td>Decide qué filas cumplen la condición.</td>
+                </tr>
+                <tr>
+                  <td><code>ORDER BY</code></td>
+                  <td>Ordena las filas del resultado.</td>
+                </tr>
+                <tr>
+                  <td><code>LIMIT</code></td>
+                  <td>Limita cuántas filas se devuelven.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            Los corchetes que aparecen en algunas explicaciones, como
+            <code>[columna]</code> o <code>[ASC|DESC]</code>, representan
+            opciones o elementos que deben sustituirse.
+            No se escriben literalmente en SQL.
+          </p>
+
+          <h3>Orden de escritura</h3>
+
+          <pre class="code-block"><code>SELECT → FROM → WHERE → ORDER BY → LIMIT</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Las cláusulas deben escribirse en este orden, aunque alguna
+            de ellas no se utilice.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="select-from">
+          <h2>5. <code>SELECT</code> y <code>FROM</code></h2>
+
+          <h3>5.1 Seleccionar columnas concretas</h3>
+
+          <pre class="code-block"><code>SELECT Name, Continent
+FROM country;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>SELECT Name, Continent</code> indica qué columnas queremos
+            ver. <code>FROM country</code> indica de qué tabla deben obtenerse.
+          </p>
+
+          <h3>Resultado representativo</h3>
+
+          <p class="lesson-note lesson-note--example">
+            El resultado contiene las columnas solicitadas. Estas son algunas
+            de sus filas:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Continent</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Aruba</td><td>North America</td></tr>
+                <tr><td>Afghanistan</td><td>Asia</td></tr>
+                <tr><td>Angola</td><td>Africa</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las demás columnas de <code>country</code> continúan existiendo,
+            pero no aparecen en este resultado.
+          </p>
+
+          <h3>5.2 Seleccionar todas las columnas</h3>
+
+          <pre class="code-block"><code>SELECT *
+FROM country;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            El asterisco <code>*</code> significa «todas las columnas».
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Es útil para explorar una tabla, pero cuando conocemos las columnas
+            necesarias suele ser mejor escribirlas expresamente.
+          </p>
+
+          <pre class="code-block"><code>SELECT Name, Population
+FROM country;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esto hace que la consulta sea más clara y evita recuperar
+            información innecesaria.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="where">
+          <h2>6. Filtrar filas con <code>WHERE</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            La cláusula <code>WHERE</code> establece una condición.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Solamente se incluyen en el resultado las filas para las que
+            la condición es verdadera.
+          </p>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla
+WHERE condicion;</code></pre>
+
+          <h3>Ejemplo</h3>
+
+          <pre class="code-block"><code>SELECT Name, Population
+FROM country
+WHERE Continent = 'Europe';</code></pre>
+
+          <h3>Comportamiento</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL examina cada país:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              Si su <code>Continent</code> es igual a <code>'Europe'</code>,
+              incluye la fila.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Si pertenece a otro continente, descarta la fila del resultado.
+            </li>
+          </ul>
+
+          <h3>Resultado representativo</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Population</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Spain</td><td>39441700</td></tr>
+                <tr><td>France</td><td>59225700</td></tr>
+                <tr><td>Germany</td><td>82164700</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            La consulta no elimina los países de otros continentes.
+            Únicamente evita mostrarlos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="comparacion">
+          <h2>7. Operadores de comparación</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los operadores permiten construir condiciones dentro de
+            <code>WHERE</code>.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Operador</th>
+                  <th scope="col">Significado</th>
+                  <th scope="col">Ejemplo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>=</code></td>
+                  <td>Igual que</td>
+                  <td><code>Continent = 'Europe'</code></td>
+                </tr>
+                <tr>
+                  <td><code>&gt;</code></td>
+                  <td>Mayor que</td>
+                  <td><code>Population &gt; 10000000</code></td>
+                </tr>
+                <tr>
+                  <td><code>&lt;</code></td>
+                  <td>Menor que</td>
+                  <td><code>Population &lt; 1000000</code></td>
+                </tr>
+                <tr>
+                  <td><code>&gt;=</code></td>
+                  <td>Mayor o igual que</td>
+                  <td><code>Population &gt;= 10000000</code></td>
+                </tr>
+                <tr>
+                  <td><code>&lt;=</code></td>
+                  <td>Menor o igual que</td>
+                  <td><code>Population &lt;= 1000000</code></td>
+                </tr>
+                <tr>
+                  <td><code>&lt;&gt;</code></td>
+                  <td>Diferente de</td>
+                  <td><code>Continent &lt;&gt; 'Europe'</code></td>
+                </tr>
+                <tr>
+                  <td><code>!=</code></td>
+                  <td>Diferente de en MySQL</td>
+                  <td><code>Continent != 'Europe'</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            En MySQL funcionan tanto <code>&lt;&gt;</code> como <code>!=</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los textos se escriben entre comillas simples:
+          </p>
+
+          <pre class="code-block"><code>WHERE Continent = 'Asia'</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            No debemos confundir:
+          </p>
+
+          <pre class="code-block"><code>WHERE Population = 10000000</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">con:</p>
+
+          <pre class="code-block"><code>WHERE Population &gt; 10000000</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La primera exige una coincidencia exacta; la segunda acepta
+            cualquier población superior.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="condiciones">
+          <h2>8. Combinar condiciones</h2>
+
+          <h3>8.1 Operador <code>AND</code></h3>
+
+          <p class="lesson-note lesson-note--key">
+            <code>AND</code> exige que todas las condiciones sean verdaderas.
+          </p>
+
+          <pre class="code-block"><code>SELECT Name, Population
+FROM country
+WHERE Continent = 'Asia'
+  AND Population &gt; 10000000;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cada país debe cumplir simultáneamente:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              Pertenecer a Asia.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Tener más de diez millones de habitantes.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un país que solamente cumpla una condición no aparecerá.
+          </p>
+
+          <h3>Resultado representativo</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Population</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>China</td><td>1277558000</td></tr>
+                <tr><td>India</td><td>1013662000</td></tr>
+                <tr><td>Japan</td><td>126714000</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>8.2 Operador <code>OR</code></h3>
+
+          <p class="lesson-note lesson-note--key">
+            <code>OR</code> exige que se cumpla al menos una de las condiciones.
+          </p>
+
+          <pre class="code-block"><code>SELECT Name, Continent
+FROM country
+WHERE Continent = 'Asia'
+   OR Continent = 'Europe';</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El resultado puede contener países asiáticos y países europeos.
+            No contiene países de otros continentes.
+          </p>
+
+          <h3>8.3 Operador <code>NOT</code></h3>
+
+          <p class="lesson-note lesson-note--key">
+            <code>NOT</code> niega una condición.
+          </p>
+
+          <pre class="code-block"><code>SELECT Name, Continent
+FROM country
+WHERE NOT (Continent = 'Europe');</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Se mostrarán los países para los que la condición
+            <code>Continent = 'Europe'</code> sea falsa.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si una comparación produce <code>NULL</code>, negarla también
+            produce <code>NULL</code> y <code>WHERE</code> no incluye esa fila.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este caso también podría utilizarse:
+          </p>
+
+          <pre class="code-block"><code>WHERE Continent &lt;&gt; 'Europe'</code></pre>
+
+          <h3>8.4 Combinar <code>AND</code> y <code>OR</code></h3>
+
+          <pre class="code-block"><code>SELECT Name, Continent, Population
+FROM country
+WHERE (Continent = 'Asia' OR Continent = 'Europe')
+  AND Population &gt; 100000000;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los paréntesis agrupan la condición de pertenecer a Asia o Europa.
+            Además, se exige que la población supere los cien millones.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Sin paréntesis, MySQL evalúa <code>AND</code> antes que
+            <code>OR</code>. Cuando combinamos ambos operadores, los paréntesis
+            evitan interpretaciones equivocadas.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="like">
+          <h2>9. Buscar patrones con <code>LIKE</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>LIKE</code> compara un texto con un patrón.
+          </p>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla
+WHERE columna LIKE 'patron';</code></pre>
+
+          <h3>9.1 El comodín <code>%</code></h3>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El comodín <code>%</code> representa cero, uno o varios caracteres.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Su posición determina qué buscamos:
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Patrón</th>
+                  <th scope="col">Coincidencia</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>'New%'</code></td>
+                  <td>Textos que empiezan por <code>New</code></td>
+                </tr>
+                <tr>
+                  <td><code>'%New'</code></td>
+                  <td>Textos que terminan en <code>New</code></td>
+                </tr>
+                <tr>
+                  <td><code>'%New%'</code></td>
+                  <td>Textos que contienen <code>New</code></td>
+                </tr>
+                <tr>
+                  <td><code>'New'</code></td>
+                  <td>Coincidencia con el texto completo <code>New</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>9.2 Buscar textos que empiezan por una palabra</h3>
+
+          <pre class="code-block"><code>SELECT Name
+FROM city
+WHERE Name LIKE 'New%';</code></pre>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              <code>New</code> debe aparecer al principio.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>%</code> permite que después aparezcan cero o más caracteres.
+            </li>
+          </ul>
+
+          <h3>Posibles resultados</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr><th scope="col">Name</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>New York</td></tr>
+                <tr><td>Newcastle</td></tr>
+                <tr><td>New Orleans</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>9.3 Buscar textos que terminan por una palabra</h3>
+
+          <pre class="code-block"><code>SELECT Name
+FROM city
+WHERE Name LIKE '%City';</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El texto puede comenzar de cualquier manera, pero debe terminar
+            en <code>City</code>.
+          </p>
+
+          <h3>9.4 Buscar un texto en cualquier posición</h3>
+
+          <pre class="code-block"><code>SELECT Name
+FROM city
+WHERE Name LIKE '%York%';</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Puede haber caracteres antes y después de <code>York</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Sin comodines, como en <code>LIKE 'New'</code>, se compara el texto
+            completo según las reglas de la intercalación. Además de
+            <code>%</code>, existe <code>_</code>, que representa exactamente
+            un carácter. En esta clase practicamos con <code>%</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            En MySQL, que <code>LIKE</code> distinga entre mayúsculas y
+            minúsculas depende de la intercalación o <code>collation</code>
+            de la columna. Habitualmente las configuraciones utilizadas al
+            empezar no hacen esa distinción, pero no es una regla universal.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="in">
+          <h2>10. Comprobar varios valores con <code>IN</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>IN</code> comprueba si un valor coincide con alguno de los
+            valores incluidos en una lista.
+          </p>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla
+WHERE columna IN (valor1, valor2, valor3);</code></pre>
+
+          <h3>Ejemplo</h3>
+
+          <pre class="code-block"><code>SELECT Name, Continent
+FROM country
+WHERE Continent IN ('Asia', 'Europe');</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Es una forma más clara de escribir:
+          </p>
+
+          <pre class="code-block"><code>SELECT Name, Continent
+FROM country
+WHERE Continent = 'Asia'
+   OR Continent = 'Europe';</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>IN</code> representa varias posibilidades para una misma
+            columna.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Cada elemento de texto debe llevar sus propias comillas:
+          </p>
+
+          <pre class="code-block"><code>IN ('Asia', 'Europe')</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Para buscar esos dos valores no sería correcto escribir:
+          </p>
+
+          <pre class="code-block"><code>IN ('Asia, Europe')</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En el segundo caso, MySQL buscaría un único texto completo:
+            <code>Asia, Europe</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="between">
+          <h2>11. Seleccionar un intervalo con <code>BETWEEN</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>BETWEEN</code> comprueba si un valor se encuentra dentro
+            de un intervalo.
+          </p>
+
+          <pre class="code-block"><code>WHERE columna BETWEEN limite_inferior AND limite_superior</code></pre>
+
+          <h3>Ejemplo</h3>
+
+          <pre class="code-block"><code>SELECT Name, IndepYear
+FROM country
+WHERE IndepYear BETWEEN 1900 AND 2000;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Se seleccionan países cuyo año de independencia sea mayor o igual
+            a 1900 y menor o igual a 2000.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>BETWEEN</code> incluye tanto el límite inferior como
+            el límite superior.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            La condición anterior equivale a:
+          </p>
+
+          <pre class="code-block"><code>WHERE IndepYear &gt;= 1900
+  AND IndepYear &lt;= 2000</code></pre>
+
+          <h3>Ejemplos de coincidencias</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">IndepYear</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Australia</td><td>1901</td></tr>
+                <tr><td>Finland</td><td>1917</td></tr>
+                <tr><td>India</td><td>1947</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="null">
+          <h2>12. Comprobar valores nulos con <code>IS NULL</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>NULL</code> representa la ausencia de un valor conocido.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para buscar filas que contienen <code>NULL</code> utilizamos:
+          </p>
+
+          <pre class="code-block"><code>SELECT Name
+FROM country
+WHERE IndepYear IS NULL;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL devuelve los países que no tienen un año de independencia
+            almacenado.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            No debemos utilizar:
+          </p>
+
+          <pre class="code-block"><code>WHERE IndepYear = NULL</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La comparación con <code>= NULL</code> produce <code>NULL</code>,
+            no verdadero. Por eso <code>WHERE</code> no selecciona esas filas:
+            para comprobar la ausencia de un valor utilizamos
+            <code>IS NULL</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            La comprobación correcta es:
+          </p>
+
+          <pre class="code-block"><code>WHERE IndepYear IS NULL</code></pre>
+        </section>
+
+        <section class="lesson-section" id="order-by">
+          <h2>13. Ordenar resultados con <code>ORDER BY</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>ORDER BY</code> organiza las filas del resultado según
+            una o varias columnas.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>ORDER BY</code> ordena las filas del resultado, pero no cambia
+            el orden en el que los datos están almacenados en la tabla.
+          </p>
+
+          <h3>13.1 Orden ascendente</h3>
+
+          <pre class="code-block"><code>SELECT Name
+FROM city
+ORDER BY Name ASC;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En los textos, el orden ascendente suele ser alfabético de la A
+            a la Z. En los números, va del menor al mayor.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            <code>ASC</code> es el orden predeterminado. Por eso estas dos
+            cláusulas piden el mismo orden:
+          </p>
+
+          <pre class="code-block"><code>ORDER BY Name ASC;</code></pre>
+
+          <pre class="code-block"><code>ORDER BY Name;</code></pre>
+
+          <h3>13.2 Orden descendente</h3>
+
+          <pre class="code-block"><code>SELECT Name, Population
+FROM city
+ORDER BY Population DESC;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este caso, las ciudades aparecen desde la población más alta
+            hasta la más baja.
+          </p>
+
+          <h3>13.3 Ordenar mediante varias columnas</h3>
+
+          <pre class="code-block"><code>SELECT Name, Population
+FROM city
+ORDER BY CountryCode ASC, Population DESC;</code></pre>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              Primero se ordenan las filas por <code>CountryCode</code>
+              de forma ascendente.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Cuando varias ciudades tienen el mismo código de país,
+              se ordenan entre ellas por <code>Population</code>
+              de forma descendente.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La segunda columna de ordenación se utiliza cuando varias filas
+            coinciden en la primera.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En estas consultas simples, podemos ordenar por una columna aunque
+            esa columna no se muestre en el <code>SELECT</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este ejemplo, <code>CountryCode</code> participa en la
+            ordenación, pero el resultado solamente muestra
+            <code>Name</code> y <code>Population</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="limit">
+          <h2>14. Limitar resultados con <code>LIMIT</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            En MySQL utilizamos <code>LIMIT</code> para indicar el número
+            máximo de filas que queremos recibir.
+          </p>
+
+          <pre class="code-block"><code>SELECT Name
+FROM country
+LIMIT 5;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL devuelve como máximo cinco filas.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Sin <code>ORDER BY</code>, no debemos interpretar esas filas como
+            «las primeras» según un criterio determinado. La base de datos no
+            garantiza un orden significativo si no se lo pedimos.
+          </p>
+
+          <h3>Obtener los cinco países más poblados</h3>
+
+          <pre class="code-block"><code>SELECT Name, Population
+FROM country
+ORDER BY Population DESC
+LIMIT 5;</code></pre>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              <code>FROM</code> localiza la tabla.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>ORDER BY Population DESC</code> ordena desde la población
+              mayor.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>LIMIT 5</code> conserva solamente las cinco primeras filas
+              del resultado ordenado.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Para obtener los primeros o últimos elementos según un criterio,
+            debemos combinar <code>ORDER BY</code> y <code>LIMIT</code>.
+            Si hay empates y necesitamos un resultado reproducible, añadimos
+            una columna única como criterio de desempate.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="alias">
+          <h2>15. Crear alias con <code>AS</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            Un alias es un nombre temporal utilizado en el resultado
+            de una consulta.
+          </p>
+
+          <pre class="code-block"><code>SELECT Name AS nombre_pais
+FROM country;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La columna original continúa llamándose <code>Name</code> dentro
+            de la tabla. El alias solo cambia el encabezado mostrado en
+            el resultado.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>AS</code> no renombra ni modifica la columna almacenada.
+          </p>
+
+          <h3>15.1 Alias con espacios</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            En MySQL podemos delimitar un alias con espacios mediante
+            acentos graves:
+          </p>
+
+          <pre class="code-block"><code>SELECT Name AS `Nombre del país`
+FROM country;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Los caracteres utilizados son acentos graves:
+          </p>
+
+          <pre class="code-block"><code>`</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Para evitar ambigüedades, reservaremos las comillas simples
+            para los valores de texto:
+          </p>
+
+          <pre class="code-block"><code>WHERE Continent = 'Europe'</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En los alias que contengan espacios utilizaremos acentos graves.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="calculos">
+          <h2>16. Realizar cálculos con columnas</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Podemos utilizar los valores de una columna para calcular
+            una columna nueva en el resultado.
+          </p>
+
+          <pre class="code-block"><code>SELECT
+    Name AS `Nombre del país`,
+    Population / 1000000 AS `Población (millones)`
+FROM country;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para cada país:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              MySQL toma el valor de <code>Population</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Lo divide entre 1000000.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Muestra el resultado bajo el alias
+              <code>Población (millones)</code>.
+            </li>
+          </ol>
+
+          <h3>Resultado representativo</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Nombre del país</th>
+                  <th scope="col">Población (millones)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Spain</td><td>39.4417</td></tr>
+                <tr><td>France</td><td>59.2257</td></tr>
+                <tr><td>Germany</td><td>82.1647</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            La población almacenada no cambia.
+          </p>
+
+          <h3>16.1 Evitar divisiones entre cero</h3>
+
+          <pre class="code-block"><code>SELECT
+    Name,
+    GNP / Population AS relacion_gnp_poblacion
+FROM country
+WHERE Population &gt; 0;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La condición <code>Population &gt; 0</code> hace que este cálculo
+            se aplique a las filas con poblaciones superiores a cero.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Antes de dividir entre una columna, debemos considerar
+            si puede contener el valor cero.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Este ejemplo enseña una operación matemática entre columnas.
+            Para interpretar económicamente el resultado habría que conocer
+            y ajustar correctamente las unidades de <code>GNP</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="subconsulta">
+          <h2>17. Subconsulta básica dentro de <code>IN</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            Una subconsulta es una consulta situada dentro de otra consulta.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El siguiente ejemplo busca ciudades pertenecientes a países
+            europeos:
+          </p>
+
+          <pre class="code-block"><code>SELECT Name
+FROM city
+WHERE CountryCode IN (
+    SELECT Code
+    FROM country
+    WHERE Continent = 'Europe'
+);</code></pre>
+
+          <h3>Consulta interior</h3>
+
+          <pre class="code-block"><code>SELECT Code
+FROM country
+WHERE Continent = 'Europe';</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Obtiene los códigos de los países europeos.
+          </p>
+
+          <h3>Resultado conceptual</h3>
+
+          <pre class="code-block"><code>ESP
+FRA
+DEU
+ITA
+...</code></pre>
+
+          <h3>Consulta exterior</h3>
+
+          <pre class="code-block"><code>SELECT Name
+FROM city
+WHERE CountryCode IN (...);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los puntos suspensivos representan el lugar de la subconsulta:
+            no se escriben literalmente. La consulta exterior comprueba
+            si el <code>CountryCode</code> de cada ciudad aparece entre
+            los códigos obtenidos por la consulta interior.
+          </p>
+
+          <h3>Interpretación lógica</h3>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              La subconsulta obtiene los códigos de los países europeos.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>IN</code> utiliza esos códigos como posibilidades.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              La consulta exterior compara cada <code>city.CountryCode</code>
+              con esos valores.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              El resultado contiene nombres de ciudades pertenecientes
+              a países europeos.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La subconsulta interior debe devolver la columna cuyos valores
+            necesita comprobar la consulta exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este caso:
+          </p>
+
+          <pre class="code-block"><code>city.CountryCode → country.Code</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este tema solo se utiliza este patrón básico. Los demás tipos
+            de subconsultas quedan fuera de su alcance.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="consulta-completa">
+          <h2>18. Combinar varias cláusulas</h2>
+
+          <pre class="code-block"><code>SELECT
+    Name AS ciudad,
+    Population AS poblacion
+FROM city
+WHERE Name LIKE 'New%'
+  AND Population &gt; 100000
+ORDER BY Population DESC
+LIMIT 5;</code></pre>
+
+          <h3>Interpretación paso a paso</h3>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              <code>FROM city</code>: utiliza la tabla de ciudades.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>WHERE Name LIKE 'New%'</code>: conserva las ciudades cuyo
+              nombre comienza por <code>New</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>AND Population &gt; 100000</code>: exige además una población
+              superior a cien mil habitantes.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>SELECT Name AS ciudad, Population AS poblacion</code>:
+              selecciona las columnas y asigna alias a sus encabezados.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>ORDER BY Population DESC</code>: ordena desde la ciudad
+              más poblada hasta la menos poblada.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>LIMIT 5</code>: devuelve como máximo cinco filas.
+            </li>
+          </ol>
+        </section>
+
+        <section class="lesson-section" id="errores">
+          <h2>19. Errores frecuentes</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Error</th>
+                  <th scope="col">Problema</th>
+                  <th scope="col">Forma correcta</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>WHERE Continent = Europe</code></td>
+                  <td>El texto no está entre comillas.</td>
+                  <td><code>WHERE Continent = 'Europe'</code></td>
+                </tr>
+                <tr>
+                  <td><code>WHERE IndepYear = NULL</code></td>
+                  <td>La comparación no devuelve verdadero.</td>
+                  <td><code>WHERE IndepYear IS NULL</code></td>
+                </tr>
+                <tr>
+                  <td><code>LIKE 'New'</code> esperando más texto</td>
+                  <td>El patrón <code>'New'</code> no contiene comodines.</td>
+                  <td><code>LIKE 'New%'</code></td>
+                </tr>
+                <tr>
+                  <td><code>IN ('Asia, Europe')</code></td>
+                  <td>Es un único texto.</td>
+                  <td><code>IN ('Asia', 'Europe')</code></td>
+                </tr>
+                <tr>
+                  <td><code>LIMIT 5</code> para obtener los cinco mayores</td>
+                  <td>No existe un criterio de ordenación.</td>
+                  <td><code>ORDER BY columna DESC LIMIT 5</code></td>
+                </tr>
+                <tr>
+                  <td><code>LIMIT</code> antes de <code>ORDER BY</code></td>
+                  <td>Las cláusulas están desordenadas.</td>
+                  <td><code>ORDER BY ... LIMIT ...</code></td>
+                </tr>
+                <tr>
+                  <td>Usar comillas simples para nombres técnicos</td>
+                  <td>Pueden confundirse con valores de texto.</td>
+                  <td>Acentos graves para alias con espacios</td>
+                </tr>
+                <tr>
+                  <td>Dividir sin comprobar el divisor</td>
+                  <td>El divisor podría valer cero.</td>
+                  <td><code>WHERE Population &gt; 0</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>20. Resumen del tema</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Elemento</th>
+                  <th scope="col">Pregunta que responde</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>SELECT</code></td>
+                  <td>¿Qué columnas o cálculos quiero mostrar?</td>
+                </tr>
+                <tr>
+                  <td><code>FROM</code></td>
+                  <td>¿De qué tabla proceden los datos?</td>
+                </tr>
+                <tr>
+                  <td><code>WHERE</code></td>
+                  <td>¿Qué filas deben aparecer?</td>
+                </tr>
+                <tr>
+                  <td><code>AND</code></td>
+                  <td>¿Deben cumplirse todas las condiciones?</td>
+                </tr>
+                <tr>
+                  <td><code>OR</code></td>
+                  <td>¿Es suficiente con que se cumpla alguna?</td>
+                </tr>
+                <tr>
+                  <td><code>NOT</code></td>
+                  <td>¿Quiero negar una condición?</td>
+                </tr>
+                <tr>
+                  <td><code>LIKE</code></td>
+                  <td>¿Quiero buscar un patrón de texto?</td>
+                </tr>
+                <tr>
+                  <td><code>%</code></td>
+                  <td>¿Dónde pueden aparecer otros caracteres?</td>
+                </tr>
+                <tr>
+                  <td><code>IN</code></td>
+                  <td>¿El valor coincide con alguna posibilidad?</td>
+                </tr>
+                <tr>
+                  <td><code>BETWEEN</code></td>
+                  <td>¿El valor está dentro de un intervalo inclusivo?</td>
+                </tr>
+                <tr>
+                  <td><code>IS NULL</code></td>
+                  <td>¿Falta un valor en esta columna?</td>
+                </tr>
+                <tr>
+                  <td><code>ORDER BY</code></td>
+                  <td>¿Cómo deben ordenarse las filas?</td>
+                </tr>
+                <tr>
+                  <td><code>ASC</code></td>
+                  <td>¿Quiero un orden ascendente?</td>
+                </tr>
+                <tr>
+                  <td><code>DESC</code></td>
+                  <td>¿Quiero un orden descendente?</td>
+                </tr>
+                <tr>
+                  <td><code>LIMIT</code></td>
+                  <td>¿Cuántas filas quiero recibir como máximo?</td>
+                </tr>
+                <tr>
+                  <td><code>AS</code></td>
+                  <td>¿Qué encabezado temporal quiero mostrar?</td>
+                </tr>
+                <tr>
+                  <td>Subconsulta</td>
+                  <td>¿Necesito utilizar el resultado de otra consulta como filtro?</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Estas consultas leen, filtran, calculan, ordenan y limitan
+            resultados, pero no modifican la estructura ni los datos almacenados.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · SQL · Clase 3
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

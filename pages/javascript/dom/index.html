@@ -1,27 +1,30 @@
 <!doctype html>
 <html lang="es">
   <head>
-    <!-- Codificación-->
     <meta charset="UTF-8" />
-    <!-- Para que la web sea responsive -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Descripción de la página para los buscadores -->
-    <meta name="description" content="contenido descriptivo" />
-    <!-- Título para el navegador y los buscadores -->
-    <title>EL DOM</title>
-    <!-- Autor de la página -->
+    <meta
+      name="description"
+      content="Lecciones del DOM en JavaScript: selección, creación y modificación de elementos, navegación y gestión de eventos."
+    />
+    <title>DOM | Cuaderno Digital</title>
     <meta name="author" content="@JonasCampos86" />
-    <!-- Para algunos navegadores móviles -->
-    <meta name="theme-color" content="#1e7bbf" />
-    <!-- Links -->
-    <!-- JavaScript principal -->
+    <meta name="theme-color" content="#7c3aed" />
+
     <script type="module" src="/src/js/main.js"></script>
   </head>
+
   <body>
     <div class="lesson-layout">
       <aside class="lesson-sidebar">
-        <h2>DOM</h2>
-        <a href="../index.html">Volver a JavaScript</a>
+        <a class="lesson-sidebar__back" href="../index.html">
+          ← Volver a JavaScript
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice del bloque">
+          <h2>DOM</h2>
+          <a href="#contenidos">Contenidos del bloque</a>
+        </nav>
       </aside>
 
       <main class="lesson-main">
@@ -33,13 +36,14 @@
           </p>
         </header>
 
-        <section class="lesson-section">
+        <section class="lesson-section" id="contenidos">
           <h2>Contenidos del bloque</h2>
 
           <p class="lesson-note lesson-note--explanation">
             Este bloque reúne los conceptos principales para manipular el
             documento HTML desde JavaScript.
           </p>
+
           <ul class="lesson-index">
             <li class="lesson-index__item">
               <a class="lesson-index__link" href="./selectores-dom.html">
@@ -78,6 +82,7 @@
                 </span>
               </a>
             </li>
+
             <li class="lesson-index__item">
               <a class="lesson-index__link" href="./insertar-mover-dom.html">
                 <strong>Insertar y movernos por el DOM</strong>
@@ -87,6 +92,7 @@
                 </span>
               </a>
             </li>
+
             <li class="lesson-index__item">
               <a class="lesson-index__link" href="./gestion-eventos.html">
                 <strong>Gestión de eventos</strong>
@@ -96,6 +102,7 @@
                 </span>
               </a>
             </li>
+
             <li class="lesson-index__item">
               <a class="lesson-index__link" href="./tipos-eventos.html">
                 <strong>Tipos de eventos</strong>
@@ -105,21 +112,25 @@
                 </span>
               </a>
             </li>
+
             <li class="lesson-index__item">
               <a
                 class="lesson-index__link"
                 href="./emision-propagacion-eventos.html"
               >
                 <strong>Emisión y propagación de eventos</strong>
-                <span
-                  >CustomEvent, dispatchEvent(), captura, burbujeo y control de
-                  eventos; target y currentTarget.</span
-                >
+                <span>
+                  CustomEvent, dispatchEvent(), captura, burbujeo y control de
+                  eventos; target y currentTarget.
+                </span>
               </a>
             </li>
           </ul>
         </section>
-        <footer class="lesson-footer">Cuaderno Digital · DOM</footer>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · DOM
+        </footer>
       </main>
     </div>
   </body>
