@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Funciones agregadas y agrupación en MySQL: COUNT, SUM, AVG, MIN, MAX, GROUP BY, HAVING, CASE, subconsultas, GROUP_CONCAT y ROLLUP."
+    />
+    <title>Funciones agregadas y agrupación en MySQL | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a SQL
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#preparacion">Antes de empezar</a>
+          <a href="#funcion-agregada">1. Qué es una función agregada</a>
+          <a href="#count">2. COUNT</a>
+          <a href="#sum">3. SUM</a>
+          <a href="#avg">4. AVG</a>
+          <a href="#min-max">5. MIN y MAX</a>
+          <a href="#group-by">6. GROUP BY</a>
+          <a href="#where-having">7. WHERE y HAVING</a>
+          <a href="#case">8. Agrupar con CASE</a>
+          <a href="#subconsultas">9. Subconsultas agregadas</a>
+          <a href="#group-concat">10. GROUP_CONCAT</a>
+          <a href="#limitar-listas">11. Limitar una lista</a>
+          <a href="#rollup">12. WITH ROLLUP</a>
+          <a href="#orden-escritura">13. Orden de escritura</a>
+          <a href="#orden-logico">14. Orden lógico</a>
+          <a href="#patrones">15. Patrones fundamentales</a>
+          <a href="#errores">16. Errores frecuentes</a>
+          <a href="#resumen">17. Resumen</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Funciones agregadas y agrupación en MySQL</h1>
+          <p>
+            Resumir datos, formar grupos y filtrar resultados con la tabla
+            film de Sakila.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="preparacion">
+          <h2>Antes de empezar</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las funciones agregadas permiten realizar cálculos sobre varias
+            filas y devolver un único resultado para todo el conjunto o para
+            cada grupo de datos.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los ejemplos utilizan principalmente la tabla <code>film</code>
+            de la base de datos <code>sakila</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>WHERE</code> filtra filas, <code>GROUP BY</code> forma grupos
+            y <code>HAVING</code> filtra esos grupos.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Antes de ejecutar los ejemplos, la base <code>sakila</code> y sus
+            datos deben estar importados en tu servidor. Puedes consultar la
+            <a
+              href="https://dev.mysql.com/doc/sakila/en/sakila-installation.html"
+            >guía oficial de instalación de Sakila</a>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Selecciona la base de datos:
+          </p>
+
+          <pre class="code-block"><code>USE sakila;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las consultas concretas utilizan <code>film</code>. Los bloques
+            con nombres como <code>tabla</code>, <code>columna</code> o
+            <code>FUNCION_AGREGADA</code> son plantillas que debes adaptar;
+            no se ejecutan literalmente.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="funcion-agregada">
+          <h2>1. Qué es una función agregada</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Una función agregada recibe los valores de varias filas
+            y calcula un único resultado.
+          </p>
+
+          <h3>Funciones agregadas principales</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Función</th>
+                  <th scope="col">Resultado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>COUNT()</code></td>
+                  <td>Cuenta filas o valores.</td>
+                </tr>
+                <tr>
+                  <td><code>SUM()</code></td>
+                  <td>Suma valores numéricos.</td>
+                </tr>
+                <tr>
+                  <td><code>AVG()</code></td>
+                  <td>Calcula la media de valores numéricos.</td>
+                </tr>
+                <tr>
+                  <td><code>MIN()</code></td>
+                  <td>Obtiene el valor mínimo.</td>
+                </tr>
+                <tr>
+                  <td><code>MAX()</code></td>
+                  <td>Obtiene el valor máximo.</td>
+                </tr>
+                <tr>
+                  <td><code>GROUP_CONCAT()</code></td>
+                  <td>
+                    Une en una cadena los valores de las filas de cada grupo.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Sin <code>GROUP BY</code>, la función agregada calcula un resultado
+            para todas las filas que superan el filtro.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Con <code>GROUP BY</code>, la función agregada calcula un resultado
+            independiente para cada grupo.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            En las funciones de este tema, <code>COUNT(columna)</code>,
+            <code>SUM()</code>, <code>AVG()</code>, <code>MIN()</code>,
+            <code>MAX()</code> y <code>GROUP_CONCAT()</code> ignoran los valores
+            <code>NULL</code>. <code>COUNT(*)</code> cuenta las filas completas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            En una agregación global sin filas coincidentes,
+            <code>COUNT()</code> devuelve <code>0</code>;
+            <code>SUM()</code>, <code>AVG()</code>, <code>MIN()</code>,
+            <code>MAX()</code> y <code>GROUP_CONCAT()</code>
+            devuelven <code>NULL</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="count">
+          <h2>2. <code>COUNT()</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>COUNT()</code> se utiliza para contar filas o valores.
+          </p>
+
+          <h3>2.1. <code>COUNT(*)</code></h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuenta todas las filas que forman parte del resultado, aunque
+            alguna de sus columnas contenga <code>NULL</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Contar todas las películas:
+          </p>
+
+          <pre class="code-block"><code>SELECT COUNT(*) AS total_peliculas
+FROM film;</code></pre>
+
+          <h3>2.2. <code>COUNT(columna)</code></h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuenta únicamente las filas en las que la columna indicada
+            no contiene <code>NULL</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Contar los valores no nulos de <code>original_language_id</code>:
+          </p>
+
+          <pre class="code-block"><code>SELECT COUNT(original_language_id) AS idiomas_originales_registrados
+FROM film;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>COUNT(*)</code> y <code>COUNT(columna)</code> pueden devolver
+            resultados diferentes si la columna contiene valores
+            <code>NULL</code>.
+          </p>
+
+          <h3>2.3. <code>COUNT(DISTINCT columna)</code></h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuenta cuántos valores diferentes y no nulos existen en una columna.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Contar las clasificaciones distintas:
+          </p>
+
+          <pre class="code-block"><code>SELECT COUNT(DISTINCT rating) AS clasificaciones_distintas
+FROM film;</code></pre>
+
+          <h3>2.4. <code>COUNT()</code> con <code>WHERE</code></h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Primero se filtran las filas y después se cuentan únicamente
+            las que cumplen la condición.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Contar las películas con clasificación <code>PG</code>:
+          </p>
+
+          <pre class="code-block"><code>SELECT COUNT(*) AS peliculas_pg
+FROM film
+WHERE rating = 'PG';</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>COUNT(*)</code> cuenta filas;
+            <code>COUNT(columna)</code> cuenta valores no nulos;
+            <code>COUNT(DISTINCT columna)</code> cuenta valores diferentes
+            no nulos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="sum">
+          <h2>3. <code>SUM()</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>SUM()</code> suma los valores numéricos de una columna.
+          </p>
+
+          <h3>Sintaxis básica</h3>
+
+          <pre class="code-block"><code>SELECT SUM(columna)
+FROM tabla;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Sumar el coste de reposición de todas las películas:
+          </p>
+
+          <pre class="code-block"><code>SELECT SUM(replacement_cost) AS costo_total
+FROM film;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Sumar el coste de reposición de las películas <code>PG</code>:
+          </p>
+
+          <pre class="code-block"><code>SELECT SUM(replacement_cost) AS costo_total_pg
+FROM film
+WHERE rating = 'PG';</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Utiliza <code>SUM()</code> con datos numéricos.
+            Los valores <code>NULL</code> no participan en la suma.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="avg">
+          <h2>4. <code>AVG()</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>AVG()</code> calcula la media aritmética de los valores
+            numéricos no nulos.
+          </p>
+
+          <h3>Sintaxis básica</h3>
+
+          <pre class="code-block"><code>SELECT AVG(columna)
+FROM tabla;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Calcular la duración media de las películas <code>NC-17</code>:
+          </p>
+
+          <pre class="code-block"><code>SELECT AVG(length) AS duracion_promedio
+FROM film
+WHERE rating = 'NC-17';</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Calcular la duración media de cada clasificación:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       AVG(length) AS duracion_promedio
+FROM film
+GROUP BY rating;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Los valores <code>NULL</code> no se consideran ni en la suma
+            ni en la cantidad de valores utilizada para calcular la media.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="min-max">
+          <h2>5. <code>MIN()</code> y <code>MAX()</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>MIN()</code> devuelve el valor más pequeño y
+            <code>MAX()</code> devuelve el más grande.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Obtener la duración mínima y máxima:
+          </p>
+
+          <pre class="code-block"><code>SELECT MIN(length) AS duracion_minima,
+       MAX(length) AS duracion_maxima
+FROM film;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Obtener la duración mínima y máxima de cada clasificación:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       MIN(length) AS duracion_minima,
+       MAX(length) AS duracion_maxima
+FROM film
+GROUP BY rating;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Estas funciones también pueden utilizarse con fechas y textos
+            cuando tenga sentido buscar el menor o el mayor valor según
+            el orden correspondiente.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Con <code>GROUP BY</code>, <code>MIN()</code> y <code>MAX()</code>
+            se calculan por separado dentro de cada grupo.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="group-by">
+          <h2>6. <code>GROUP BY</code></h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>GROUP BY</code> reúne en un mismo grupo las filas que
+            comparten el mismo valor en una o varias columnas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Después, las funciones agregadas calculan un resultado para
+            cada uno de esos grupos.
+          </p>
+
+          <h3>Sintaxis básica</h3>
+
+          <pre class="code-block"><code>SELECT columna_agrupada,
+       FUNCION_AGREGADA(columna)
+FROM tabla
+GROUP BY columna_agrupada;</code></pre>
+
+          <h3>6.1. Agrupar por una columna</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Contar las películas de cada año de estreno:
+          </p>
+
+          <pre class="code-block"><code>SELECT release_year,
+       COUNT(*) AS total_peliculas
+FROM film
+GROUP BY release_year;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Contar las películas por combinación de características especiales:
+          </p>
+
+          <pre class="code-block"><code>SELECT special_features,
+       COUNT(*) AS total_peliculas
+FROM film
+GROUP BY special_features;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Si <code>special_features</code> contiene varios elementos,
+            <code>GROUP BY</code> agrupa por el contenido completo almacenado
+            en la columna, no por cada elemento de forma independiente.
+          </p>
+
+          <h3>6.2. Agrupar por varias columnas</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando se indican varias columnas, cada combinación distinta
+            de sus valores forma un grupo independiente.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Agrupar por clasificación y características especiales:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       special_features,
+       COUNT(*) AS total_peliculas,
+       AVG(length) AS duracion_promedio,
+       SUM(replacement_cost) AS costo_total
+FROM film
+GROUP BY rating, special_features
+ORDER BY rating, total_peliculas DESC;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Se crea un grupo por cada combinación de <code>rating</code>
+            y <code>special_features</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Sin <code>ROLLUP</code>,
+            <code>GROUP BY rating, special_features</code> y
+            <code>GROUP BY special_features, rating</code> forman los mismos
+            grupos. El orden de escritura no garantiza el orden del resultado:
+            para eso usamos <code>ORDER BY</code>.
+            Con <code>WITH ROLLUP</code>, el orden sí determina qué subtotales
+            se generan.
+          </p>
+
+          <h3>6.3. Columnas permitidas en <code>SELECT</code></h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para las consultas de esta lección seguiremos esta regla práctica:
+            cada columna mostrada en <code>SELECT</code> debe cumplir una de
+            estas condiciones:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              Aparecer en <code>GROUP BY</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Estar dentro de una función agregada.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo correcto:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       COUNT(*) AS total_peliculas,
+       AVG(length) AS duracion_promedio
+FROM film
+GROUP BY rating;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Mostrar una columna que no está agrupada ni agregada puede producir
+            un error con el modo <code>ONLY_FULL_GROUP_BY</code> o un resultado
+            ambiguo si dicho control no está activo.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Incluye en <code>GROUP BY</code> las columnas no agregadas
+            que quieras mostrar.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL también admite casos de dependencia funcional: por ejemplo,
+            agrupar por una clave primaria puede permitir mostrar otras
+            columnas de esa misma tabla. Es una excepción a la regla didáctica;
+            no hace falta desactivar <code>ONLY_FULL_GROUP_BY</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="where-having">
+          <h2>7. Diferencia entre <code>WHERE</code> y <code>HAVING</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>WHERE</code> y <code>HAVING</code> filtran datos
+            en momentos diferentes.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Cláusula</th>
+                  <th scope="col">Momento de aplicación</th>
+                  <th scope="col">Qué filtra</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>WHERE</code></td>
+                  <td>Antes de formar los grupos.</td>
+                  <td>Filas individuales.</td>
+                </tr>
+                <tr>
+                  <td><code>HAVING</code></td>
+                  <td>Después de formar los grupos y calcular los agregados.</td>
+                  <td>Grupos completos.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>7.1. Filtrar filas con <code>WHERE</code></h3>
+
+          <p class="lesson-note lesson-note--example">
+            Agrupar únicamente películas con una tarifa superior a
+            <code>2.99</code>:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       COUNT(*) AS total_peliculas
+FROM film
+WHERE rental_rate &gt; 2.99
+GROUP BY rating;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>WHERE</code> excluye de la consulta las películas que no
+            cumplen la condición. Después, <code>GROUP BY</code> organiza
+            las filas restantes. No se borran registros de la tabla.
+          </p>
+
+          <h3>7.2. Filtrar grupos con <code>HAVING</code></h3>
+
+          <p class="lesson-note lesson-note--example">
+            Mostrar solo las clasificaciones con más de 50 películas:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       COUNT(*) AS total_peliculas
+FROM film
+GROUP BY rating
+HAVING COUNT(*) &gt; 50;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Mostrar solo las clasificaciones cuya duración media
+            supera 100 minutos:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       AVG(length) AS duracion_promedio
+FROM film
+GROUP BY rating
+HAVING AVG(length) &gt; 100;</code></pre>
+
+          <h3>7.3. Utilizar un alias en <code>HAVING</code></h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL permite utilizar en <code>HAVING</code> el alias asignado
+            a una expresión de <code>SELECT</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo equivalente:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       AVG(length) AS duracion_promedio
+FROM film
+GROUP BY rating
+HAVING duracion_promedio &gt; 100;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            El alias de <code>SELECT</code> no puede utilizarse en
+            <code>WHERE</code>. Ese alias no está disponible para el filtrado
+            de las filas de origen.
+          </p>
+
+          <h3>7.4. Combinar <code>WHERE</code> y <code>HAVING</code></h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una misma consulta puede filtrar primero las filas y después
+            los grupos resultantes.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Aplicar ambos filtros:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       COUNT(*) AS total_peliculas,
+       AVG(length) AS duracion_promedio
+FROM film
+WHERE replacement_cost &gt;= 15
+GROUP BY rating
+HAVING AVG(length) &gt; 100
+ORDER BY duracion_promedio DESC;</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Utiliza <code>WHERE</code> para condiciones sobre filas y
+            <code>HAVING</code> para condiciones sobre resultados agregados.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="case">
+          <h2>8. Agrupar mediante <code>CASE</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>CASE</code> permite crear categorías calculadas a partir
+            de una o varias condiciones.
+          </p>
+
+          <h3>Estructura básica</h3>
+
+          <pre class="code-block"><code>CASE
+    WHEN condicion_1 THEN 'Resultado 1'
+    WHEN condicion_2 THEN 'Resultado 2'
+    ELSE 'Resultado restante'
+END</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Dividir las películas en segmentos de coste:
+          </p>
+
+          <pre class="code-block"><code>SELECT CASE
+           WHEN replacement_cost &lt; 15 THEN 'Bajo'
+           WHEN replacement_cost BETWEEN 15 AND 20 THEN 'Medio'
+           ELSE 'Alto'
+       END AS segmento_costo,
+       COUNT(*) AS cantidad,
+       AVG(rental_rate) AS tarifa_promedio,
+       AVG(length) AS duracion_promedio
+FROM film
+GROUP BY segmento_costo
+ORDER BY cantidad DESC;</code></pre>
+
+          <h3>Categorías creadas por el ejemplo</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Condición</th>
+                  <th scope="col">Categoría</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>replacement_cost &lt; 15</code></td>
+                  <td><code>Bajo</code></td>
+                </tr>
+                <tr>
+                  <td><code>replacement_cost BETWEEN 15 AND 20</code></td>
+                  <td><code>Medio</code></td>
+                </tr>
+                <tr>
+                  <td><code>replacement_cost &gt; 20</code></td>
+                  <td><code>Alto</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>BETWEEN 15 AND 20</code> incluye ambos límites:
+            <code>15</code> y <code>20</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL permite utilizar el alias <code>segmento_costo</code>
+            en <code>GROUP BY</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si la columna pudiera contener <code>NULL</code>, ninguna
+            comparación sería verdadera y ese valor llegaría al
+            <code>ELSE</code>. En ese caso habría que tratar
+            <code>NULL</code> de forma explícita para no clasificarlo
+            incorrectamente.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>CASE</code> crea la categoría y <code>GROUP BY</code>
+            reúne las filas que pertenecen a ella.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="subconsultas">
+          <h2>9. Subconsultas con funciones agregadas</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una subconsulta puede calcular un valor agregado que la consulta
+            principal utiliza para comparar, filtrar o calcular nuevos
+            resultados.
+          </p>
+
+          <h3>9.1. Comparar cada fila con la media global</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Películas cuya duración supera la media general:
+          </p>
+
+          <pre class="code-block"><code>SELECT title,
+       length
+FROM film
+WHERE length &gt; (
+    SELECT AVG(length)
+    FROM film
+)
+ORDER BY length DESC;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La subconsulta calcula una única duración media. La consulta
+            principal compara la duración de cada película con ese valor.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            En este patrón de comparación escalar, la subconsulta debe
+            proporcionar una sola columna y como máximo una fila.
+            <code>AVG(length)</code> sin <code>GROUP BY</code> devuelve
+            una fila con la media, o con <code>NULL</code> si no hay
+            valores que promediar.
+          </p>
+
+          <h3>9.2. Comparar cada grupo con la media global</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Comparar la tarifa media de cada clasificación con
+            la tarifa media general:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       AVG(rental_rate) AS tarifa_promedio,
+       (SELECT AVG(rental_rate) FROM film) AS tarifa_global,
+       AVG(rental_rate) - (
+           SELECT AVG(rental_rate)
+           FROM film
+       ) AS diferencia
+FROM film
+GROUP BY rating
+ORDER BY diferencia DESC;</code></pre>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              <code>tarifa_promedio</code> contiene la media
+              de cada clasificación.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>tarifa_global</code> contiene la media
+              de todas las películas.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>diferencia</code> muestra cuánto se separa la media
+              de cada grupo respecto a la media global.
+            </li>
+          </ul>
+
+          <h3>Interpretación de <code>diferencia</code></h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Resultado</th>
+                  <th scope="col">Significado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Mayor que <code>0</code></td>
+                  <td>La media del grupo supera la media global.</td>
+                </tr>
+                <tr>
+                  <td>Igual a <code>0</code></td>
+                  <td>La media del grupo coincide con la media global.</td>
+                </tr>
+                <tr>
+                  <td>Menor que <code>0</code></td>
+                  <td>La media del grupo está por debajo de la media global.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La consulta principal trabaja con los grupos; la subconsulta
+            independiente calcula el valor global de referencia.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="group-concat">
+          <h2>10. <code>GROUP_CONCAT()</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>GROUP_CONCAT()</code> reúne en una sola cadena los valores
+            no nulos de varias filas pertenecientes al mismo grupo.
+          </p>
+
+          <h3>Sintaxis de MySQL</h3>
+
+          <pre class="code-block"><code>GROUP_CONCAT(
+    [DISTINCT] expresion
+    [ORDER BY expresion]
+    [SEPARATOR 'separador']
+)</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Permite las siguientes opciones:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              <code>DISTINCT</code>: elimina los valores duplicados antes
+              de construir la cadena.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>ORDER BY</code>: ordena internamente los valores
+              que se van a concatenar.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>SEPARATOR</code>: sustituye la coma utilizada
+              como separador predeterminado.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--warning">
+            La sintaxis de <code>GROUP_CONCAT()</code> en MySQL no incluye
+            una opción <code>LIMIT</code>. Los corchetes de la plantilla
+            indican partes opcionales y no se escriben literalmente.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            La cadena puede truncarse al alcanzar
+            <code>group_concat_max_len</code> (1024 bytes por defecto).
+            Una lista de títulos extensa puede quedar incompleta:
+            revisa ese límite cuando necesites conservar todos los valores.
+          </p>
+
+          <h3>10.1. Listar valores de cada grupo</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Reunir los títulos de cada clasificación:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       GROUP_CONCAT(
+           title
+           ORDER BY title
+           SEPARATOR ' | '
+       ) AS titulos,
+       COUNT(*) AS total_peliculas
+FROM film
+GROUP BY rating
+ORDER BY total_peliculas DESC;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El <code>ORDER BY title</code> situado dentro de
+            <code>GROUP_CONCAT()</code> ordena los títulos antes de unirlos.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El <code>ORDER BY</code> situado al final de la consulta ordena
+            las filas del resultado, pero no los valores dentro de la cadena
+            creada por <code>GROUP_CONCAT()</code>.
+          </p>
+
+          <h3>10.2. Eliminar duplicados</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Mostrar las clasificaciones distintas de cada conjunto
+            de características:
+          </p>
+
+          <pre class="code-block"><code>SELECT special_features,
+       GROUP_CONCAT(
+           DISTINCT rating
+           ORDER BY rating
+           SEPARATOR ', '
+       ) AS ratings_disponibles,
+       AVG(replacement_cost) AS costo_promedio
+FROM film
+GROUP BY special_features
+ORDER BY COUNT(*) DESC;</code></pre>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              <code>DISTINCT</code> evita repetir una misma clasificación
+              dentro de la cadena de cada grupo.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>ORDER BY rating</code> organiza las clasificaciones
+              dentro de la cadena.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>SEPARATOR ', '</code> separa los valores mediante
+              una coma y un espacio.
+            </li>
+          </ul>
+        </section>
+
+        <section class="lesson-section" id="limitar-listas">
+          <h2>11. Limitar una lista creada con <code>GROUP_CONCAT()</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Como <code>GROUP_CONCAT()</code> no dispone de
+            <code>LIMIT</code> en MySQL, puede combinarse con
+            <code>SUBSTRING_INDEX()</code> para conservar solo
+            una parte de la cadena.
+          </p>
+
+          <h3>11.1. <code>SUBSTRING_INDEX()</code></h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>SUBSTRING_INDEX(cadena, separador, cantidad)</code>
+            devuelve la parte de una cadena situada antes o después
+            de un número determinado de apariciones del separador.
+          </p>
+
+          <h3>Sintaxis básica</h3>
+
+          <pre class="code-block"><code>SUBSTRING_INDEX(cadena, separador, cantidad)</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Con una cantidad positiva, devuelve lo que hay antes de la
+            aparición número <code>cantidad</code> del separador, contando
+            desde la izquierda. Si no hay tantas apariciones,
+            devuelve toda la cadena.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Mostrar hasta cinco títulos por clasificación:
+          </p>
+
+          <pre class="code-block"><code>SELECT rating,
+       SUBSTRING_INDEX(
+           GROUP_CONCAT(
+               title
+               ORDER BY title
+               SEPARATOR ' | '
+           ),
+           ' | ',
+           5
+       ) AS muestra_titulos,
+       COUNT(*) AS total_peliculas
+FROM film
+GROUP BY rating
+ORDER BY total_peliculas DESC;</code></pre>
+
+          <h3>Interpretación del ejemplo</h3>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              <code>GROUP BY rating</code> forma un grupo
+              por cada clasificación.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>GROUP_CONCAT()</code> ordena por título
+              y une los valores de cada grupo.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>SUBSTRING_INDEX()</code> extrae la parte anterior
+              al quinto separador.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>COUNT(*)</code> cuenta todas las películas del grupo,
+              no solo las incluidas en la muestra.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--warning">
+            Sin un <code>ORDER BY</code> interno, no puede controlarse
+            qué títulos aparecen al principio de la cadena.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El <code>ORDER BY title</code> interno permite tomar la muestra
+            en orden de título. Si distintos títulos empatan según la
+            intercalación y necesitas un desempate estable, puedes añadir
+            <code>film_id</code> al orden interno.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Este patrón recorta una cadena ya construida; no limita previamente
+            las filas que recibe <code>GROUP_CONCAT()</code>.
+            Solo representa hasta cinco títulos completos si el separador
+            no aparece dentro de los títulos y la cadena no se ha truncado
+            antes de completar esa muestra.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El separador utilizado por <code>SUBSTRING_INDEX()</code>
+            debe coincidir exactamente con el definido mediante
+            <code>SEPARATOR</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="rollup">
+          <h2>12. <code>WITH ROLLUP</code></h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>WITH ROLLUP</code> añade filas de resumen
+            a un resultado agrupado.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Puede generar subtotales para los niveles de agrupación
+            y un total general.
+          </p>
+
+          <h3>Sintaxis básica</h3>
+
+          <pre class="code-block"><code>SELECT columnas,
+       FUNCION_AGREGADA(columna)
+FROM tabla
+GROUP BY columna_1, columna_2 WITH ROLLUP;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Contar películas con subtotales y total general:
+          </p>
+
+          <pre class="code-block"><code>SELECT IFNULL(rating, 'TOTAL') AS rating,
+       IFNULL(release_year, 'SUBTOTAL') AS anio,
+       COUNT(*) AS total
+FROM film
+GROUP BY rating, release_year WITH ROLLUP;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Con el orden
+            <code>GROUP BY rating, release_year WITH ROLLUP</code>,
+            el resultado incluye:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--example">
+              El total de cada combinación de <code>rating</code>
+              y <code>release_year</code>.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Un subtotal para cada valor de <code>rating</code>.
+            </li>
+            <li class="lesson-note lesson-note--example">
+              Un total general de todas las filas.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las filas adicionales utilizan <code>NULL</code> en las columnas
+            cuyo nivel se está resumiendo.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>IFNULL()</code> sustituye esos valores por textos
+            más fáciles de interpretar.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>IFNULL()</code> no distingue entre un <code>NULL</code>
+            real de los datos y un <code>NULL</code> generado por
+            <code>WITH ROLLUP</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL dispone de <code>GROUPING()</code> para realizar
+            esa distinción cuando sea necesario.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El orden de las columnas de <code>GROUP BY</code> determina
+            la jerarquía de los subtotales generados por
+            <code>WITH ROLLUP</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="orden-escritura">
+          <h2>13. Orden de escritura de una consulta agrupada</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las cláusulas deben escribirse siguiendo este orden:
+          </p>
+
+          <pre class="code-block"><code>SELECT columnas_y_agregados
+FROM tabla
+WHERE condiciones_sobre_filas
+GROUP BY columnas_de_agrupacion
+HAVING condiciones_sobre_grupos
+ORDER BY criterio_de_ordenacion
+LIMIT cantidad;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Cambiar el orden sintáctico de estas cláusulas provoca un error.
+            Las cláusulas que no necesites pueden omitirse.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="orden-logico">
+          <h2>14. Orden lógico de ejecución</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aunque <code>SELECT</code> se escribe primero, las partes
+            de una consulta se interpretan conceptualmente en otro orden.
+          </p>
+
+          <h3>Orden lógico simplificado</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Posición</th>
+                  <th scope="col">Etapa</th>
+                  <th scope="col">Función</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td><code>FROM</code></td>
+                  <td>Determina la tabla de origen.</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td><code>WHERE</code></td>
+                  <td>Filtra las filas individuales.</td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td><code>GROUP BY</code> y agregación</td>
+                  <td>
+                    Forma los grupos y calcula los agregados necesarios.
+                  </td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td><code>HAVING</code></td>
+                  <td>Filtra los grupos.</td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td><code>SELECT</code></td>
+                  <td>
+                    Construye las columnas del resultado a partir
+                    de los grupos y agregados.
+                  </td>
+                </tr>
+                <tr>
+                  <td>6</td>
+                  <td><code>DISTINCT</code></td>
+                  <td>Elimina filas duplicadas del resultado seleccionado.</td>
+                </tr>
+                <tr>
+                  <td>7</td>
+                  <td><code>ORDER BY</code></td>
+                  <td>Ordena el resultado.</td>
+                </tr>
+                <tr>
+                  <td>8</td>
+                  <td><code>LIMIT</code></td>
+                  <td>Limita el número de filas devueltas.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Es un modelo lógico para comprender el resultado, no una secuencia
+            física obligatoria: el optimizador puede elegir otra estrategia.
+            Los agregados necesarios para <code>HAVING</code> ya deben estar
+            disponibles al filtrar los grupos.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL permite utilizar alias de <code>SELECT</code> en
+            <code>GROUP BY</code>, <code>HAVING</code> y
+            <code>ORDER BY</code>, aunque esas etapas aparezcan en distintas
+            posiciones dentro del modelo lógico.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="patrones">
+          <h2>15. Patrones fundamentales</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Estas plantillas reúnen las estructuras principales.
+            Sustituye los nombres genéricos y las condiciones antes
+            de ejecutarlas.
+          </p>
+
+          <h3>15.1. Calcular un agregado global</h3>
+
+          <pre class="code-block"><code>SELECT FUNCION_AGREGADA(columna) AS resultado
+FROM tabla;</code></pre>
+
+          <h3>15.2. Calcular un agregado después de filtrar filas</h3>
+
+          <pre class="code-block"><code>SELECT FUNCION_AGREGADA(columna) AS resultado
+FROM tabla
+WHERE condicion;</code></pre>
+
+          <h3>15.3. Calcular un agregado por grupos</h3>
+
+          <pre class="code-block"><code>SELECT columna_agrupada,
+       FUNCION_AGREGADA(columna) AS resultado
+FROM tabla
+GROUP BY columna_agrupada;</code></pre>
+
+          <h3>15.4. Filtrar grupos</h3>
+
+          <pre class="code-block"><code>SELECT columna_agrupada,
+       FUNCION_AGREGADA(columna) AS resultado
+FROM tabla
+GROUP BY columna_agrupada
+HAVING FUNCION_AGREGADA(columna) condicion;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En esta última plantilla, <code>condicion</code> representa
+            la comparación que falta, por ejemplo <code>&gt; 10</code>.
+          </p>
+
+          <h3>15.5. Filtrar filas y después grupos</h3>
+
+          <pre class="code-block"><code>SELECT columna_agrupada,
+       FUNCION_AGREGADA(columna) AS resultado
+FROM tabla
+WHERE condicion_sobre_filas
+GROUP BY columna_agrupada
+HAVING condicion_sobre_agregados;</code></pre>
+
+          <h3>15.6. Comparar con un agregado calculado por una subconsulta</h3>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla
+WHERE columna &gt; (
+    SELECT AVG(columna)
+    FROM tabla
+);</code></pre>
+
+          <h3>15.7. Crear categorías y agruparlas</h3>
+
+          <pre class="code-block"><code>SELECT CASE
+           WHEN condicion_1 THEN 'Categoria 1'
+           WHEN condicion_2 THEN 'Categoria 2'
+           ELSE 'Categoria 3'
+       END AS categoria,
+       COUNT(*) AS cantidad
+FROM tabla
+GROUP BY categoria;</code></pre>
+        </section>
+
+        <section class="lesson-section" id="errores">
+          <h2>16. Errores frecuentes</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Error</th>
+                  <th scope="col">Corrección</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Utilizar <code>WHERE COUNT(*) &gt; 10</code>.</td>
+                  <td>
+                    Las condiciones sobre agregados del grupo van
+                    en <code>HAVING</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Mostrar columnas no agregadas sin justificar
+                    su valor dentro de cada grupo.
+                  </td>
+                  <td>
+                    Como regla práctica, inclúyelas en <code>GROUP BY</code>
+                    o aplícales una función agregada.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Pensar que <code>COUNT(columna)</code>
+                    cuenta también los valores <code>NULL</code>.
+                  </td>
+                  <td>
+                    Utiliza <code>COUNT(*)</code> para contar todas las filas.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Confundir <code>COUNT(*)</code> con
+                    <code>COUNT(DISTINCT columna)</code>.
+                  </td>
+                  <td>
+                    Elige entre contar filas y contar valores diferentes
+                    no nulos.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Utilizar <code>HAVING</code> para un filtro normal
+                    sobre las filas de origen.
+                  </td>
+                  <td>
+                    Aplica ese filtro con <code>WHERE</code> antes de agrupar.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>GROUP_CONCAT(... LIMIT 5)</code>.</td>
+                  <td>
+                    MySQL no admite <code>LIMIT</code> dentro de esa función.
+                    Puedes recortar la cadena con <code>SUBSTRING_INDEX()</code>
+                    respetando sus limitaciones.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Colocar <code>ORDER BY</code> solo al final esperando
+                    ordenar el interior de <code>GROUP_CONCAT()</code>.
+                  </td>
+                  <td>
+                    Añade un <code>ORDER BY</code> dentro de
+                    <code>GROUP_CONCAT()</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Usar separadores diferentes en <code>GROUP_CONCAT()</code>
+                    y <code>SUBSTRING_INDEX()</code>.
+                  </td>
+                  <td>
+                    Utiliza exactamente el mismo separador en ambas funciones.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Interpretar todos los <code>NULL</code> de un resultado
+                    con <code>ROLLUP</code> como subtotales.
+                  </td>
+                  <td>
+                    También pueden existir <code>NULL</code> reales.
+                    <code>GROUPING()</code> permite distinguirlos.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Considerar obligatorio indexar todas las columnas
+                    utilizadas en <code>GROUP BY</code>.
+                  </td>
+                  <td>
+                    Los índices pueden mejorar algunas consultas, pero su
+                    utilidad depende de la consulta y de los datos.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>17. Resumen final</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Elemento</th>
+                  <th scope="col">Uso principal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>COUNT(*)</code></td>
+                  <td>Contar todas las filas.</td>
+                </tr>
+                <tr>
+                  <td><code>COUNT(columna)</code></td>
+                  <td>Contar valores no nulos.</td>
+                </tr>
+                <tr>
+                  <td><code>COUNT(DISTINCT columna)</code></td>
+                  <td>Contar valores diferentes no nulos.</td>
+                </tr>
+                <tr>
+                  <td><code>SUM()</code></td>
+                  <td>Sumar valores numéricos.</td>
+                </tr>
+                <tr>
+                  <td><code>AVG()</code></td>
+                  <td>Calcular una media.</td>
+                </tr>
+                <tr>
+                  <td><code>MIN()</code></td>
+                  <td>Obtener el valor mínimo.</td>
+                </tr>
+                <tr>
+                  <td><code>MAX()</code></td>
+                  <td>Obtener el valor máximo.</td>
+                </tr>
+                <tr>
+                  <td><code>GROUP BY</code></td>
+                  <td>Formar grupos.</td>
+                </tr>
+                <tr>
+                  <td><code>WHERE</code></td>
+                  <td>Filtrar filas antes de agrupar.</td>
+                </tr>
+                <tr>
+                  <td><code>HAVING</code></td>
+                  <td>Filtrar grupos después de calcular los agregados.</td>
+                </tr>
+                <tr>
+                  <td><code>CASE</code></td>
+                  <td>Crear categorías calculadas.</td>
+                </tr>
+                <tr>
+                  <td><code>GROUP_CONCAT()</code></td>
+                  <td>Unir los valores de cada grupo en una cadena.</td>
+                </tr>
+                <tr>
+                  <td><code>SUBSTRING_INDEX()</code></td>
+                  <td>
+                    Extraer una parte de una cadena utilizando un separador.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>WITH ROLLUP</code></td>
+                  <td>Añadir subtotales y un total general.</td>
+                </tr>
+                <tr>
+                  <td>Subconsulta agregada</td>
+                  <td>
+                    Calcular un valor de referencia para la consulta principal.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Esquema lógico:
+            <code>FROM</code> → <code>WHERE</code> →
+            agrupación y agregación → <code>HAVING</code> →
+            <code>SELECT</code> → <code>DISTINCT</code> si se solicita →
+            <code>ORDER BY</code> → <code>LIMIT</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Antes de escribir una consulta agrupada, decide qué filas
+            participan, qué define cada grupo, qué cálculo se realiza
+            y si debe filtrarse alguna fila o algún grupo.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · SQL · Funciones agregadas y agrupación
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
