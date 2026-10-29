@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Relaciones entre tablas y JOINs en MySQL: claves foráneas, INNER, LEFT, RIGHT, CROSS, filtros y consultas agregadas con Sakila."
+    />
+    <title>Relaciones entre tablas y JOINs | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a SQL
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#preparacion">Antes de empezar</a>
+          <a href="#relaciones">1. Relaciones entre tablas</a>
+          <a href="#claves-foraneas">2. Claves foráneas</a>
+          <a href="#join">3. Qué es un JOIN</a>
+          <a href="#inner-join">4. INNER JOIN</a>
+          <a href="#left-join">5. LEFT JOIN</a>
+          <a href="#right-join">6. RIGHT JOIN y filtros</a>
+          <a href="#full-join">7. FULL JOIN</a>
+          <a href="#cross-join">8. CROSS JOIN</a>
+          <a href="#comparacion">9. Comparación de JOINs</a>
+          <a href="#encadenar">10. Encadenar JOINs</a>
+          <a href="#agregaciones">11. JOINs y agregaciones</a>
+          <a href="#actores">12. Actividad de los actores</a>
+          <a href="#copias">13. Copias y alquileres</a>
+          <a href="#construir">14. Construir una consulta</a>
+          <a href="#errores">15. Errores frecuentes</a>
+          <a href="#resumen">16. Ideas clave</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Relaciones entre tablas y JOINs</h1>
+          <p>
+            Conectar tablas, elegir qué filas conservar y combinar JOINs
+            con funciones agregadas en MySQL.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="preparacion">
+          <h2>Antes de empezar</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            En una base de datos relacional, la información suele repartirse
+            entre varias tablas. Las relaciones permiten conectar esos datos
+            y los <code>JOIN</code> permiten consultarlos conjuntamente.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los ejemplos concretos utilizan <code>sakila</code>.
+            Selecciona la base de datos ya importada antes de ejecutarlos:
+          </p>
+
+          <pre class="code-block"><code>USE sakila;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Si aún no la tienes, importa su estructura y sus datos siguiendo
+            la
+            <a
+              href="https://dev.mysql.com/doc/sakila/en/sakila-installation.html"
+            >guía oficial de Sakila</a>.
+            <code>USE</code> solo selecciona una base existente.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los bloques con <code>tabla1</code>, <code>tabla2</code>,
+            <code>columnas</code> o <code>TIPO_DE_JOIN</code> son plantillas.
+            Los esquemas con flechas y las tablas A y B son ejemplos
+            conceptuales.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="relaciones">
+          <h2>1. Relaciones entre tablas</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Una relación indica cómo se conectan los registros de dos tablas.
+          </p>
+
+          <h3>Tipos de relaciones</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Explicación</th>
+                  <th scope="col">Ejemplo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>1:1</code></td>
+                  <td>
+                    Cada registro de cualquiera de las dos tablas se relaciona,
+                    como máximo, con uno de la otra.
+                  </td>
+                  <td>Una persona y su ficha de datos adicional.</td>
+                </tr>
+                <tr>
+                  <td><code>1:N</code></td>
+                  <td>
+                    Un registro de la primera tabla puede relacionarse
+                    con varios registros de la segunda.
+                  </td>
+                  <td>
+                    Un idioma puede ser el idioma de muchas películas;
+                    cada película tiene un idioma en
+                    <code>film.language_id</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>M:N</code></td>
+                  <td>
+                    Varios registros de una tabla pueden relacionarse
+                    con varios registros de la otra.
+                  </td>
+                  <td>
+                    Una película puede tener varios actores y un actor
+                    puede aparecer en varias películas.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las relaciones <code>M:N</code> se representan mediante una
+            <strong>tabla intermedia</strong>. En Sakila,
+            <code>film_category</code> conecta <code>film</code> con
+            <code>category</code>, y <code>film_actor</code> conecta
+            <code>film</code> con <code>actor</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Esquema de una relación muchos a muchos:
+          </p>
+
+          <pre class="diagram-block">film ← film_category → category</pre>
+        </section>
+
+        <section class="lesson-section" id="claves-foraneas">
+          <h2>2. Claves foráneas</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Una clave foránea o <code>FOREIGN KEY</code> es una restricción
+            sobre una o varias columnas que referencian una clave de otra
+            tabla, normalmente su clave primaria. También puede referenciar
+            otra fila de la misma tabla.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Su propósito es mantener la <strong>integridad referencial</strong>:
+            cuando la restricción se aplica, impide guardar referencias
+            no nulas que no tengan un registro correspondiente.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo de Sakila:
+          </p>
+
+          <pre class="diagram-block">film_category.film_id     → film.film_id
+film_category.category_id → category.category_id</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En <code>film_category</code>, cada fila relaciona una película
+            con una categoría.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Las columnas relacionadas deben representar el mismo dato
+            y utilizar tipos compatibles. No basta con que tengan valores
+            numéricos parecidos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="join">
+          <h2>3. Qué es un JOIN</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Un <code>JOIN</code> combina filas de dos o más tablas.
+            En las uniones por coincidencia de esta lección, escribiremos
+            la condición después de <code>ON</code>;
+            <code>CROSS JOIN</code> se utilizará sin condición.
+          </p>
+
+          <h3>Estructura general</h3>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla1
+TIPO_DE_JOIN tabla2
+    ON tabla1.columna = tabla2.columna;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En nuestros ejemplos, <code>ON</code> compara las columnas
+            relacionadas; también puede incluir condiciones adicionales.
+            No hace falta que exista una clave foránea declarada para escribir
+            un <code>JOIN</code>: la restricción protege los datos y la consulta
+            decide cómo combinarlos.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los alias de tabla reducen la longitud de la consulta y ayudan
+            a identificar de qué tabla procede cada columna.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Películas con su idioma:
+          </p>
+
+          <pre class="code-block"><code>SELECT f.title AS `Película`,
+       l.name AS `Idioma`
+FROM film AS f
+INNER JOIN language AS l
+    ON f.language_id = l.language_id;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Un alias no crea una tabla ni una columna nueva en la base
+            de datos. Proporciona un nombre temporal para la consulta
+            o un encabezado para su resultado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="inner-join">
+          <h2>4. INNER JOIN</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>INNER JOIN</code> devuelve únicamente las filas
+            que tienen coincidencia en ambas tablas.
+          </p>
+
+          <h3>Sintaxis</h3>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla1
+INNER JOIN tabla2
+    ON tabla1.columna = tabla2.columna;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Categorías relacionadas con sus películas:
+          </p>
+
+          <pre class="code-block"><code>SELECT c.name AS `Categoría`,
+       f.title AS `Película`
+FROM category AS c
+INNER JOIN film_category AS fc
+    ON c.category_id = fc.category_id
+INNER JOIN film AS f
+    ON fc.film_id = f.film_id;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para conectar <code>category</code> con <code>film</code>
+            es necesario atravesar <code>film_category</code>, porque
+            la relación entre categorías y películas está guardada
+            en esa tabla intermedia.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="left-join">
+          <h2>5. LEFT JOIN</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>LEFT JOIN</code> devuelve:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              Todas las filas de la tabla situada a la izquierda.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Las filas coincidentes de la tabla situada a la derecha.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>NULL</code> en las columnas de la tabla derecha
+              cuando no existe coincidencia.
+            </li>
+          </ul>
+
+          <h3>Sintaxis</h3>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla1
+LEFT JOIN tabla2
+    ON tabla1.columna = tabla2.columna;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Películas con sus copias de inventario, incluidas las películas
+            que no tienen copias:
+          </p>
+
+          <pre class="code-block"><code>SELECT f.title AS `Película`,
+       i.inventory_id AS `Copia`
+FROM film AS f
+LEFT JOIN inventory AS i
+    ON f.film_id = i.film_id;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            En este ejemplo de dos tablas, <code>film</code> es la tabla
+            izquierda y se conservan todas sus películas.
+            Si una película tiene varias copias, aparece una fila por copia;
+            si no tiene ninguna, aparece una fila con
+            <code>Copia</code> a <code>NULL</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="right-join">
+          <h2>6. RIGHT JOIN</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>RIGHT JOIN</code> devuelve:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              Todas las filas de la tabla situada a la derecha.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Las filas coincidentes de la tabla situada a la izquierda.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              <code>NULL</code> en las columnas de la tabla izquierda
+              cuando no existe coincidencia.
+            </li>
+          </ul>
+
+          <h3>Sintaxis</h3>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla1
+RIGHT JOIN tabla2
+    ON tabla1.columna = tabla2.columna;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Su comportamiento es el inverso de <code>LEFT JOIN</code>.
+            La misma lógica puede expresarse cambiando el orden de las tablas
+            y utilizando <code>LEFT JOIN</code>.
+          </p>
+
+          <h3>6.1. LEFT JOIN y los filtros de WHERE</h3>
+
+          <p class="lesson-note lesson-note--key">
+            Un <code>LEFT JOIN</code> conserva todas las filas de la tabla
+            izquierda, pero un filtro posterior en <code>WHERE</code>
+            puede eliminar las filas que contienen <code>NULL</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Esta consulta conserva inicialmente todas las películas,
+            pero después excluye las que no tienen una copia en la tienda 1:
+          </p>
+
+          <pre class="code-block"><code>SELECT f.title AS `Película`,
+       i.inventory_id AS `Copia`
+FROM film AS f
+LEFT JOIN inventory AS i
+    ON f.film_id = i.film_id
+WHERE i.store_id = 1;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Si el objetivo era conservar todas las películas, el filtro
+            en <code>WHERE</code> anula esa parte del comportamiento
+            del <code>LEFT JOIN</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Para conservar todas las películas y relacionar únicamente
+            las copias de la tienda 1, la condición debe formar parte
+            de <code>ON</code>:
+          </p>
+
+          <pre class="code-block"><code>SELECT f.title AS `Película`,
+       i.inventory_id AS `Copia`
+FROM film AS f
+LEFT JOIN inventory AS i
+    ON f.film_id = i.film_id
+   AND i.store_id = 1;</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>ON</code> decide qué filas se relacionan.
+            <code>WHERE</code> filtra el resultado obtenido después
+            de realizar la relación.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="full-join">
+          <h2>7. FULL JOIN</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Conceptualmente, <code>FULL JOIN</code> o
+            <code>FULL OUTER JOIN</code> devuelve todas las filas
+            de ambas tablas:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--explanation">
+              Une las filas que tienen coincidencia.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Conserva las filas sin coincidencia de la tabla izquierda.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Conserva las filas sin coincidencia de la tabla derecha.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--warning">
+            <strong>MySQL no admite FULL JOIN de forma nativa.</strong>
+            Intentar ejecutar directamente esa sintaxis produciría un error
+            en MySQL. En este bloque se estudia su significado, pero no
+            se utilizará en los ejercicios hasta aprender las herramientas
+            necesarias para reproducir su comportamiento.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="cross-join">
+          <h2>8. CROSS JOIN</h2>
+
+          <p class="lesson-note lesson-note--key">
+            <code>CROSS JOIN</code> genera el producto cartesiano:
+            combina cada fila de la primera tabla con todas las filas
+            de la segunda.
+          </p>
+
+          <h3>Sintaxis</h3>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla1
+CROSS JOIN tabla2;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este patrón no se utiliza una condición <code>ON</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Si una tabla contiene 4 filas y la otra contiene 3,
+            el resultado tendrá 12 filas.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Puede producir una cantidad enorme de resultados.
+            Utilízalo cuando necesites deliberadamente todas
+            las combinaciones posibles.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="comparacion">
+          <h2>9. Comparación de los JOIN</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">JOIN</th>
+                  <th scope="col">Filas que conserva</th>
+                  <th scope="col">Condición en esta lección</th>
+                  <th scope="col">Compatibilidad con MySQL</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>INNER JOIN</code></td>
+                  <td>Solo las coincidencias.</td>
+                  <td>Con <code>ON</code>.</td>
+                  <td>Admitido.</td>
+                </tr>
+                <tr>
+                  <td><code>LEFT JOIN</code></td>
+                  <td>
+                    Todas las de la izquierda y las coincidencias
+                    de la derecha.
+                  </td>
+                  <td>Con <code>ON</code>.</td>
+                  <td>Admitido.</td>
+                </tr>
+                <tr>
+                  <td><code>RIGHT JOIN</code></td>
+                  <td>
+                    Todas las de la derecha y las coincidencias
+                    de la izquierda.
+                  </td>
+                  <td>Con <code>ON</code>.</td>
+                  <td>Admitido.</td>
+                </tr>
+                <tr>
+                  <td><code>FULL JOIN</code></td>
+                  <td>Todas las filas de ambas tablas.</td>
+                  <td>Con <code>ON</code>, conceptualmente.</td>
+                  <td>No se admite de forma nativa.</td>
+                </tr>
+                <tr>
+                  <td><code>CROSS JOIN</code></td>
+                  <td>Todas las combinaciones posibles.</td>
+                  <td>Sin <code>ON</code>.</td>
+                  <td>Admitido.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>9.1. Comparación visual con los mismos datos</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para observar las diferencias, utilizamos dos tablas conceptuales
+            sin restricciones de clave foránea.
+          </p>
+
+          <h3>Tabla A</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">id</th>
+                  <th scope="col">nombre</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>Ana</td></tr>
+                <tr><td>2</td><td>Luis</td></tr>
+                <tr><td>3</td><td>Marta</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Tabla B</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">id</th>
+                  <th scope="col">ciudad</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>2</td><td>Madrid</td></tr>
+                <tr><td>3</td><td>Toledo</td></tr>
+                <tr><td>4</td><td>Segovia</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para las uniones por coincidencia se utiliza
+            <code>tabla_a.id = tabla_b.id</code>; en el producto cartesiano
+            no se aplica ese filtro. Cada ID aparece una sola vez en cada
+            tabla conceptual. Los resultados siguientes resumen las
+            correspondencias, no garantizan un orden de salida.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">JOIN</th>
+                  <th scope="col">IDs presentes en alguna de las tablas</th>
+                  <th scope="col">Interpretación</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>INNER JOIN</code></td>
+                  <td>2, 3</td>
+                  <td>
+                    Solo aparecen los valores presentes en ambas tablas.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>LEFT JOIN</code></td>
+                  <td>1, 2, 3</td>
+                  <td>
+                    Se conserva toda la tabla A; la fila de Ana recibe
+                    <code>NULL</code> en las columnas de B.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>RIGHT JOIN</code></td>
+                  <td>2, 3, 4</td>
+                  <td>
+                    Se conserva toda la tabla B; la fila de Segovia recibe
+                    <code>NULL</code> en las columnas de A.
+                    El ID 4 procede de B.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>FULL JOIN</code></td>
+                  <td>1, 2, 3, 4</td>
+                  <td>
+                    Conceptualmente conserva ambas tablas,
+                    pero MySQL no lo admite directamente.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>CROSS JOIN</code></td>
+                  <td>9 combinaciones</td>
+                  <td>
+                    Cada una de las 3 filas de A se combina
+                    con las 3 filas de B.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="lesson-section" id="encadenar">
+          <h2>10. Encadenar varios JOIN</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una consulta puede recorrer varias relaciones.
+            En las cadenas de esta lección, cada nuevo <code>JOIN</code>
+            se conecta con una tabla ya incorporada.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Recorrido desde una categoría hasta los pagos:
+          </p>
+
+          <pre class="diagram-block">category
+   ↓
+film_category
+   ↓
+film
+   ↓
+inventory
+   ↓
+rental
+   ↓
+payment</pre>
+
+          <h3>Consulta de ejemplo</h3>
+
+          <pre class="code-block"><code>SELECT c.name AS `Categoría`,
+       COUNT(DISTINCT r.rental_id) AS `Alquileres totales`,
+       SUM(p.amount) AS `Total generado`,
+       AVG(p.amount) AS `Pago medio`
+FROM category AS c
+INNER JOIN film_category AS fc
+    ON c.category_id = fc.category_id
+INNER JOIN film AS f
+    ON fc.film_id = f.film_id
+INNER JOIN inventory AS i
+    ON f.film_id = i.film_id
+INNER JOIN rental AS r
+    ON i.inventory_id = r.inventory_id
+INNER JOIN payment AS p
+    ON r.rental_id = p.rental_id
+GROUP BY c.category_id, c.name
+ORDER BY `Total generado` DESC;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La consulta parte de <code>category</code> y avanza tabla a tabla
+            hasta llegar a <code>payment</code>. No existe una relación directa
+            entre <code>category</code> y <code>payment</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Al utilizar <code>INNER JOIN</code> en toda la cadena, solo
+            se cuentan alquileres que llegan a un pago asociado.
+            Las categorías sin coincidencia completa no aparecen.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Si una película pertenece a varias categorías, sus pagos
+            se atribuyen a cada una, por lo que sumar los totales por
+            categoría puede repetir importes.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>AVG(p.amount)</code> calcula el promedio de las filas
+            de <code>payment</code>. Solo puede interpretarse como ingreso
+            medio por alquiler cuando cada alquiler tiene exactamente
+            un pago asociado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="agregaciones">
+          <h2>11. JOIN y funciones agregadas</h2>
+
+          <p class="lesson-note lesson-note--key">
+            Un <code>JOIN</code> puede aumentar el número de filas antes
+            de que actúen <code>COUNT</code>, <code>SUM</code> o
+            <code>AVG</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esto sucede especialmente en relaciones <code>1:N</code>
+            y <code>M:N</code>. Por eso hay que comprobar qué representa
+            realmente cada fila del resultado intermedio.
+          </p>
+
+          <h3>Filas frente a películas diferentes</h3>
+
+          <pre class="code-block"><code>COUNT(f.film_id)</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuenta todas las filas resultantes en las que aparece una película.
+            Una misma película puede repetirse por cada copia, alquiler o pago.
+          </p>
+
+          <pre class="code-block"><code>COUNT(DISTINCT f.film_id)</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuenta películas diferentes.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>SUM(DISTINCT p.amount)</code> tampoco corrige automáticamente
+            una duplicación: eliminaría importes iguales aunque correspondieran
+            a pagos diferentes.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Utilizar <code>DISTINCT</code> no es una corrección automática.
+            Primero hay que decidir qué entidad solicita el enunciado:
+            filas, películas, copias, alquileres u otra cosa.
+          </p>
+
+          <h3>11.1. COUNT(*) frente a COUNT(columna)</h3>
+
+          <p class="lesson-note lesson-note--key">
+            Con <code>LEFT JOIN</code>, <code>COUNT(*)</code> y
+            <code>COUNT(columna)</code> pueden producir resultados diferentes.
+          </p>
+
+          <pre class="code-block"><code>SELECT l.name AS `Idioma`,
+       COUNT(*) AS `Filas del resultado`,
+       COUNT(f.film_id) AS `Películas`
+FROM language AS l
+LEFT JOIN film AS f
+    ON l.language_id = f.language_id
+GROUP BY l.language_id, l.name;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>COUNT(*)</code> cuenta todas las filas del resultado,
+            incluida la fila conservada para un idioma sin películas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>COUNT(f.film_id)</code> solo cuenta las filas en las que
+            <code>film_id</code> tiene un valor. Si un idioma no tiene
+            películas, devuelve <code>0</code> porque <code>COUNT</code>
+            ignora los <code>NULL</code>.
+          </p>
+
+          <h3>Para un idioma sin películas</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Expresión</th>
+                  <th scope="col">Resultado</th>
+                  <th scope="col">Motivo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>COUNT(*)</code></td>
+                  <td>1</td>
+                  <td>
+                    El <code>LEFT JOIN</code> conserva una fila para el idioma.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>COUNT(f.film_id)</code></td>
+                  <td>0</td>
+                  <td>
+                    La columna de la película contiene <code>NULL</code>.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            Para contar coincidencias de la tabla derecha, utiliza una columna
+            que no pueda ser nula en sus registros reales, como su clave
+            primaria. Así, el <code>NULL</code> introducido por el
+            <code>LEFT JOIN</code> no se cuenta como una coincidencia.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="actores">
+          <h2>12. Ejemplo: actividad asociada a actores</h2>
+
+          <pre class="code-block"><code>SELECT a.actor_id AS `ID del actor`,
+       CONCAT(a.first_name, ' ', a.last_name) AS `Actor`,
+       COUNT(DISTINCT f.film_id) AS `Películas`,
+       SUM(p.amount) AS `Ingresos de sus películas`
+FROM actor AS a
+INNER JOIN film_actor AS fa
+    ON a.actor_id = fa.actor_id
+INNER JOIN film AS f
+    ON fa.film_id = f.film_id
+INNER JOIN inventory AS i
+    ON f.film_id = i.film_id
+INNER JOIN rental AS r
+    ON i.inventory_id = r.inventory_id
+INNER JOIN payment AS p
+    ON r.rental_id = p.rental_id
+GROUP BY a.actor_id, a.first_name, a.last_name
+ORDER BY `Ingresos de sus películas` DESC
+LIMIT 10;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Debido a los <code>INNER JOIN</code>, la columna
+            <code>Películas</code> cuenta películas distintas con copias,
+            alquileres y pagos enlazados; no toda la filmografía del actor.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El total no representa ingresos exclusivos generados por cada
+            actor. El pago de una película se atribuye a todos los actores
+            que participaron en ella, por lo que los importes se solapan
+            entre actores.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>COUNT(f.film_id)</code> no contaría películas diferentes,
+            sino filas después de enlazar copias, alquileres y pagos.
+            Para contar películas diferentes se utiliza
+            <code>COUNT(DISTINCT f.film_id)</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="copias">
+          <h2>13. Ejemplo: disponibilidad y uso de las copias</h2>
+
+          <pre class="code-block"><code>SELECT f.film_id AS `ID de la película`,
+       f.title AS `Película`,
+       COUNT(DISTINCT i.inventory_id) AS `Copias en inventario`,
+       COUNT(DISTINCT r.rental_id) /
+           NULLIF(COUNT(DISTINCT i.inventory_id), 0) AS `Alquileres por copia`,
+       IFNULL(SUM(p.amount), 0) AS `Ingresos totales`
+FROM film AS f
+LEFT JOIN inventory AS i
+    ON f.film_id = i.film_id
+LEFT JOIN rental AS r
+    ON i.inventory_id = r.inventory_id
+LEFT JOIN payment AS p
+    ON r.rental_id = p.rental_id
+GROUP BY f.film_id, f.title
+HAVING `Copias en inventario` &gt; 0
+ORDER BY `Alquileres por copia` ASC
+LIMIT 20;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los <code>LEFT JOIN</code> mantienen inicialmente todas
+            las películas, incluso si no tienen copias, alquileres o pagos.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>IFNULL</code> transforma en <code>0</code> el total
+            de ingresos de las películas sin pagos.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>HAVING</code> excluye del resultado los grupos sin copias
+            de inventario. <code>NULLIF(conteo, 0)</code> convierte un divisor
+            cero en <code>NULL</code>, de modo que la fórmula contempla
+            ese caso directamente.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>Copias en inventario</code> cuenta copias registradas,
+            no necesariamente copias libres en este momento.
+            <code>Alquileres por copia</code> resume los alquileres registrados
+            por cada copia; no comprueba por sí solo su disponibilidad actual.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            El orden <code>ASC</code> muestra primero las películas con menos
+            alquileres por copia. Es apropiado para buscar copias poco
+            aprovechadas. Para mostrar primero las más utilizadas
+            se emplearía <code>DESC</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="construir">
+          <h2>14. Orden lógico para construir un JOIN</h2>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              Identificar qué información debe mostrarse.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Localizar la tabla que contiene cada columna.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Elegir la tabla de partida en <code>FROM</code>.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Seguir las relaciones necesarias, tabla por tabla.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Escribir cada condición <code>ON</code>
+              con las columnas relacionadas.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Comprobar qué filas debe conservar el tipo de
+              <code>JOIN</code> elegido.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Revisar si el resultado multiplica filas antes
+              de aplicar agregaciones.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              Añadir <code>WHERE</code>, <code>GROUP BY</code>,
+              <code>HAVING</code>, <code>ORDER BY</code>
+              y <code>LIMIT</code> cuando sean necesarios.
+            </li>
+          </ol>
+        </section>
+
+        <section class="lesson-section" id="errores">
+          <h2>15. Errores frecuentes</h2>
+
+          <p class="lesson-note lesson-note--warning">
+            Relacionar columnas que no representan el mismo dato.
+            Esta condición es un ejemplo incorrecto:
+          </p>
+
+          <pre class="code-block"><code>ON film.film_id = category.category_id</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Olvidar la tabla intermedia en una relación <code>M:N</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Utilizar <code>LEFT JOIN</code> sin comprobar qué tabla
+            está situada a la izquierda.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Convertir involuntariamente un <code>LEFT JOIN</code>
+            en un resultado equivalente a <code>INNER JOIN</code>
+            al exigir en <code>WHERE</code> que una columna de la tabla
+            derecha tenga un valor concreto.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Contar filas repetidas cuando el enunciado pide
+            entidades diferentes.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Interpretar como ingresos exclusivos una suma
+            que se repite entre varios grupos.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Intentar ejecutar <code>FULL JOIN</code> directamente en MySQL.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Utilizar <code>CROSS JOIN</code> sin calcular previamente
+            el tamaño aproximado del resultado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>16. Ideas clave</h2>
+
+          <p class="lesson-note lesson-note--key">
+            La clave foránea impone una regla de integridad sobre
+            las referencias. El <code>JOIN</code> combina filas al consultar.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            La condición <code>ON</code> establece cómo se relacionan las filas.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>INNER JOIN</code> conserva solo coincidencias.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>LEFT JOIN</code> conserva todas las filas de la izquierda.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>RIGHT JOIN</code> conserva todas las filas de la derecha.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>FULL JOIN</code> es un concepto válido, pero no existe
+            de forma nativa en MySQL.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>CROSS JOIN</code> genera todas las combinaciones posibles.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Las relaciones <code>M:N</code> se representan
+            mediante una tabla intermedia.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Encadenar <code>JOIN</code> puede multiplicar filas
+            y alterar los cálculos agregados.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Antes de utilizar <code>COUNT</code>, <code>SUM</code>
+            o <code>AVG</code>, hay que saber qué representa
+            cada fila resultante.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · SQL · Relaciones entre tablas y JOINs
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
