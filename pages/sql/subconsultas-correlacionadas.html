@@ -1,0 +1,1402 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Subconsultas correlacionadas en MySQL: EXISTS, NOT EXISTS, consultas escalares, tablas derivadas y ámbito de los alias."
+    />
+    <title>
+      Subconsultas correlacionadas y consultas avanzadas | Cuaderno Digital
+    </title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a SQL
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#preparacion">Antes de empezar</a>
+          <a href="#clasificacion">1. Clasificar subconsultas</a>
+          <a href="#correlacionadas">2. Subconsultas correlacionadas</a>
+          <a href="#referencias">3. Referencias exteriores</a>
+          <a href="#ejecucion">4. Modelo de ejecución</a>
+          <a href="#escalares">5. Subconsultas escalares</a>
+          <a href="#exists">6. EXISTS</a>
+          <a href="#select-uno">7. SELECT 1</a>
+          <a href="#exists-count">8. EXISTS y COUNT</a>
+          <a href="#not-exists">9. NOT EXISTS</a>
+          <a href="#exists-independiente">10. EXISTS sin correlación</a>
+          <a href="#select">11. Subconsultas en SELECT</a>
+          <a href="#tablas-derivadas">12. Tablas derivadas</a>
+          <a href="#comparacion">13. IN, EXISTS y NOT EXISTS</a>
+          <a href="#alias">14. Ámbito y alias</a>
+          <a href="#errores">15. Errores frecuentes</a>
+          <a href="#metodo">16. Método de análisis</a>
+          <a href="#resumen">17. Resumen</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Subconsultas correlacionadas y consultas avanzadas</h1>
+          <p>
+            Relacionar consultas, comprobar la existencia de filas y trabajar
+            con tablas derivadas en MySQL.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="preparacion">
+          <h2>Antes de empezar</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            En los apuntes anteriores ya se han utilizado subconsultas para
+            comparar una columna con una lista mediante <code>IN</code>,
+            comparar una fila con una media global y mostrar un agregado
+            global dentro del <code>SELECT</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo ya conocido:
+          </p>
+
+          <pre class="code-block"><code>SELECT  title,
+        length
+FROM film
+WHERE length &gt; (
+    SELECT AVG(length)
+    FROM film
+);</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            La subconsulta anterior es independiente porque no utiliza
+            ninguna columna de la consulta exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            También es escalar porque devuelve un único valor.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            El contenido nuevo comienza cuando una subconsulta necesita
+            información de la consulta exterior o cuando su resultado
+            se utiliza como una tabla.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="clasificacion">
+          <h2>1. Tres formas de clasificar una subconsulta</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una subconsulta puede clasificarse según tres criterios
+            diferentes: el resultado que devuelve, su dependencia respecto
+            a la consulta exterior y el lugar donde aparece.
+          </p>
+
+          <h3>1.1. Según el resultado que devuelve</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Resultado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Escalar</td>
+                  <td>Una columna y como máximo una fila.</td>
+                </tr>
+                <tr>
+                  <td>De lista</td>
+                  <td>
+                    Una sola columna y cero, una o varias filas,
+                    utilizada como lista.
+                  </td>
+                </tr>
+                <tr>
+                  <td>De tabla</td>
+                  <td>
+                    Una o varias columnas y cero, una o varias filas,
+                    utilizadas como una tabla.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>1.2. Según su dependencia</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Dependencia</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>No correlacionada</td>
+                  <td>
+                    Puede ejecutarse sin utilizar datos de la consulta
+                    exterior.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Correlacionada</td>
+                  <td>
+                    Utiliza alguna columna perteneciente a la consulta
+                    exterior.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>1.3. Según su ubicación</h3>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Dentro de <code>WHERE</code>, para participar en el filtrado.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Dentro de <code>SELECT</code>, para calcular una columna
+              del resultado.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Dentro de <code>FROM</code>, para producir una tabla derivada.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Estas clasificaciones no son excluyentes. Una misma subconsulta
+            puede ser escalar, correlacionada y estar situada dentro de
+            <code>SELECT</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="correlacionadas">
+          <h2>2. Subconsultas correlacionadas</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una subconsulta es correlacionada cuando utiliza una columna
+            de la consulta exterior, normalmente identificada mediante
+            un alias.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo en <code>world</code>: ciudades cuya población supera
+            la media de las ciudades de su propio país.
+          </p>
+
+          <pre class="code-block"><code>SELECT  ci.Name AS `Ciudad`,
+        ci.CountryCode AS `Código del país`,
+        ci.Population AS `Población`
+FROM city AS ci
+WHERE ci.Population &gt; (
+    SELECT AVG(ci2.Population)
+    FROM city AS ci2
+    WHERE ci2.CountryCode = ci.CountryCode
+)
+ORDER BY ci.CountryCode, ci.Population DESC;</code></pre>
+
+          <h3>2.1. Consulta exterior</h3>
+
+          <p class="lesson-note lesson-note--example">Fragmento:</p>
+
+          <pre class="code-block"><code>SELECT  ci.Name,
+        ci.CountryCode,
+        ci.Population
+FROM city AS ci</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La consulta exterior trabaja con las ciudades y utiliza
+            el alias <code>ci</code>.
+          </p>
+
+          <h3>2.2. Subconsulta</h3>
+
+          <p class="lesson-note lesson-note--example">Fragmento:</p>
+
+          <pre class="code-block"><code>SELECT AVG(ci2.Population)
+FROM city AS ci2
+WHERE ci2.CountryCode = ci.CountryCode</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            <code>ci2</code> representa las ciudades utilizadas
+            para calcular la media.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>ci</code> representa la ciudad que se está evaluando
+            en la consulta exterior.
+          </p>
+
+          <h3>2.3. Condición de correlación</h3>
+
+          <pre class="code-block"><code>ci2.CountryCode = ci.CountryCode</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Esta condición hace que la media se calcule únicamente con
+            las ciudades pertenecientes al mismo país que la ciudad exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La referencia <code>ci.CountryCode</code> convierte la subconsulta
+            en correlacionada porque el alias <code>ci</code> se ha definido
+            fuera de ella.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="referencias">
+          <h2>3. Cómo reconocer una referencia exterior</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para saber si una subconsulta es correlacionada, hay que
+            comprobar dónde se ha definido cada alias.
+          </p>
+
+          <pre class="code-block"><code>SELECT ci.Name
+FROM city AS ci
+WHERE ci.Population &gt; (
+    SELECT AVG(ci2.Population)
+    FROM city AS ci2
+    WHERE ci2.CountryCode = ci.CountryCode
+);</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            El alias <code>ci</code> se define en la consulta exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            El alias <code>ci2</code> se define dentro de la subconsulta.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cuando MySQL encuentra <code>ci.CountryCode</code> dentro de
+            la subconsulta, busca el alias <code>ci</code> fuera de ella
+            porque no está definido en el ámbito interior.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Esta condición no crea una correlación:
+          </p>
+
+          <pre class="code-block"><code>WHERE ci2.CountryCode = ci2.CountryCode</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            La columna se está comparando consigo misma. La condición será
+            verdadera para cualquier valor no nulo y no conectará
+            la subconsulta con la consulta exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Condición correcta:
+          </p>
+
+          <pre class="code-block"><code>WHERE ci2.CountryCode = ci.CountryCode</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una subconsulta es correlacionada por utilizar una referencia
+            exterior, no por emplear un operador concreto.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="ejecucion">
+          <h2>4. Modelo mental de ejecución</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para comprender una subconsulta correlacionada, podemos
+            imaginar el siguiente proceso lógico:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--explanation">
+              La consulta exterior toma una fila.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              La subconsulta recibe un valor de esa fila.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              La subconsulta busca o calcula el resultado correspondiente.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              La consulta exterior utiliza ese resultado.
+            </li>
+            <li class="lesson-note lesson-note--explanation">
+              El proceso continúa conceptualmente con las demás
+              filas exteriores.
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--example">
+            En el ejemplo de las ciudades, primero se toma una ciudad,
+            después se obtiene su <code>CountryCode</code>, se calcula
+            la media de las ciudades de ese país y finalmente se compara
+            la población de la ciudad con esa media.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Este es un modelo mental para comprender la lógica, no una
+            garantía de que MySQL ejecute físicamente la subconsulta
+            una vez por cada fila.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            El optimizador puede transformar internamente la consulta
+            y elegir otra estrategia equivalente.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="escalares">
+          <h2>5. Subconsultas escalares correlacionadas</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una subconsulta puede ser simultáneamente escalar y correlacionada.
+          </p>
+
+          <pre class="code-block"><code>SELECT  ci.Name AS `Ciudad`,
+        ci.Population AS `Población`
+FROM city AS ci
+WHERE ci.Population &gt; (
+    SELECT AVG(ci2.Population)
+    FROM city AS ci2
+    WHERE ci2.CountryCode = ci.CountryCode
+);</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Es escalar porque <code>AVG(ci2.Population)</code>
+            devuelve un único valor.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Es correlacionada porque utiliza <code>ci.CountryCode</code>,
+            que procede de la consulta exterior.
+          </p>
+
+          <h3>5.1. Cantidad de columnas y filas</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una subconsulta escalar debe devolver una sola columna
+            y como máximo una fila.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Resultado de la subconsulta</th>
+                  <th scope="col">Comportamiento</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Una fila</td>
+                  <td>MySQL utiliza el valor obtenido.</td>
+                </tr>
+                <tr>
+                  <td>Ninguna fila</td>
+                  <td>El resultado escalar es <code>NULL</code>.</td>
+                </tr>
+                <tr>
+                  <td>Varias filas</td>
+                  <td>
+                    MySQL genera un error porque no puede utilizar
+                    varias filas como un único valor.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>5.2. Matiz con las funciones agregadas</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una consulta agregada sin <code>GROUP BY</code> produce una fila
+            aunque no encuentre datos que procesar, siempre que no se elimine
+            esa fila con <code>HAVING</code> u otra cláusula.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Expresión</th>
+                  <th scope="col">
+                    Resultado cuando no hay filas que procesar
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>COUNT(*)</code></td>
+                  <td>Devuelve <code>0</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>AVG(columna)</code></td>
+                  <td>Devuelve <code>NULL</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>SUM(columna)</code></td>
+                  <td>Devuelve <code>NULL</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>MIN(columna)</code></td>
+                  <td>Devuelve <code>NULL</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>MAX(columna)</code></td>
+                  <td>Devuelve <code>NULL</code>.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            En las comparaciones con un valor individual que usamos aquí
+            (<code>=</code>, <code>&gt;</code>, <code>&lt;</code>,
+            <code>&gt;=</code> o <code>&lt;=</code>), la subconsulta debe
+            devolver una sola columna y como máximo una fila.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un agregado sin <code>GROUP BY</code> o un filtro por el valor
+            completo de una clave primaria pueden limitar el resultado
+            a una fila. Además, hay que seleccionar una sola columna.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="exists">
+          <h2>6. EXISTS</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>EXISTS</code> comprueba si una subconsulta
+            devuelve al menos una fila.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Estructura:</p>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla_exterior AS e
+WHERE EXISTS (
+    SELECT 1
+    FROM tabla_interior AS i
+    WHERE i.columna = e.columna
+);</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo en <code>world</code>: países que tienen
+            al menos un idioma oficial.
+          </p>
+
+          <pre class="code-block"><code>SELECT  c.Code AS `Código`,
+        c.Name AS `País`
+FROM country AS c
+WHERE EXISTS (
+    SELECT 1
+    FROM countrylanguage AS cl
+    WHERE cl.CountryCode = c.Code
+      AND cl.IsOfficial = 'T'
+)
+ORDER BY c.Name;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            <code>cl.CountryCode = c.Code</code> relaciona los idiomas
+            interiores con el país exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>cl.IsOfficial = 'T'</code> exige que el idioma sea oficial.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si la subconsulta encuentra al menos una fila,
+            <code>EXISTS</code> es verdadero y el país se conserva.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si la subconsulta no encuentra ninguna fila,
+            <code>EXISTS</code> es falso y el país se descarta.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>EXISTS</code> responde a una pregunta de existencia:
+            no necesita recuperar los valores de las filas encontradas.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="select-uno">
+          <h2>7. Qué significa SELECT 1</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Dentro de <code>EXISTS</code> es habitual escribir
+            <code>SELECT 1</code> porque el operador no utiliza
+            el valor seleccionado.
+          </p>
+
+          <pre class="code-block"><code>SELECT 1</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            También podrían utilizarse <code>SELECT *</code> o una columna
+            concreta sin cambiar el resultado lógico de <code>EXISTS</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>SELECT 1</code> comunica con claridad que solo interesa
+            saber si existe alguna fila.
+          </p>
+
+          <h3>7.1. EXISTS no muestra las columnas interiores</h3>
+
+          <pre class="code-block"><code>SELECT c.Name
+FROM country AS c
+WHERE EXISTS (
+    SELECT cl.Language
+    FROM countrylanguage AS cl
+    WHERE cl.CountryCode = c.Code
+);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El resultado exterior solo muestra <code>c.Name</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Aunque la subconsulta seleccione <code>cl.Language</code>,
+            <code>EXISTS</code> no añade esa columna al resultado
+            de la consulta exterior.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="exists-count">
+          <h2>8. EXISTS y COUNT</h2>
+
+          <p class="lesson-note lesson-note--warning">
+            No debe utilizarse <code>COUNT(*)</code> dentro de
+            <code>EXISTS</code> para comprobar si existen filas.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Código problemático:
+          </p>
+
+          <pre class="code-block"><code>SELECT c.Name
+FROM country AS c
+WHERE EXISTS (
+    SELECT COUNT(*)
+    FROM city AS ci
+    WHERE ci.CountryCode = c.Code
+);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>COUNT(*)</code> sin <code>GROUP BY</code> devuelve
+            una fila incluso cuando el conteo es <code>0</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Como la subconsulta devuelve una fila, <code>EXISTS</code>
+            resulta verdadero aunque no exista ninguna ciudad relacionada.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Código correcto:</p>
+
+          <pre class="code-block"><code>SELECT c.Name
+FROM country AS c
+WHERE EXISTS (
+    SELECT 1
+    FROM city AS ci
+    WHERE ci.CountryCode = c.Code
+);</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>EXISTS</code> ya realiza la comprobación de existencia
+            y no necesita <code>COUNT(*)</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="not-exists">
+          <h2>9. NOT EXISTS</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>NOT EXISTS</code> conserva una fila exterior cuando
+            la subconsulta no encuentra ninguna fila relacionada.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Estructura:</p>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM tabla_exterior AS e
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM tabla_interior AS i
+    WHERE i.columna = e.columna
+);</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo en <code>world</code>: países sin ciudades registradas.
+          </p>
+
+          <pre class="code-block"><code>SELECT  c.Code AS `Código`,
+        c.Name AS `País`
+FROM country AS c
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM city AS ci
+    WHERE ci.CountryCode = c.Code
+)
+ORDER BY c.Name;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La consulta exterior toma un país y la subconsulta
+            busca una ciudad asociada con él.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Si encuentra alguna ciudad, <code>EXISTS</code> sería verdadero
+            y <code>NOT EXISTS</code> lo convierte en falso.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Si no encuentra ninguna ciudad, <code>EXISTS</code> sería falso
+            y <code>NOT EXISTS</code> lo convierte en verdadero.
+          </p>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Operador</th>
+                  <th scope="col">Conserva la fila exterior cuando...</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>EXISTS</code></td>
+                  <td>La subconsulta encuentra al menos una fila.</td>
+                </tr>
+                <tr>
+                  <td><code>NOT EXISTS</code></td>
+                  <td>La subconsulta no encuentra ninguna fila.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>EXISTS</code> busca presencia y
+            <code>NOT EXISTS</code> busca ausencia.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="exists-independiente">
+          <h2>10. EXISTS no siempre implica correlación</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Es habitual utilizar <code>EXISTS</code> con subconsultas
+            correlacionadas, pero el operador no crea la correlación
+            automáticamente.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo no correlacionado:
+          </p>
+
+          <pre class="code-block"><code>SELECT Name
+FROM country
+WHERE EXISTS (
+    SELECT 1
+    FROM city
+    WHERE Population &gt; 10000000
+);</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            La subconsulta no utiliza ninguna columna de
+            <code>country</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si existe al menos una ciudad con más de diez millones
+            de habitantes, <code>EXISTS</code> será verdadero
+            para todos los países.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si no existe ninguna, será falso para todos los países.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una subconsulta es correlacionada porque utiliza una referencia
+            exterior, no porque emplee <code>EXISTS</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="select">
+          <h2>11. Subconsultas correlacionadas dentro de SELECT</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una subconsulta situada dentro del <code>SELECT</code> calcula
+            una columna para cada fila de la consulta exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo en <code>sakila</code>: mostrar cada cliente
+            y su número total de alquileres.
+          </p>
+
+          <pre class="code-block"><code>SELECT  c.customer_id AS `ID`,
+        c.first_name AS `Nombre`,
+        c.last_name AS `Apellidos`,
+        (
+            SELECT COUNT(*)
+            FROM rental AS r
+            WHERE r.customer_id = c.customer_id
+        ) AS `Total de alquileres`
+FROM customer AS c
+ORDER BY `Total de alquileres` DESC;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            Es escalar porque <code>COUNT(*)</code> devuelve un solo valor.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Es correlacionada porque utiliza <code>c.customer_id</code>
+            de la consulta exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Está dentro del <code>SELECT</code> porque su resultado se
+            muestra como la columna <code>Total de alquileres</code>.
+          </p>
+
+          <h3>11.1. Diferencia respecto a una subconsulta global</h3>
+
+          <p class="lesson-note lesson-note--example">
+            Subconsulta global e independiente:
+          </p>
+
+          <pre class="code-block"><code>SELECT  rating,
+        AVG(length) AS `Media del grupo`,
+        (
+            SELECT AVG(length)
+            FROM film
+        ) AS `Media global`
+FROM film
+GROUP BY rating;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La media global es la misma para todos los grupos porque
+            la subconsulta no utiliza ninguna columna exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Subconsulta correlacionada:
+          </p>
+
+          <pre class="code-block"><code>SELECT  c.customer_id,
+        (
+            SELECT COUNT(*)
+            FROM rental AS r
+            WHERE r.customer_id = c.customer_id
+        ) AS `Total de alquileres`
+FROM customer AS c;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El resultado puede cambiar para cada cliente porque
+            depende de <code>c.customer_id</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="tablas-derivadas">
+          <h2>12. Subconsultas dentro de FROM</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una subconsulta situada dentro de <code>FROM</code> produce
+            un resultado que la consulta exterior puede utilizar
+            como si fuera una tabla.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Este resultado recibe el nombre de tabla derivada.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Estructura:</p>
+
+          <pre class="code-block"><code>SELECT columnas
+FROM (
+    SELECT columnas
+    FROM tabla
+) AS alias;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo en <code>sakila</code>: crear un resumen por
+            clasificación y filtrar después ese resultado.
+          </p>
+
+          <pre class="code-block"><code>SELECT  resumen.rating AS `Clasificación`,
+        resumen.Total AS `Total de películas`,
+        resumen.`Duración media`
+FROM (
+    SELECT  rating,
+            COUNT(*) AS Total,
+            AVG(length) AS `Duración media`
+    FROM film
+    GROUP BY rating
+) AS resumen
+WHERE resumen.Total &gt;= 200
+ORDER BY resumen.Total DESC;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            La subconsulta agrupa las películas por <code>rating</code>
+            y calcula el total y la duración media de cada grupo.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El resultado interior recibe el alias <code>resumen</code>
+            y la consulta exterior trabaja con él como si fuera una tabla.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Finalmente, la consulta exterior conserva los grupos
+            que tienen al menos 200 películas.
+          </p>
+
+          <h3>12.1. Alias de una tabla derivada</h3>
+
+          <p class="lesson-note lesson-note--warning">
+            Una tabla derivada debe tener un alias.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">Código incorrecto:</p>
+
+          <pre class="code-block"><code>SELECT *
+FROM (
+    SELECT  rating,
+            COUNT(*) AS Total
+    FROM film
+    GROUP BY rating
+);</code></pre>
+
+          <p class="lesson-note lesson-note--example">Código correcto:</p>
+
+          <pre class="code-block"><code>SELECT *
+FROM (
+    SELECT  rating,
+            COUNT(*) AS Total
+    FROM film
+    GROUP BY rating
+) AS resumen;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El alias se escribe después del paréntesis
+            que cierra la subconsulta.
+          </p>
+
+          <h3>12.2. Columnas disponibles</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            La consulta exterior solo puede utilizar las columnas
+            devueltas por la subconsulta.
+          </p>
+
+          <pre class="code-block"><code>SELECT  resumen.rating,
+        resumen.Total
+FROM (
+    SELECT  rating,
+            COUNT(*) AS Total
+    FROM film
+    GROUP BY rating
+) AS resumen;</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            La tabla derivada contiene <code>rating</code>
+            y <code>Total</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            La consulta exterior no podría utilizar
+            <code>resumen.film_id</code> porque <code>film_id</code>
+            no forma parte del resultado interior.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Una tabla derivada solo expone las columnas
+            incluidas en su propio <code>SELECT</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="comparacion">
+          <h2>13. IN, EXISTS y NOT EXISTS</h2>
+
+          <h3>13.1. IN</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>IN</code> responde a la pregunta: ¿este valor aparece
+            en la lista producida por la subconsulta?
+          </p>
+
+          <p class="lesson-note lesson-note--example">Patrón:</p>
+
+          <pre class="code-block"><code>WHERE Code IN (
+    SELECT CountryCode
+    FROM countrylanguage
+);</code></pre>
+
+          <h3>13.2. EXISTS</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>EXISTS</code> responde a la pregunta:
+            ¿existe al menos una fila relacionada?
+          </p>
+
+          <p class="lesson-note lesson-note--example">Patrón:</p>
+
+          <pre class="code-block"><code>WHERE EXISTS (
+    SELECT 1
+    FROM countrylanguage AS cl
+    WHERE cl.CountryCode = c.Code
+);</code></pre>
+
+          <h3>13.3. NOT EXISTS</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>NOT EXISTS</code> responde a la pregunta:
+            ¿no existe ninguna fila relacionada?
+          </p>
+
+          <p class="lesson-note lesson-note--example">Patrón:</p>
+
+          <pre class="code-block"><code>WHERE NOT EXISTS (
+    SELECT 1
+    FROM countrylanguage AS cl
+    WHERE cl.CountryCode = c.Code
+);</code></pre>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Necesidad lógica</th>
+                  <th scope="col">Operador habitual</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Comparar un valor con una lista.</td>
+                  <td><code>IN</code></td>
+                </tr>
+                <tr>
+                  <td>Comprobar si existe una relación.</td>
+                  <td><code>EXISTS</code></td>
+                </tr>
+                <tr>
+                  <td>Comprobar que no existe una relación.</td>
+                  <td><code>NOT EXISTS</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>13.4. Rendimiento</h3>
+
+          <p class="lesson-note lesson-note--warning">
+            No debe memorizarse que <code>EXISTS</code>
+            siempre es más eficiente que <code>IN</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            MySQL puede transformar y optimizar ambas formas
+            mediante diferentes estrategias.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            El rendimiento depende de los índices, el tamaño de las tablas,
+            la distribución de los datos, las condiciones utilizadas
+            y las decisiones del optimizador.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Primero debe elegirse el operador que exprese
+            correctamente la lógica de la consulta.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="alias">
+          <h2>14. Ámbito y ocultación de alias</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Cada consulta tiene su propio ámbito.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Una subconsulta puede utilizar sus propias tablas, sus propios
+            alias y los alias exteriores cuando es correlacionada.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Código correcto:</p>
+
+          <pre class="code-block"><code>SELECT co.Name
+FROM country AS co
+WHERE EXISTS (
+    SELECT 1
+    FROM city AS ci
+    WHERE ci.CountryCode = co.Code
+);</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            <code>co</code> pertenece a la consulta exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            <code>ci</code> pertenece a la subconsulta.
+          </p>
+
+          <h3>14.1. Reutilizar un alias interior</h3>
+
+          <p class="lesson-note lesson-note--warning">Código incorrecto:</p>
+
+          <pre class="code-block"><code>SELECT c.Name
+FROM country AS c
+WHERE EXISTS (
+    SELECT 1
+    FROM city AS c
+    WHERE c.CountryCode = c.Code
+);</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            El alias interior <code>c</code> de la tabla <code>city</code>
+            oculta al alias exterior <code>c</code> de la tabla
+            <code>country</code> dentro de la subconsulta.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            MySQL interpreta <code>c.Code</code> como una columna de
+            <code>city</code>. Como <code>city</code> no contiene una
+            columna llamada <code>Code</code>, la consulta provoca
+            un error de ejecución.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Versión correcta:</p>
+
+          <pre class="code-block"><code>SELECT co.Name
+FROM country AS co
+WHERE EXISTS (
+    SELECT 1
+    FROM city AS ci
+    WHERE ci.CountryCode = co.Code
+);</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Utilizar alias distintos permite reconocer inmediatamente
+            qué tabla representa cada referencia.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="errores">
+          <h2>15. Errores frecuentes</h2>
+
+          <h3>15.1. Confundir una subconsulta global con una correlacionada</h3>
+
+          <p class="lesson-note lesson-note--warning">Código problemático:</p>
+
+          <pre class="code-block"><code>SELECT  c.Name,
+        (
+            SELECT COUNT(*)
+            FROM city
+        ) AS `Total`
+FROM country AS c;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            La subconsulta cuenta todas las ciudades y repite
+            el mismo total para todos los países.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para obtener un total diferente por país, debe relacionarse
+            la tabla interior con la fila exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Condición necesaria:</p>
+
+          <pre class="code-block"><code>WHERE ci.CountryCode = c.Code</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para utilizar esa condición, también hay que cambiar
+            <code>FROM city</code> por <code>FROM city AS ci</code>
+            dentro de la subconsulta.
+          </p>
+
+          <h3>15.2. Comparar una columna consigo misma</h3>
+
+          <p class="lesson-note lesson-note--warning">Código incorrecto:</p>
+
+          <pre class="code-block"><code>WHERE ci.CountryCode = ci.CountryCode</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Para valores no nulos, la columna coincide consigo misma.
+            La condición no conecta con la consulta exterior.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Código correcto:</p>
+
+          <pre class="code-block"><code>WHERE ci.CountryCode = c.Code</code></pre>
+
+          <h3>15.3. Utilizar COUNT dentro de EXISTS</h3>
+
+          <p class="lesson-note lesson-note--warning">Código incorrecto:</p>
+
+          <pre class="code-block"><code>WHERE EXISTS (
+    SELECT COUNT(*)
+    FROM city AS ci
+    WHERE ci.CountryCode = c.Code
+);</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>COUNT(*)</code> devuelve una fila aunque el conteo
+            sea <code>0</code>, por lo que <code>EXISTS</code>
+            resulta verdadero.
+          </p>
+
+          <p class="lesson-note lesson-note--example">Código correcto:</p>
+
+          <pre class="code-block"><code>WHERE EXISTS (
+    SELECT 1
+    FROM city AS ci
+    WHERE ci.CountryCode = c.Code
+);</code></pre>
+
+          <h3>15.4. Esperar que EXISTS muestre columnas interiores</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>EXISTS</code> solo comprueba si la subconsulta
+            devuelve alguna fila.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Las columnas seleccionadas dentro de <code>EXISTS</code>
+            no se añaden al resultado exterior.
+          </p>
+
+          <h3>15.5. Utilizar una subconsulta escalar que devuelve varias filas</h3>
+
+          <p class="lesson-note lesson-note--warning">Código problemático:</p>
+
+          <pre class="code-block"><code>WHERE Population &gt; (
+    SELECT Population
+    FROM city
+    WHERE CountryCode = 'ESP'
+);</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            La subconsulta puede devolver varias poblaciones
+            y provocar un error de ejecución.
+          </p>
+
+          <h3>15.6. Olvidar el alias de una tabla derivada</h3>
+
+          <p class="lesson-note lesson-note--warning">Código incorrecto:</p>
+
+          <pre class="code-block"><code>FROM (
+    SELECT  rating,
+            COUNT(*) AS Total
+    FROM film
+    GROUP BY rating
+)</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Falta un alias después del paréntesis de cierre,
+            como <code>AS resumen</code>.
+          </p>
+
+          <h3>15.7. Solicitar una columna que la tabla derivada no devuelve</h3>
+
+          <p class="lesson-note lesson-note--warning">Código incorrecto:</p>
+
+          <pre class="code-block"><code>SELECT resumen.film_id
+FROM (
+    SELECT  rating,
+            COUNT(*) AS Total
+    FROM film
+    GROUP BY rating
+) AS resumen;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>film_id</code> no forma parte del resultado
+            de la subconsulta y no está disponible para la consulta exterior.
+          </p>
+
+          <h3>15.8. Suponer que toda subconsulta con EXISTS es correlacionada</h3>
+
+          <p class="lesson-note lesson-note--warning">
+            <code>EXISTS</code> no crea la correlación por sí solo.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Solo será correlacionada si utiliza alguna columna
+            perteneciente a la consulta exterior.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="metodo">
+          <h2>16. Método para analizar una subconsulta avanzada</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Antes de ejecutar una consulta, conviene responder
+            estas preguntas en orden:
+          </p>
+
+          <ol>
+            <li class="lesson-note lesson-note--key">
+              ¿Cuál es la consulta exterior?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              ¿Cuál es la subconsulta?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              ¿Qué columnas y filas devuelve la subconsulta?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              ¿Devuelve un valor, una lista o una tabla?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              ¿Utiliza algún alias de la consulta exterior?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              ¿Qué condición conecta la consulta interior con la exterior?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              ¿La lógica necesita <code>IN</code>, <code>EXISTS</code>
+              o <code>NOT EXISTS</code>?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Si es escalar, ¿puede devolver más de una fila?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Si utiliza <code>EXISTS</code>, ¿se están comprobando
+              filas directamente?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Si está dentro de <code>FROM</code>,
+              ¿la tabla derivada tiene alias?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              ¿La tabla derivada devuelve todas las columnas
+              que necesita la consulta exterior?
+            </li>
+            <li class="lesson-note lesson-note--key">
+              ¿Los alias permiten distinguir claramente cada tabla?
+            </li>
+          </ol>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Analizar primero la forma del resultado y después
+            la relación entre los ámbitos evita la mayoría
+            de errores conceptuales.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>17. Resumen final</h2>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Una subconsulta correlacionada utiliza una columna
+              de la consulta exterior.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              La correlación se reconoce localizando alias exteriores
+              dentro de la subconsulta.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Una subconsulta puede ser escalar y correlacionada
+              al mismo tiempo.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Una subconsulta escalar devuelve una columna
+              y como máximo una fila.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>COUNT(*)</code> sin <code>GROUP BY</code> devuelve
+              <code>0</code> cuando no encuentra filas; otros agregados
+              como <code>AVG()</code> devuelven <code>NULL</code>
+              cuando no tienen valores que procesar.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>EXISTS</code> comprueba si la subconsulta
+              devuelve al menos una fila.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>SELECT 1</code> expresa que solo interesa
+              comprobar la existencia de una fila.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>EXISTS</code> no muestra las columnas
+              seleccionadas dentro de la subconsulta.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              No debe utilizarse <code>COUNT(*)</code> dentro de
+              <code>EXISTS</code> para comprobar si existen filas.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>NOT EXISTS</code> conserva la fila exterior
+              cuando no encuentra ninguna correspondencia.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Utilizar <code>EXISTS</code> no convierte automáticamente
+              una subconsulta en correlacionada.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Una subconsulta correlacionada dentro de <code>SELECT</code>
+              calcula un valor relacionado con cada fila exterior.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Una subconsulta dentro de <code>FROM</code>
+              crea una tabla derivada.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Las tablas derivadas necesitan un alias.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              La consulta exterior solo puede utilizar las columnas
+              devueltas por la tabla derivada.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Un alias interior puede ocultar un alias exterior
+              con el mismo nombre.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>IN</code>, <code>EXISTS</code> y
+              <code>NOT EXISTS</code> deben elegirse
+              por su significado lógico.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              No existe una regla universal que garantice que
+              <code>EXISTS</code> siempre sea más rápido
+              que <code>IN</code>.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La clave consiste en identificar qué devuelve la subconsulta,
+            de qué ámbito procede cada columna y cómo utiliza
+            el resultado la consulta exterior.
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · SQL · Subconsultas correlacionadas
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
