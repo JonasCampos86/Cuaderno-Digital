@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Índices B-Tree, compuestos, HASH y FULLTEXT, planes con EXPLAIN y normalización de bases de datos: 1FN, 2FN y 3FN."
+    />
+    <title>Optimización y normalización en MySQL | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">
+          ← Volver a SQL
+        </a>
+
+        <nav class="lesson-sidebar__nav" aria-label="Índice de la lección">
+          <h2>Índice</h2>
+
+          <a href="#indices">1. Índices</a>
+          <a href="#innodb">2. InnoDB</a>
+          <a href="#btree">3. B-Tree</a>
+          <a href="#compuestos">4. Índices compuestos</a>
+          <a href="#rangos">5. Rangos y ordenación</a>
+          <a href="#hash">6. HASH</a>
+          <a href="#fulltext">7. FULLTEXT</a>
+          <a href="#elegir">8. Elegir un índice</a>
+          <a href="#gestionar">9. Consultar y eliminar índices</a>
+          <a href="#explain">10. EXPLAIN</a>
+          <a href="#normalizacion">11. Normalización</a>
+          <a href="#anomalias">12. Anomalías</a>
+          <a href="#primera-forma">13. Primera forma normal</a>
+          <a href="#segunda-forma">14. Segunda forma normal</a>
+          <a href="#tercera-forma">15. Tercera forma normal</a>
+          <a href="#resumen">16. Resumen</a>
+        </nav>
+      </aside>
+
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Optimización y normalización en MySQL</h1>
+          <p>
+            Elegir índices, comprobar cómo se ejecutan las consultas
+            y organizar los datos para reducir redundancia y anomalías.
+          </p>
+        </header>
+
+        <section class="lesson-section" id="indices">
+          <h2>1. Índices en bases de datos</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un índice es una estructura auxiliar que ayuda a MySQL
+            a localizar determinadas filas sin tener que recorrer
+            necesariamente toda la tabla.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Se parece al índice de un libro: permite llegar directamente
+            a una parte concreta sin leer todas las páginas anteriores.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Los índices pueden acelerar las consultas, pero eso no significa
+            que MySQL vaya a utilizarlos siempre. El optimizador decide
+            si usar un índice o recorrer la tabla completa.
+          </p>
+
+          <h3>Ventajas de los índices</h3>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Aceleran muchas búsquedas realizadas con <code>WHERE</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Pueden mejorar relaciones mediante <code>JOIN</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Pueden ayudar con determinadas ordenaciones y agrupaciones.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Permiten localizar valores concretos o rangos de valores.
+            </li>
+          </ul>
+
+          <h3>Costes de los índices</h3>
+
+          <ul>
+            <li class="lesson-note lesson-note--warning">
+              Ocupan espacio adicional.
+            </li>
+            <li class="lesson-note lesson-note--warning">
+              Deben actualizarse al insertar, modificar o eliminar datos.
+            </li>
+            <li class="lesson-note lesson-note--warning">
+              Un exceso de índices puede perjudicar el rendimiento
+              de las escrituras.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un índice debe crearse porque mejora consultas reales,
+            no simplemente porque sea posible crearlo.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="innodb">
+          <h2>2. Una aclaración mínima: InnoDB</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>InnoDB</code> es el motor de almacenamiento que MySQL
+            utiliza normalmente para gestionar las tablas.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            No es una tabla interna ni una tabla adicional. La tabla sigue
+            siendo, por ejemplo, <code>usuarios</code>;
+            <code>InnoDB</code> determina cómo se almacenan sus datos
+            y cómo funcionan sus índices, claves foráneas y transacciones.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Si creamos esta tabla sin indicar ningún motor:
+          </p>
+
+          <pre class="code-block"><code>CREATE TABLE usuarios (
+    id INT PRIMARY KEY,
+    nombre VARCHAR(50)
+);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Si el motor predeterminado es <code>InnoDB</code>,
+            la definición anterior equivale a indicar explícitamente:
+          </p>
+
+          <pre class="code-block"><code>CREATE TABLE usuarios (
+    id INT PRIMARY KEY,
+    nombre VARCHAR(50)
+) ENGINE = InnoDB;</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Para trabajar con SQL no necesitamos escribir
+            <code>ENGINE = InnoDB</code> cada vez, pero conocerlo
+            permite entender qué tipos de índice podemos utilizar.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Estas dos definiciones son alternativas. Los ejemplos posteriores
+            de índices presuponen tablas con las columnas indicadas,
+            como <code>email</code>, <code>edad</code>
+            y <code>contenido</code>; no son una continuación
+            de esta tabla mínima.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="btree">
+          <h2>3. Índices B-Tree</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            B-Tree es el tipo de índice habitual en MySQL cuando
+            trabajamos con tablas <code>InnoDB</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Puede utilizarse con búsquedas por:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Igualdad: <code>=</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Comparación: <code>&gt;</code>, <code>&lt;</code>,
+              <code>&gt;=</code>, <code>&lt;=</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Rangos: <code>BETWEEN</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Listas de valores: <code>IN</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Determinadas ordenaciones mediante <code>ORDER BY</code>.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--example">
+            Creación de un índice sencillo:
+          </p>
+
+          <pre class="code-block"><code>CREATE INDEX idx_usuarios_email
+ON usuarios(email);</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Consulta que podría aprovecharlo:
+          </p>
+
+          <pre class="code-block"><code>SELECT *
+FROM usuarios
+WHERE email = 'ana@example.com';</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un índice B-Tree también sirve para búsquedas de igualdad.
+            No necesitamos un índice <code>HASH</code>
+            para realizar una consulta con <code>=</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="compuestos">
+          <h2>4. Índices compuestos</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un índice compuesto incluye varias columnas.
+          </p>
+
+          <pre class="code-block"><code>CREATE INDEX idx_usuarios_edad_nombre
+ON usuarios(edad, nombre);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El orden de las columnas es importante. Este índice está
+            organizado primero por <code>edad</code>
+            y después por <code>nombre</code>.
+          </p>
+
+          <h3>Regla del prefijo izquierdo</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Este índice puede ayudar normalmente en consultas
+            que utilicen su primera columna:
+          </p>
+
+          <pre class="code-block"><code>SELECT *
+FROM usuarios
+WHERE edad = 25;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            También puede ayudar cuando filtramos por las dos columnas:
+          </p>
+
+          <pre class="code-block"><code>SELECT *
+FROM usuarios
+WHERE edad = 25
+  AND nombre = 'Ana';</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Además, puede ayudar a filtrar y ordenar cuando
+            la primera columna mantiene un único valor:
+          </p>
+
+          <pre class="code-block"><code>SELECT *
+FROM usuarios
+WHERE edad = 25
+ORDER BY nombre;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            En cambio, normalmente no está preparado
+            para buscar únicamente por la segunda columna:
+          </p>
+
+          <pre class="code-block"><code>SELECT *
+FROM usuarios
+WHERE nombre = 'Ana';</code></pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La regla se refiere al orden de las columnas en la definición
+            del índice, no al orden de las condiciones dentro de
+            <code>WHERE</code>. Intercambiar las condiciones unidas
+            por <code>AND</code> no cambia este principio.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Para una búsqueda por prefijo se utiliza la primera columna,
+            o varias columnas consecutivas desde la izquierda.
+            No significa que el índice sea inútil en cualquier otro caso:
+            MySQL puede elegir otras estrategias, que debemos comprobar
+            con <code>EXPLAIN</code>.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="rangos">
+          <h2>5. Rangos dentro de un índice compuesto</h2>
+
+          <pre class="code-block"><code>SELECT *
+FROM usuarios
+WHERE edad BETWEEN 18 AND 30
+ORDER BY nombre;</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            El índice <code>(edad, nombre)</code> puede ayudar
+            a localizar el rango de edades.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Sin embargo, no debemos afirmar que también evita
+            necesariamente la ordenación por <code>nombre</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los datos del índice están ordenados así:
+          </p>
+
+          <pre class="diagram-block">edad → nombre</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            Por tanto, los nombres están ordenados dentro de cada edad,
+            pero no globalmente entre todas las edades comprendidas
+            entre 18 y 30.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Un rango puede limitar cómo se usan las columnas posteriores
+            para acotar la búsqueda o resolver la ordenación.
+            Esas columnas todavía pueden ayudar a filtrar;
+            el plan de ejecución determina su uso real.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="hash">
+          <h2>6. Índices HASH</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Un índice <code>HASH</code> está pensado principalmente
+            para comparaciones exactas.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo de comparación exacta:
+          </p>
+
+          <pre class="code-block"><code>WHERE email = 'ana@example.com'</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            No sirve para búsquedas por rango ni para ordenar los resultados.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Además, no está disponible como índice normal creado por
+            el usuario en las tablas habituales <code>InnoDB</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            En MySQL se utiliza con motores específicos, como
+            <code>MEMORY</code>. <code>NDB</code> también admite
+            índices HASH, con sus propias restricciones.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Ejemplo de índice <code>HASH</code> si
+            <code>usuarios_temporales</code> utiliza
+            el motor <code>MEMORY</code>:
+          </p>
+
+          <pre class="code-block"><code>CREATE INDEX idx_usuarios_email
+USING HASH
+ON usuarios_temporales(email);</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Para obtener un índice HASH real, el motor debe admitirlo.
+            En InnoDB, solicitar <code>USING HASH</code> puede generar
+            un aviso y crear el índice B-Tree predeterminado.
+            Que la sentencia termine no demuestra que se haya creado un HASH.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En las tablas <code>InnoDB</code> habituales utilizaremos
+            un índice B-Tree, incluso para búsquedas mediante igualdad.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="fulltext">
+          <h2>7. Índices FULLTEXT</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Los índices <code>FULLTEXT</code> se utilizan
+            para buscar palabras dentro de textos extensos.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Se pueden crear sobre columnas:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              <code>CHAR</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>VARCHAR</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>TEXT</code>.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--example">
+            Creación del índice:
+          </p>
+
+          <pre class="code-block"><code>CREATE FULLTEXT INDEX idx_posts_contenido
+ON posts(contenido);</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Búsqueda en modo booleano:
+          </p>
+
+          <pre class="code-block"><code>SELECT *
+FROM posts
+WHERE MATCH(contenido)
+      AGAINST('+receta +pasta' IN BOOLEAN MODE);</code></pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este ejemplo:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              <code>MATCH(contenido)</code> indica la columna
+              en la que se busca.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>AGAINST(...)</code> contiene las palabras buscadas.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>IN BOOLEAN MODE</code> permite utilizar
+              operadores especiales.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              El signo <code>+</code> indica que la palabra debe aparecer.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--example">
+            La búsqueda siguiente exige que aparezcan las dos palabras:
+          </p>
+
+          <pre class="diagram-block">+receta +pasta</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            En InnoDB, las columnas indicadas en <code>MATCH()</code>
+            deben coincidir con las de un índice <code>FULLTEXT</code>.
+            En este ejemplo, el índice y la búsqueda utilizan
+            únicamente <code>contenido</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            La búsqueda también depende de las palabras excluidas
+            y de las reglas de tokenización, como la longitud
+            mínima de las palabras.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <code>FULLTEXT</code> está diseñado para buscar palabras
+            dentro de textos; no sustituye a <code>LIKE</code>
+            en absolutamente todos los casos.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="elegir">
+          <h2>8. Elección básica del índice</h2>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Necesidad</th>
+                  <th scope="col">Índice habitual</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Igualdad con <code>=</code></td>
+                  <td>B-Tree en <code>InnoDB</code></td>
+                </tr>
+                <tr>
+                  <td>Comparaciones y rangos</td>
+                  <td>B-Tree</td>
+                </tr>
+                <tr>
+                  <td><code>BETWEEN</code> o <code>IN</code></td>
+                  <td>B-Tree</td>
+                </tr>
+                <tr>
+                  <td>Determinadas ordenaciones</td>
+                  <td>B-Tree</td>
+                </tr>
+                <tr>
+                  <td>Búsqueda dentro de textos</td>
+                  <td><code>FULLTEXT</code></td>
+                </tr>
+                <tr>
+                  <td>Igualdad exacta en tablas compatibles</td>
+                  <td>Puede utilizarse <code>HASH</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            No elegimos un índice únicamente por el operador de la consulta.
+            También debemos considerar:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              El motor de almacenamiento.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Las columnas utilizadas.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              El orden de las columnas.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              La cantidad y distribución de los datos.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Las consultas que realmente ejecutará la aplicación.
+            </li>
+          </ul>
+        </section>
+
+        <section class="lesson-section" id="gestionar">
+          <h2>9. Consultar y eliminar índices</h2>
+
+          <p class="lesson-note lesson-note--example">
+            Mostrar los índices de una tabla:
+          </p>
+
+          <pre class="code-block"><code>SHOW INDEX FROM usuarios;</code></pre>
+
+          <p class="lesson-note lesson-note--example">
+            Eliminar un índice:
+          </p>
+
+          <pre class="code-block"><code>DROP INDEX idx_usuarios_email
+ON usuarios;</code></pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Eliminar un índice puede empeorar las consultas que
+            dependían de él. Debemos comprobar su uso antes de borrarlo.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="explain">
+          <h2>10. Comprobar si un índice se utiliza</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            No debemos considerar optimizada una consulta simplemente
+            porque hayamos creado un índice.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Podemos consultar el plan de ejecución con:
+          </p>
+
+          <pre class="code-block"><code>EXPLAIN
+SELECT *
+FROM usuarios
+WHERE email = 'ana@example.com';</code></pre>
+
+          <p class="lesson-note lesson-note--key">
+            <code>EXPLAIN</code> permite comprobar, entre otras cosas:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Si MySQL utiliza un índice.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Qué índice ha elegido.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Cómo piensa acceder a los datos.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Una estimación de las filas que tendrá que revisar.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Crear el índice es una posibilidad de optimización;
+            comprobar el plan con <code>EXPLAIN</code> permite
+            saber qué ha decidido MySQL.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            El plan describe la estrategia prevista y sus estimaciones.
+            Por sí solo no demuestra cuánto tiempo tarda la consulta
+            ni cuánto ha mejorado.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="normalizacion">
+          <h2>11. Normalización de bases de datos</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            La normalización es un proceso para organizar los datos
+            de una base de datos relacional.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Sus objetivos principales son:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Reducir información repetida.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Mantener relaciones lógicas entre los datos.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Mejorar la consistencia.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Evitar determinados problemas al insertar,
+              modificar o eliminar registros.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--warning">
+            La normalización no garantiza que todas las consultas sean
+            más rápidas. Una estructura normalizada puede necesitar
+            más tablas y más <code>JOIN</code>.
+          </p>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            La normalización busca principalmente mejorar
+            la organización y la integridad de los datos,
+            no sustituir la optimización de consultas.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="anomalias">
+          <h2>12. Anomalías en los datos</h2>
+
+          <h3>Anomalía de inserción</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aparece cuando no podemos guardar un dato sin repetir
+            o añadir otra información innecesaria.
+          </p>
+
+          <h3>Anomalía de actualización</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aparece cuando el mismo dato está repetido y debemos
+            modificarlo en varios registros.
+          </p>
+
+          <p class="lesson-note lesson-note--example">
+            Si el nombre de una ciudad aparece en cien filas,
+            tendríamos que corregirlo cien veces.
+          </p>
+
+          <h3>Anomalía de eliminación</h3>
+
+          <p class="lesson-note lesson-note--explanation">
+            Aparece cuando al eliminar un registro perdemos
+            también información que queríamos conservar.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="primera-forma">
+          <h2>13. Primera Forma Normal — 1FN</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una tabla cumple la primera forma normal cuando
+            cada celda contiene un único valor y no existen
+            grupos repetitivos dentro de una misma columna.
+          </p>
+
+          <h3>Tabla que incumple 1FN</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">AlumnoID</th>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">Cursos</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>Ana Pérez</td>
+                  <td>Matemáticas, Física, Química</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--warning">
+            La columna <code>Cursos</code> contiene varios valores
+            en una sola celda.
+          </p>
+
+          <h3>Tabla que cumple 1FN</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">AlumnoID</th>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">Curso</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>Ana Pérez</td>
+                  <td>Matemáticas</td>
+                </tr>
+                <tr>
+                  <td>1</td>
+                  <td>Ana Pérez</td>
+                  <td>Física</td>
+                </tr>
+                <tr>
+                  <td>1</td>
+                  <td>Ana Pérez</td>
+                  <td>Química</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            Ahora cada celda contiene un único valor.
+          </p>
+
+          <p class="lesson-note lesson-note--key">
+            Una posible clave sería:
+          </p>
+
+          <pre class="diagram-block">(AlumnoID, Curso)</pre>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            Cumplir 1FN no significa que la tabla esté completamente
+            normalizada. Todavía puede contener información repetida
+            que se corregirá en formas normales posteriores.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="segunda-forma">
+          <h2>14. Segunda Forma Normal — 2FN</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una tabla cumple 2FN cuando:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Ya cumple 1FN.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Sus atributos no clave dependen de cada clave candidata
+              completa, no de una parte de ella.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una clave candidata es un conjunto mínimo de columnas
+            que identifica una fila; una de ellas se elige como
+            clave primaria. Aquí llamamos no clave a los atributos
+            que no forman parte de ninguna clave candidata.
+          </p>
+
+          <p class="lesson-note lesson-note--explanation">
+            Las dependencias parciales aparecen cuando existe
+            alguna clave candidata compuesta, aunque no sea
+            la elegida como primaria.
+          </p>
+
+          <h3>Tabla original</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">PedidoID</th>
+                  <th scope="col">ProductoID</th>
+                  <th scope="col">NombreProducto</th>
+                  <th scope="col">Cantidad</th>
+                  <th scope="col">Cliente</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1001</td>
+                  <td>501</td>
+                  <td>Laptop</td>
+                  <td>2</td>
+                  <td>Juan Pérez</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--explanation">
+            En este ejemplo, cada pedido tiene un cliente y cada producto
+            aparece una sola vez por pedido. La clave compuesta sería:
+          </p>
+
+          <pre class="diagram-block">(PedidoID, ProductoID)</pre>
+
+          <p class="lesson-note lesson-note--warning">
+            Sin embargo, existen dependencias parciales:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              <code>Cliente</code> depende solamente
+              de <code>PedidoID</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>NombreProducto</code> depende solamente
+              de <code>ProductoID</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>Cantidad</code> depende de la combinación
+              <code>(PedidoID, ProductoID)</code>.
+            </li>
+          </ul>
+
+          <h3>Separación correcta</h3>
+
+          <h4>Pedidos</h4>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">PedidoID</th>
+                  <th scope="col">Cliente</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1001</td>
+                  <td>Juan Pérez</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>Productos</h4>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">ProductoID</th>
+                  <th scope="col">NombreProducto</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>501</td>
+                  <td>Laptop</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>DetallePedido</h4>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">PedidoID</th>
+                  <th scope="col">ProductoID</th>
+                  <th scope="col">Cantidad</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1001</td>
+                  <td>501</td>
+                  <td>2</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En 2FN eliminamos dependencias respecto
+            a una parte de una clave compuesta.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="tercera-forma">
+          <h2>15. Tercera Forma Normal — 3FN</h2>
+
+          <p class="lesson-note lesson-note--explanation">
+            Una tabla cumple 3FN cuando:
+          </p>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              Ya cumple 2FN.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Los atributos no clave dependen directamente de la clave.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              No existen dependencias transitivas entre atributos no clave.
+            </li>
+          </ul>
+
+          <h3>Tabla original</h3>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">EmpleadoID</th>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">Departamento</th>
+                  <th scope="col">CiudadSede</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>101</td>
+                  <td>Carlos R.</td>
+                  <td>Ventas</td>
+                  <td>Guadalajara</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--key">
+            La relación sería:
+          </p>
+
+          <pre class="diagram-block">EmpleadoID → Departamento → CiudadSede</pre>
+
+          <p class="lesson-note lesson-note--explanation">
+            <code>CiudadSede</code> no depende directamente
+            del empleado, sino del departamento.
+          </p>
+
+          <h3>Separación correcta</h3>
+
+          <h4>Empleados</h4>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">EmpleadoID</th>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">DepartamentoID</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>101</td>
+                  <td>Carlos R.</td>
+                  <td>1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>Departamentos</h4>
+
+          <div class="lesson-table">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">DepartamentoID</th>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">CiudadSede</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>Ventas</td>
+                  <td>Guadalajara</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            En este ejemplo, separar la sede del departamento
+            evita repetirla en cada empleado y elimina
+            la dependencia transitiva que incumple 3FN.
+          </p>
+
+          <p class="lesson-note lesson-note--warning">
+            Esta separación es correcta si cada departamento tiene
+            una única sede. La normalización siempre depende
+            de las reglas reales del negocio.
+          </p>
+        </section>
+
+        <section class="lesson-section" id="resumen">
+          <h2>16. Resumen final</h2>
+
+          <h3>Índices</h3>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              B-Tree es el índice normal en <code>InnoDB</code>.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Sirve para igualdad, comparaciones y rangos.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              En los índices compuestos importa el orden de las columnas.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>HASH</code> solo está disponible
+              en determinados motores.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>FULLTEXT</code> permite buscar palabras
+              dentro de textos.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              Los índices aceleran determinadas lecturas,
+              pero encarecen las escrituras.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              <code>EXPLAIN</code> permite comprobar
+              si MySQL utiliza realmente un índice.
+            </li>
+          </ul>
+
+          <h3>Normalización</h3>
+
+          <ul>
+            <li class="lesson-note lesson-note--key">
+              1FN: valores atómicos y sin listas dentro de una celda.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              2FN: cada atributo no clave depende
+              de cada clave candidata completa.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              3FN: no existen dependencias transitivas
+              entre atributos no clave.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              La normalización reduce redundancia y anomalías.
+            </li>
+            <li class="lesson-note lesson-note--key">
+              No garantiza por sí sola consultas más rápidas.
+            </li>
+          </ul>
+
+          <p class="lesson-note lesson-note--important lesson-note--key">
+            <strong>
+              Índices y normalización resuelven problemas diferentes:
+              los índices ayudan a acceder a los datos
+              y la normalización ayuda a organizarlos correctamente.
+            </strong>
+          </p>
+        </section>
+
+        <footer class="lesson-footer">
+          Cuaderno Digital · SQL · Optimización y normalización
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
