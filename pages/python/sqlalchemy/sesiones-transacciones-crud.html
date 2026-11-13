@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Ciclo de vida de la sesión, transacciones, consultas y validaciones." />
+    <title>Sesiones, transacciones y CRUD | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">← Volver a SQLAlchemy</a>
+        <nav class="lesson-sidebar__nav" aria-label="Índice de Sesiones, transacciones y CRUD">
+          <h2>Índice</h2>
+          <a href="#que-es-una-sesion">1. Qué es una sesión</a>
+          <a href="#fabrica-de-sesiones">2. Fábrica de sesiones</a>
+          <a href="#estados-de-un-objeto-orm">3. Estados de un objeto ORM</a>
+          <a href="#add-flush-y-commit">4. <code>add()</code>, <code>flush()</code> y <code>commit()</code></a>
+          <a href="#rollback">5. <code>rollback()</code></a>
+          <a href="#transaccion-automatica">6. Transacción automática</a>
+          <a href="#crud">7. CRUD</a>
+          <a href="#crear-registros">8. Crear registros</a>
+          <a href="#leer-registros">9. Leer registros</a>
+          <a href="#agregaciones">10. Agregaciones</a>
+          <a href="#actualizar-registros">11. Actualizar registros</a>
+          <a href="#eliminar-registros">12. Eliminar registros</a>
+          <a href="#validaciones">13. Validaciones</a>
+          <a href="#sesiones-con-duracion-limitada">14. Sesiones con duración limitada</a>
+          <a href="#errores-frecuentes">15. Errores frecuentes</a>
+          <a href="#resumen">16. Resumen</a>
+        </nav>
+      </aside>
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Sesiones, transacciones y CRUD</h1>
+          <p>Ciclo de vida de la sesión, transacciones, consultas y validaciones.</p>
+        </header>
+<section class="lesson-section" id="que-es-una-sesion">
+<h2>1. Qué es una sesión</h2>
+
+<p class="lesson-note lesson-note--explanation">Los fragmentos continúan la configuración de las lecciones anteriores: se reutilizan <code>Base</code>, <code>engine</code>, <code>SessionLocal</code> y los modelos según corresponda.</p>
+
+<p class="lesson-note lesson-note--explanation">La <code>Session</code> es el espacio de trabajo utilizado por SQLAlchemy ORM para consultar objetos, registrar cambios y coordinar una transacción.</p>
+
+<p class="lesson-note lesson-note--explanation">La sesión mantiene temporalmente los objetos con los que trabaja y solicita una conexión al <code>Engine</code> cuando necesita comunicarse con la base de datos.</p>
+
+<p class="lesson-note lesson-note--important lesson-note--key">Una sesión reúne operaciones relacionadas que deben confirmarse o deshacerse juntas.</p>
+
+</section>
+
+<section class="lesson-section" id="fabrica-de-sesiones">
+<h2>2. Fábrica de sesiones</h2>
+
+<p class="lesson-note lesson-note--example">Configuración habitual:</p>
+
+<pre class="code-block"><code class="language-python">from sqlalchemy.orm import sessionmaker
+
+SessionLocal = sessionmaker(
+    bind=engine,
+    autoflush=False,
+)</code></pre>
+
+<p class="lesson-note lesson-note--explanation"><code>SessionLocal</code> es una fábrica. Cada llamada crea una sesión independiente:</p>
+
+<pre class="code-block"><code class="language-python">session = SessionLocal()</code></pre>
+
+<p class="lesson-note lesson-note--warning">La sesión debe cerrarse al terminar:</p>
+
+<pre class="code-block"><code class="language-python">session.close()</code></pre>
+
+<p class="lesson-note lesson-note--example">Es preferible garantizar el cierre mediante <code>with</code>:</p>
+
+<pre class="code-block"><code class="language-python">with SessionLocal() as session:
+    usuarios = session.scalars(select(Usuario)).all()</code></pre>
+
+<p class="lesson-note lesson-note--explanation"><code>with SessionLocal()</code> garantiza el cierre, pero no hace commit automáticamente. Para confirmar al salir usamos <code>SessionLocal.begin()</code> o un <code>commit()</code> explícito.</p>
+
+</section>
+
+<section class="lesson-section" id="estados-de-un-objeto-orm">
+<h2>3. Estados de un objeto ORM</h2>
+
+<div class="lesson-table"><table>
+<thead><tr><th scope="col">Estado</th><th scope="col">Significado</th></tr></thead>
+<tbody>
+<tr><td>Transitorio</td><td>Existe en Python, pero no pertenece a una sesión</td></tr>
+<tr><td>Pendiente</td><td>Se añadió a la sesión, pero puede no haberse insertado</td></tr>
+<tr><td>Persistente</td><td>Representa una fila asociada a la sesión</td></tr>
+<tr><td>Eliminado</td><td>El DELETE se ejecutó durante un flush; la transacción aún no ha terminado</td></tr>
+<tr><td>Separado</td><td>Tiene identidad de base de datos, pero no está asociado a ninguna sesión</td></tr>
+</tbody></table></div>
+
+<p class="lesson-note lesson-note--example">Ejemplo:</p>
+
+<pre class="code-block"><code class="language-python">usuario = Usuario(nombre=&quot;Ana&quot;, edad=30)  # Transitorio
+session.add(usuario)                       # Pendiente
+session.flush()                            # Persistente</code></pre>
+
+</section>
+
+<section class="lesson-section" id="add-flush-y-commit">
+<h2>4. <code>add()</code>, <code>flush()</code> y <code>commit()</code></h2>
+
+<h3><code>add()</code></h3>
+
+<p class="lesson-note lesson-note--explanation">Añade un objeto a la unidad de trabajo de la sesión.</p>
+
+<pre class="code-block"><code class="language-python">session.add(usuario)</code></pre>
+
+<p class="lesson-note lesson-note--warning"><code>add()</code> no significa que el <code>INSERT</code> ya se haya ejecutado.</p>
+
+<h3><code>flush()</code></h3>
+
+<p class="lesson-note lesson-note--explanation">Sincroniza los cambios pendientes con la base de datos dentro de la transacción actual.</p>
+
+<pre class="code-block"><code class="language-python">session.add(usuario)
+session.flush()
+print(usuario.id)</code></pre>
+
+<p class="lesson-note lesson-note--explanation">Después del <code>flush</code> pueden estar disponibles valores generados por la base de datos, como la clave primaria.</p>
+
+<p class="lesson-note lesson-note--warning">El <code>flush</code> no confirma la transacción. Todavía puede ejecutarse <code>rollback()</code>.</p>
+
+<h3><code>commit()</code></h3>
+
+<p class="lesson-note lesson-note--explanation">Confirma la transacción y hace permanentes sus cambios.</p>
+
+<pre class="code-block"><code class="language-python">session.commit()</code></pre>
+
+<p class="lesson-note lesson-note--important lesson-note--key"><code>commit()</code> ejecuta primero un <code>flush</code> si existen cambios pendientes.</p>
+
+<p class="lesson-note lesson-note--warning"><code>autoflush=False</code> no evita el <code>flush</code> obligatorio realizado por <code>commit()</code>.</p>
+
+<p class="lesson-note lesson-note--explanation">Con <code>autoflush=False</code>, una consulta puede no reflejar cambios pendientes todavía no enviados. Si necesita verlos, ejecuta <code>flush()</code> antes de consultar.</p>
+
+</section>
+
+<section class="lesson-section" id="rollback">
+<h2>5. <code>rollback()</code></h2>
+
+<p class="lesson-note lesson-note--explanation"><code>rollback()</code> deshace la transacción actual y permite recuperar una sesión después de determinados errores.</p>
+
+<pre class="code-block"><code class="language-python">session.rollback()</code></pre>
+
+<p class="lesson-note lesson-note--example">Patrón básico:</p>
+
+<pre class="code-block"><code class="language-python">from sqlalchemy.exc import SQLAlchemyError
+
+with SessionLocal() as session:
+    try:
+        usuario = Usuario(nombre=&quot;Ana&quot;, edad=30)
+        session.add(usuario)
+        session.commit()
+    except SQLAlchemyError as error:
+        session.rollback()
+        print(f&quot;No se pudo guardar: {error}&quot;)</code></pre>
+
+<p class="lesson-note lesson-note--warning">Capturar una excepción sin ejecutar <code>rollback()</code> puede dejar la sesión inutilizable.</p>
+
+</section>
+
+<section class="lesson-section" id="transaccion-automatica">
+<h2>6. Transacción automática</h2>
+
+<p class="lesson-note lesson-note--example">El gestor de contexto puede confirmar, revertir y cerrar automáticamente:</p>
+
+<pre class="code-block"><code class="language-python">with SessionLocal.begin() as session:
+    session.add(Usuario(nombre=&quot;Ana&quot;, edad=30))
+    session.add(Usuario(nombre=&quot;Carlos&quot;, edad=25))</code></pre>
+
+<p class="lesson-note lesson-note--explanation">Si el bloque termina correctamente, se ejecuta <code>commit()</code>. Si aparece una excepción, se ejecuta <code>rollback()</code>.</p>
+
+</section>
+
+<section class="lesson-section" id="crud">
+<h2>7. CRUD</h2>
+
+<div class="lesson-table"><table>
+<thead><tr><th scope="col">Operación</th><th scope="col">SQL</th><th scope="col">ORM</th></tr></thead>
+<tbody>
+<tr><td>Create</td><td><code>INSERT</code></td><td>Crear y añadir objetos</td></tr>
+<tr><td>Read</td><td><code>SELECT</code></td><td>Ejecutar consultas</td></tr>
+<tr><td>Update</td><td><code>UPDATE</code></td><td>Modificar objetos persistentes</td></tr>
+<tr><td>Delete</td><td><code>DELETE</code></td><td>Marcar objetos para eliminación</td></tr>
+</tbody></table></div>
+
+</section>
+
+<section class="lesson-section" id="crear-registros">
+<h2>8. Crear registros</h2>
+
+<h3>Un registro</h3>
+
+<pre class="code-block"><code class="language-python">with SessionLocal.begin() as session:
+    usuario = Usuario(nombre=&quot;Raquel&quot;, edad=23)
+    session.add(usuario)</code></pre>
+
+<h3>Varios registros</h3>
+
+<pre class="code-block"><code class="language-python">usuarios = [
+    Usuario(nombre=&quot;Bob&quot;, edad=30),
+    Usuario(nombre=&quot;María&quot;, edad=20),
+    Usuario(nombre=&quot;Carlos&quot;, edad=35),
+]
+
+with SessionLocal.begin() as session:
+    session.add_all(usuarios)</code></pre>
+
+<p class="lesson-note lesson-note--warning">Los valores deben respetar los tipos del modelo. Una edad debe enviarse como entero.</p>
+
+</section>
+
+<section class="lesson-section" id="leer-registros">
+<h2>9. Leer registros</h2>
+
+<h3>Todos los registros</h3>
+
+<p class="lesson-note lesson-note--example">Sintaxis recomendada en SQLAlchemy 2.x:</p>
+
+<pre class="code-block"><code class="language-python">from sqlalchemy import select
+
+with SessionLocal() as session:
+    sentencia = select(Usuario)
+    usuarios = session.scalars(sentencia).all()</code></pre>
+
+<p class="lesson-note lesson-note--example">Sintaxis tradicional:</p>
+
+<pre class="code-block"><code class="language-python">usuarios = session.query(Usuario).all()</code></pre>
+
+<p class="lesson-note lesson-note--explanation"><code>session.query()</code> todavía puede funcionar, pero <code>select()</code> es la forma principal en SQLAlchemy 2.x.</p>
+
+<h3>Filtrar</h3>
+
+<pre class="code-block"><code class="language-python">sentencia = select(Usuario).where(Usuario.edad &gt; 25)
+usuarios = session.scalars(sentencia).all()</code></pre>
+
+<p class="lesson-note lesson-note--example">SQL aproximado:</p>
+
+<pre class="code-block"><code class="language-sql">SELECT id, nombre, edad
+FROM usuarios
+WHERE edad &gt; 25;</code></pre>
+
+<h3>Varios criterios</h3>
+
+<pre class="code-block"><code class="language-python">sentencia = select(Usuario).where(
+    Usuario.edad &gt;= 20,
+    Usuario.edad &lt;= 30,
+)</code></pre>
+
+<p class="lesson-note lesson-note--explanation">Los criterios separados dentro de <code>where()</code> se combinan mediante <code>AND</code>.</p>
+
+<h3>Primer resultado</h3>
+
+<p class="lesson-note lesson-note--explanation"><code>first()</code> obtiene el primer resultado, pero no añade un límite al SQL. Usamos <code>limit(1)</code> para solicitar como máximo una fila. Sin <code>order_by()</code>, no se garantiza cuál será la primera.</p>
+
+<pre class="code-block"><code class="language-python">sentencia = select(Usuario).where(Usuario.nombre == &quot;Ana&quot;).limit(1)
+usuario = session.scalars(sentencia).first()</code></pre>
+
+<h3>Buscar por clave primaria</h3>
+
+<pre class="code-block"><code class="language-python">usuario = session.get(Usuario, 1)</code></pre>
+
+<p class="lesson-note lesson-note--important lesson-note--key">Para buscar por clave primaria, <code>session.get()</code> expresa mejor la intención.</p>
+
+</section>
+
+<section class="lesson-section" id="agregaciones">
+<h2>10. Agregaciones</h2>
+
+<p class="lesson-note lesson-note--example">Contar usuarios:</p>
+
+<pre class="code-block"><code class="language-python">from sqlalchemy import func, select
+
+sentencia = select(func.count(Usuario.id))
+total = session.scalar(sentencia)</code></pre>
+
+<p class="lesson-note lesson-note--example">Calcular la edad media:</p>
+
+<pre class="code-block"><code class="language-python">sentencia = select(func.avg(Usuario.edad))
+edad_media = session.scalar(sentencia)</code></pre>
+
+<p class="lesson-note lesson-note--important lesson-note--key">Si MySQL puede realizar la agregación, normalmente es preferible no cargar todas las filas en Python.</p>
+
+</section>
+
+<section class="lesson-section" id="actualizar-registros">
+<h2>11. Actualizar registros</h2>
+
+<p class="lesson-note lesson-note--explanation">Los objetos recuperados por la sesión son vigilados por SQLAlchemy. Al modificar un atributo y confirmar la transacción, el ORM genera el <code>UPDATE</code>.</p>
+
+<pre class="code-block"><code class="language-python">with SessionLocal.begin() as session:
+    usuario = session.get(Usuario, 1)
+
+    if usuario is not None:
+        usuario.edad = 31</code></pre>
+
+<p class="lesson-note lesson-note--example">SQL aproximado:</p>
+
+<pre class="code-block"><code class="language-sql">UPDATE usuarios
+SET edad = 31
+WHERE id = 1;</code></pre>
+
+<p class="lesson-note lesson-note--warning">Un parámetro opcional no debe comprobarse únicamente por su valor de verdad:</p>
+
+<pre class="code-block"><code class="language-python"># Evitar si 0 es un valor permitido
+if nueva_edad:
+    usuario.edad = nueva_edad
+
+# Correcto
+if nueva_edad is not None:
+    usuario.edad = nueva_edad</code></pre>
+
+</section>
+
+<section class="lesson-section" id="eliminar-registros">
+<h2>12. Eliminar registros</h2>
+
+<pre class="code-block"><code class="language-python">with SessionLocal.begin() as session:
+    usuario = session.get(Usuario, 1)
+
+    if usuario is not None:
+        session.delete(usuario)</code></pre>
+
+<p class="lesson-note lesson-note--explanation"><code>delete()</code> marca el objeto. El <code>DELETE</code> se ejecuta durante el siguiente <code>flush</code>.</p>
+
+</section>
+
+<section class="lesson-section" id="validaciones">
+<h2>13. Validaciones</h2>
+
+<p class="lesson-note lesson-note--explanation">Existen dos niveles diferentes de validación.</p>
+
+<h3>Validación en Python</h3>
+
+<pre class="code-block"><code class="language-python">def validar_usuario(nombre: str, edad: int) -&gt; None:
+    if not nombre.strip():
+        raise ValueError(&quot;El nombre es obligatorio&quot;)
+
+    if edad &lt; 0:
+        raise ValueError(&quot;La edad no puede ser negativa&quot;)</code></pre>
+
+<h3>Restricciones en la base de datos</h3>
+
+<pre class="code-block"><code class="language-python">nombre: Mapped[str] = mapped_column(
+    String(100),
+    nullable=False,
+)
+edad: Mapped[int] = mapped_column(nullable=False)</code></pre>
+
+<p class="lesson-note lesson-note--important lesson-note--key">La validación de Python mejora la experiencia de uso, pero no sustituye las restricciones de MySQL.</p>
+
+<p class="lesson-note lesson-note--explanation"><code>nullable=False</code> impide <code>NULL</code>, pero por sí solo no impide un nombre vacío ni una edad negativa. Esas reglas requieren las validaciones o restricciones adicionales correspondientes.</p>
+
+</section>
+
+<section class="lesson-section" id="sesiones-con-duracion-limitada">
+<h2>14. Sesiones con duración limitada</h2>
+
+<p class="lesson-note lesson-note--warning">Debe evitarse una sesión global abierta al importar un módulo:</p>
+
+<pre class="code-block"><code class="language-python"># Evitar como diseño general
+session = SessionLocal()</code></pre>
+
+<p class="lesson-note lesson-note--example">Es preferible abrirla donde comienza la operación:</p>
+
+<pre class="code-block"><code class="language-python">def crear_usuario(nombre: str, edad: int) -&gt; None:
+    with SessionLocal.begin() as session:
+        session.add(
+            Usuario(nombre=nombre, edad=edad)
+        )</code></pre>
+
+<p class="lesson-note lesson-note--explanation">Cada operación o petición debe tener un límite claro para su sesión.</p>
+
+<p class="lesson-note lesson-note--example">Ciclo habitual de una operación:</p>
+
+<ul>
+<li class="lesson-note lesson-note--example">Abrir una sesión al comenzar la operación o petición.</li>
+<li class="lesson-note lesson-note--example">Realizar con ella las consultas y cambios que formen parte de esa operación.</li>
+<li class="lesson-note lesson-note--example">Ejecutar <code>commit()</code> si todo termina correctamente o <code>rollback()</code> si se produce un error.</li>
+<li class="lesson-note lesson-note--example">Cerrar la sesión al finalizar.</li>
+</ul>
+
+<p class="lesson-note lesson-note--important lesson-note--key">Regla práctica: una sesión por operación o petición completa; no una sesión distinta para cada objeto ni una sesión global durante toda la vida de la aplicación.</p>
+
+<p class="lesson-note lesson-note--explanation">Abrir y cerrar sesiones es una operación ligera. La sesión solicita una conexión al <code>Engine</code> cuando la necesita y, al cerrarse, normalmente la devuelve al conjunto de conexiones para que pueda reutilizarse.</p>
+
+<p class="lesson-note lesson-note--warning">Cerrar una sesión no confirma sus cambios. <code>close()</code> libera recursos y revierte una transacción pendiente; si queremos conservar modificaciones debemos confirmarlas antes, explícitamente o mediante <code>SessionLocal.begin()</code>.</p>
+
+</section>
+
+<section class="lesson-section" id="errores-frecuentes">
+<h2>15. Errores frecuentes</h2>
+
+<p class="lesson-note lesson-note--warning">No cerrar la sesión.</p>
+
+<p class="lesson-note lesson-note--warning">Capturar <code>Exception</code> y ocultar el error real.</p>
+
+<p class="lesson-note lesson-note--warning">Olvidar <code>rollback()</code> después de un error.</p>
+
+<p class="lesson-note lesson-note--warning">Suponer que una columna rechaza <code>NULL</code> sin revisar su nulabilidad: puede declararse con <code>nullable=False</code> o inferirse de una anotación <code>Mapped</code> no opcional.</p>
+
+<p class="lesson-note lesson-note--warning">Pasar números como cadenas.</p>
+
+<p class="lesson-note lesson-note--warning">Ejecutar repetidamente un script que siempre inserta los mismos datos.</p>
+
+<p class="lesson-note lesson-note--warning">Utilizar identificadores fijos suponiendo que existen.</p>
+
+<p class="lesson-note lesson-note--warning">Confundir <code>add()</code> con un <code>INSERT</code> ya confirmado.</p>
+
+</section>
+
+<section class="lesson-section" id="resumen">
+<h2>16. Resumen</h2>
+
+<p class="lesson-note lesson-note--key">La sesión coordina los objetos y la transacción.</p>
+
+<p class="lesson-note lesson-note--key"><code>add()</code> registra cambios pendientes.</p>
+
+<p class="lesson-note lesson-note--key"><code>flush()</code> envía cambios sin confirmar la transacción.</p>
+
+<p class="lesson-note lesson-note--key"><code>commit()</code> confirma los cambios.</p>
+
+<p class="lesson-note lesson-note--key"><code>rollback()</code> revierte la transacción actual.</p>
+
+<p class="lesson-note lesson-note--key"><code>close()</code> libera los recursos de la sesión.</p>
+
+<p class="lesson-note lesson-note--important lesson-note--key">Un CRUD correcto también necesita validaciones, transacciones y un ciclo de vida claro para la sesión.</p>
+
+</section>
+
+<nav aria-label="Continuar el bloque SQLAlchemy"><ul class="lesson-index">
+<li class="lesson-index__item"><a class="lesson-index__link" href="./fundamentos-orm.html"><strong>← Lección anterior</strong><span>Fundamentos de ORM y SQLAlchemy</span></a></li>
+<li class="lesson-index__item"><a class="lesson-index__link" href="./relaciones-buenas-practicas.html"><strong>Siguiente lección →</strong><span>Relaciones y buenas prácticas</span></a></li>
+</ul></nav>
+        <footer class="lesson-footer">Cuaderno Digital · Python · SQLAlchemy</footer>
+      </main>
+    </div>
+  </body>
+</html>

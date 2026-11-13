@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Objetos, SQL, conexión, modelos y creación de tablas." />
+    <title>Fundamentos de ORM y SQLAlchemy | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">← Volver a SQLAlchemy</a>
+        <nav class="lesson-sidebar__nav" aria-label="Índice de Fundamentos de ORM y SQLAlchemy">
+          <h2>Índice</h2>
+          <a href="#que-es-un-orm">1. Qué es un ORM</a>
+          <a href="#que-aporta-un-orm">2. Qué aporta un ORM</a>
+          <a href="#que-no-hace-un-orm">3. Qué no hace un ORM</a>
+          <a href="#sqlalchemy">4. SQLAlchemy</a>
+          <a href="#variables-de-entorno">5. Variables de entorno</a>
+          <a href="#url-de-conexion-y-engine">6. URL de conexión y <code>Engine</code></a>
+          <a href="#clase-base-declarativa">7. Clase base declarativa</a>
+          <a href="#definicion-de-un-modelo">8. Definición de un modelo</a>
+          <a href="#tipos-de-datos">9. Tipos de datos</a>
+          <a href="#creacion-de-tablas">10. Creación de tablas</a>
+          <a href="#observar-el-sql-generado">11. Observar el SQL generado</a>
+          <a href="#resumen">12. Resumen</a>
+        </nav>
+      </aside>
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Fundamentos de ORM y SQLAlchemy</h1>
+          <p>Objetos, SQL, conexión, modelos y creación de tablas.</p>
+        </header>
+<section class="lesson-section" id="que-es-un-orm">
+<h2>1. Qué es un ORM</h2>
+
+<p class="lesson-note lesson-note--explanation">Un ORM (<em>Object-Relational Mapping</em>) es una herramienta que relaciona el modelo de objetos de un lenguaje de programación con una base de datos relacional.</p>
+
+<p class="lesson-note lesson-note--explanation">En Python trabajamos con clases, objetos y atributos. En MySQL trabajamos con tablas, filas y columnas. El ORM traduce las operaciones realizadas con objetos a instrucciones SQL.</p>
+
+<div class="lesson-table"><table>
+<thead><tr><th scope="col">Programación orientada a objetos</th><th scope="col">Base de datos relacional</th></tr></thead>
+<tbody>
+<tr><td>Clase</td><td>Tabla</td></tr>
+<tr><td>Objeto</td><td>Fila</td></tr>
+<tr><td>Atributo mapeado</td><td>Columna</td></tr>
+<tr><td>Referencia entre objetos</td><td>Relación apoyada normalmente en una clave foránea</td></tr>
+</tbody></table></div>
+
+<p class="lesson-note lesson-note--warning">Estas equivalencias son aproximaciones didácticas. Una clave foránea y una relación del ORM no son lo mismo:</p>
+
+<ul>
+<li class="lesson-note lesson-note--warning">La clave foránea es una restricción sobre una o varias columnas de la base de datos.</li>
+<li class="lesson-note lesson-note--warning">La relación ORM es una propiedad de Python que permite navegar entre objetos relacionados.</li>
+</ul>
+
+<p class="lesson-note lesson-note--important lesson-note--key">El ORM no sustituye SQL. Genera SQL y lo ejecuta mediante un controlador.</p>
+
+<pre class="diagram-block">Código Python
+    ↓
+SQLAlchemy ORM
+    ↓
+SQL generado
+    ↓
+PyMySQL
+    ↓
+MySQL</pre>
+
+</section>
+
+<section class="lesson-section" id="que-aporta-un-orm">
+<h2>2. Qué aporta un ORM</h2>
+
+<p class="lesson-note lesson-note--explanation">Un ORM permite:</p>
+
+<ul>
+<li class="lesson-note lesson-note--explanation">Definir tablas mediante clases.</li>
+<li class="lesson-note lesson-note--explanation">Crear registros mediante objetos.</li>
+<li class="lesson-note lesson-note--explanation">Consultar, actualizar y eliminar datos.</li>
+<li class="lesson-note lesson-note--explanation">Representar relaciones entre tablas.</li>
+<li class="lesson-note lesson-note--explanation">Gestionar transacciones mediante sesiones.</li>
+<li class="lesson-note lesson-note--explanation">Mantener el acceso a datos integrado con Python.</li>
+</ul>
+
+<p class="lesson-note lesson-note--example">Objeto creado en Python:</p>
+
+<pre class="code-block"><code class="language-python">usuario = Usuario(nombre=&quot;Ana&quot;, edad=30)</code></pre>
+
+<p class="lesson-note lesson-note--example">SQL aproximado cuando el objeto se guarde:</p>
+
+<pre class="code-block"><code class="language-sql">INSERT INTO usuarios (nombre, edad)
+VALUES ('Ana', 30);</code></pre>
+
+<p class="lesson-note lesson-note--warning">Crear el objeto no ejecuta todavía el <code>INSERT</code>. Primero debe añadirse a una sesión y sincronizarse con la base de datos.</p>
+
+</section>
+
+<section class="lesson-section" id="que-no-hace-un-orm">
+<h2>3. Qué no hace un ORM</h2>
+
+<p class="lesson-note lesson-note--explanation">Utilizar un ORM no elimina la necesidad de conocer:</p>
+
+<ul>
+<li class="lesson-note lesson-note--explanation">Tablas y tipos de datos.</li>
+<li class="lesson-note lesson-note--explanation">Claves primarias y foráneas.</li>
+<li class="lesson-note lesson-note--explanation">Relaciones.</li>
+<li class="lesson-note lesson-note--explanation">Restricciones.</li>
+<li class="lesson-note lesson-note--explanation">Índices.</li>
+<li class="lesson-note lesson-note--explanation">Transacciones.</li>
+<li class="lesson-note lesson-note--explanation">Normalización.</li>
+<li class="lesson-note lesson-note--explanation">Consultas SQL.</li>
+<li class="lesson-note lesson-note--explanation">Planes de ejecución y rendimiento.</li>
+</ul>
+
+<p class="lesson-note lesson-note--warning">Un ORM tampoco garantiza:</p>
+
+<ul>
+<li class="lesson-note lesson-note--warning">Que todas las consultas sean eficientes.</li>
+<li class="lesson-note lesson-note--warning">Que el diseño de la base de datos sea correcto.</li>
+<li class="lesson-note lesson-note--warning">Que nunca exista una inyección SQL.</li>
+<li class="lesson-note lesson-note--warning">Que no aparezcan consultas innecesarias.</li>
+<li class="lesson-note lesson-note--warning">Que cambiar de motor de base de datos sea automático.</li>
+</ul>
+
+<p class="lesson-note lesson-note--important lesson-note--key">Saber SQL permite comprender, comprobar y optimizar el trabajo realizado por el ORM.</p>
+
+</section>
+
+<section class="lesson-section" id="sqlalchemy">
+<h2>4. SQLAlchemy</h2>
+
+<p class="lesson-note lesson-note--explanation">SQLAlchemy es una biblioteca de Python para trabajar con bases de datos relacionales.</p>
+
+<p class="lesson-note lesson-note--key">Contiene dos niveles principales:</p>
+
+<div class="lesson-table"><table>
+<thead><tr><th scope="col">Componente</th><th scope="col">Función</th></tr></thead>
+<tbody>
+<tr><td>SQLAlchemy Core</td><td>Construye expresiones SQL mediante objetos de Python</td></tr>
+<tr><td>SQLAlchemy ORM</td><td>Mapea clases y gestiona objetos mediante sesiones</td></tr>
+</tbody></table></div>
+
+<p class="lesson-note lesson-note--key">Elementos utilizados junto con SQLAlchemy:</p>
+
+<div class="lesson-table"><table>
+<thead><tr><th scope="col">Elemento</th><th scope="col">Función</th></tr></thead>
+<tbody>
+<tr><td>MySQL</td><td>Motor de base de datos</td></tr>
+<tr><td>PyMySQL</td><td>Controlador que comunica Python con MySQL</td></tr>
+<tr><td><code>python-dotenv</code></td><td>Carga variables desde <code>.env</code></td></tr>
+<tr><td>ReportLab</td><td>Genera documentos PDF</td></tr>
+</tbody></table></div>
+
+<p class="lesson-note lesson-note--example">Instalación:</p>
+
+<pre class="code-block"><code class="language-bash">pip install sqlalchemy pymysql python-dotenv reportlab</code></pre>
+
+</section>
+
+<section class="lesson-section" id="variables-de-entorno">
+<h2>5. Variables de entorno</h2>
+
+<p class="lesson-note lesson-note--explanation">Las credenciales no deben escribirse directamente en el código ni publicarse en GitHub.</p>
+
+<p class="lesson-note lesson-note--example">Archivo <code>.env</code>:</p>
+
+<pre class="code-block"><code class="language-env">DB_USER=usuario_aplicacion
+DB_PASSWORD=contraseña_local
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=clase1</code></pre>
+
+<p class="lesson-note lesson-note--example">Carga de las variables:</p>
+
+<pre class="code-block"><code class="language-python">import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+password = os.getenv(&quot;DB_PASSWORD&quot;)
+
+if not password:
+    raise RuntimeError(&quot;No se ha definido DB_PASSWORD&quot;)</code></pre>
+
+<p class="lesson-note lesson-note--warning">Importar <code>load_dotenv</code> no carga el archivo. Debe ejecutarse <code>load_dotenv()</code>.</p>
+
+<p class="lesson-note lesson-note--warning">Archivos que deben excluirse de Git:</p>
+
+<pre class="code-block"><code class="language-gitignore">.env
+__pycache__/
+*.pyc</code></pre>
+
+<p class="lesson-note lesson-note--example">Puede crearse un <code>.env.example</code> sin contraseñas reales para documentar las variables necesarias.</p>
+
+</section>
+
+<section class="lesson-section" id="url-de-conexion-y-engine">
+<h2>6. URL de conexión y <code>Engine</code></h2>
+
+<p class="lesson-note lesson-note--explanation">El <code>Engine</code> administra la comunicación con la base de datos y el conjunto de conexiones disponibles.</p>
+
+<p class="lesson-note lesson-note--example">Configuración recomendada:</p>
+
+<pre class="code-block"><code class="language-python">import os
+from dotenv import load_dotenv
+from sqlalchemy import URL, create_engine
+
+load_dotenv()
+
+password = os.getenv(&quot;DB_PASSWORD&quot;)
+
+if not password:
+    raise RuntimeError(&quot;Falta la variable DB_PASSWORD&quot;)
+
+database_url = URL.create(
+    drivername=&quot;mysql+pymysql&quot;,
+    username=os.getenv(&quot;DB_USER&quot;, &quot;usuario_aplicacion&quot;),
+    password=password,
+    host=os.getenv(&quot;DB_HOST&quot;, &quot;localhost&quot;),
+    port=int(os.getenv(&quot;DB_PORT&quot;, &quot;3306&quot;)),
+    database=os.getenv(&quot;DB_NAME&quot;, &quot;clase1&quot;),
+)
+
+engine = create_engine(database_url, echo=True)</code></pre>
+
+<p class="lesson-note lesson-note--key"><code>mysql+pymysql</code> indica:</p>
+
+<ul>
+<li class="lesson-note lesson-note--key"><code>mysql</code>: dialecto de la base de datos.</li>
+<li class="lesson-note lesson-note--key"><code>pymysql</code>: controlador utilizado para conectarse.</li>
+</ul>
+
+<p class="lesson-note lesson-note--explanation"><code>URL.create()</code> evita problemas con caracteres especiales en la contraseña.</p>
+
+<p class="lesson-note lesson-note--explanation"><code>echo=True</code> muestra en la terminal el SQL generado. Es útil para estudiar y depurar.</p>
+
+<p class="lesson-note lesson-note--warning">En producción normalmente se utiliza <code>echo=False</code> porque el registro puede ser extenso y mostrar información sensible.</p>
+
+<p class="lesson-note lesson-note--warning"><code>create_engine()</code> no crea la base de datos indicada en la URL. La base de datos debe existir previamente.</p>
+
+</section>
+
+<section class="lesson-section" id="clase-base-declarativa">
+<h2>7. Clase base declarativa</h2>
+
+<p class="lesson-note lesson-note--explanation">Todos los modelos heredan de una clase base común. SQLAlchemy registra en ella las tablas y columnas declaradas.</p>
+
+<p class="lesson-note lesson-note--example">Estilo recomendado en SQLAlchemy 2.x:</p>
+
+<pre class="code-block"><code class="language-python">from sqlalchemy.orm import DeclarativeBase
+
+
+class Base(DeclarativeBase):
+    pass</code></pre>
+
+<p class="lesson-note lesson-note--example">Estilo tradicional:</p>
+
+<pre class="code-block"><code class="language-python">from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()</code></pre>
+
+<p class="lesson-note lesson-note--explanation">El estilo tradicional todavía puede funcionar, pero <code>DeclarativeBase</code> es la opción moderna y se integra mejor con el tipado.</p>
+
+<p class="lesson-note lesson-note--warning">Debe evitarse la importación antigua:</p>
+
+<pre class="code-block"><code class="language-python">from sqlalchemy.ext.declarative import declarative_base</code></pre>
+
+</section>
+
+<section class="lesson-section" id="definicion-de-un-modelo">
+<h2>8. Definición de un modelo</h2>
+
+<p class="lesson-note lesson-note--example">Modelo moderno:</p>
+
+<pre class="code-block"><code class="language-python">from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
+
+
+class Usuario(Base):
+    __tablename__ = &quot;usuarios&quot;
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+    edad: Mapped[int] = mapped_column(nullable=False)</code></pre>
+
+<div class="lesson-table"><table>
+<thead><tr><th scope="col">Elemento</th><th scope="col">Significado</th></tr></thead>
+<tbody>
+<tr><td><code>Usuario</code></td><td>Clase mapeada</td></tr>
+<tr><td><code>Base</code></td><td>Registro común de modelos</td></tr>
+<tr><td><code>__tablename__</code></td><td>Nombre real de la tabla</td></tr>
+<tr><td><code>Mapped[int]</code></td><td>Tipo esperado en Python</td></tr>
+<tr><td><code>mapped_column()</code></td><td>Configuración de la columna</td></tr>
+<tr><td><code>primary_key=True</code></td><td>Clave primaria</td></tr>
+<tr><td><code>nullable=False</code></td><td>Equivalente a <code>NOT NULL</code></td></tr>
+<tr><td><code>String(100)</code></td><td><code>VARCHAR(100)</code> en MySQL</td></tr>
+</tbody></table></div>
+
+<p class="lesson-note lesson-note--warning">MySQL necesita una longitud para los campos <code>VARCHAR</code>:</p>
+
+<pre class="code-block"><code class="language-python"># Evitar
+nombre = Column(String)
+
+# Correcto
+nombre = Column(String(100))</code></pre>
+
+<p class="lesson-note lesson-note--warning">Una clave primaria ya dispone de índice. Normalmente no necesita <code>index=True</code>.</p>
+
+</section>
+
+<section class="lesson-section" id="tipos-de-datos">
+<h2>9. Tipos de datos</h2>
+
+<div class="lesson-table"><table>
+<thead><tr><th scope="col">Python</th><th scope="col">SQLAlchemy</th><th scope="col">MySQL aproximado</th></tr></thead>
+<tbody>
+<tr><td><code>int</code></td><td><code>Integer</code></td><td><code>INT</code></td></tr>
+<tr><td><code>str</code></td><td><code>String(100)</code></td><td><code>VARCHAR(100)</code></td></tr>
+<tr><td><code>bool</code></td><td><code>Boolean</code></td><td><code>BOOLEAN / TINYINT(1)</code></td></tr>
+<tr><td><code>datetime</code></td><td><code>DateTime</code></td><td><code>DATETIME</code></td></tr>
+<tr><td><code>Decimal</code></td><td><code>Numeric(10, 2)</code></td><td><code>DECIMAL(10,2)</code></td></tr>
+</tbody></table></div>
+
+<p class="lesson-note lesson-note--explanation">Las anotaciones de tipos ayudan a describir el modelo, pero no sustituyen la validación de los datos de entrada en tiempo de ejecución.</p>
+
+<p class="lesson-note lesson-note--warning">Los valores enviados deben respetar el tipo del modelo:</p>
+
+<pre class="code-block"><code class="language-python"># Evitar
+Usuario(nombre=&quot;Bob&quot;, edad=&quot;30&quot;)
+
+# Correcto
+Usuario(nombre=&quot;Bob&quot;, edad=30)</code></pre>
+
+</section>
+
+<section class="lesson-section" id="creacion-de-tablas">
+<h2>10. Creación de tablas</h2>
+
+<p class="lesson-note lesson-note--example">Después de importar todos los modelos:</p>
+
+<pre class="code-block"><code class="language-python">Base.metadata.create_all(bind=engine)</code></pre>
+
+<p class="lesson-note lesson-note--explanation"><code>create_all()</code> comprueba qué tablas registradas no existen y ejecuta los <code>CREATE TABLE</code> necesarios.</p>
+
+<p class="lesson-note lesson-note--warning">Si se ejecuta antes de importar o definir los modelos, <code>Base.metadata</code> puede estar vacío y no habrá tablas que crear.</p>
+
+<p class="lesson-note lesson-note--warning"><code>create_all()</code> no modifica automáticamente tablas existentes. No sustituye a las migraciones.</p>
+
+<p class="lesson-note lesson-note--example">En proyectos reales suele utilizarse Alembic para:</p>
+
+<ul>
+<li class="lesson-note lesson-note--example">Añadir o eliminar columnas.</li>
+<li class="lesson-note lesson-note--example">Cambiar tipos.</li>
+<li class="lesson-note lesson-note--example">Crear restricciones.</li>
+<li class="lesson-note lesson-note--example">Mantener un historial de cambios.</li>
+</ul>
+
+</section>
+
+<section class="lesson-section" id="observar-el-sql-generado">
+<h2>11. Observar el SQL generado</h2>
+
+<p class="lesson-note lesson-note--explanation">Con <code>echo=True</code> pueden observarse consultas parecidas a estas:</p>
+
+<pre class="code-block"><code class="language-sql">INSERT INTO usuarios (nombre, edad)
+VALUES (%s, %s);</code></pre>
+
+<pre class="code-block"><code class="language-sql">SELECT usuarios.id, usuarios.nombre, usuarios.edad
+FROM usuarios
+WHERE usuarios.edad &gt; %s;</code></pre>
+
+<p class="lesson-note lesson-note--important lesson-note--key">Si una operación es lenta o inesperada, debe revisarse el SQL generado y su plan de ejecución.</p>
+
+</section>
+
+<section class="lesson-section" id="resumen">
+<h2>12. Resumen</h2>
+
+<p class="lesson-note lesson-note--key">El ORM relaciona objetos con datos almacenados en tablas.</p>
+
+<p class="lesson-note lesson-note--key">SQLAlchemy genera SQL, pero MySQL continúa almacenando y validando los datos.</p>
+
+<p class="lesson-note lesson-note--key"><code>Engine</code> administra la comunicación con la base de datos.</p>
+
+<p class="lesson-note lesson-note--key"><code>Base</code> registra los modelos.</p>
+
+<p class="lesson-note lesson-note--key">Un modelo define la correspondencia entre una clase y una tabla.</p>
+
+<p class="lesson-note lesson-note--key"><code>create_all()</code> crea tablas ausentes, pero no realiza migraciones.</p>
+
+<p class="lesson-note lesson-note--important lesson-note--key">Comprender SQL continúa siendo imprescindible para utilizar correctamente un ORM.</p>
+
+</section>
+
+<nav aria-label="Continuar el bloque SQLAlchemy"><ul class="lesson-index">
+<li class="lesson-index__item"><a class="lesson-index__link" href="./sesiones-transacciones-crud.html"><strong>Siguiente lección →</strong><span>Sesiones, transacciones y CRUD</span></a></li>
+</ul></nav>
+        <footer class="lesson-footer">Cuaderno Digital · Python · SQLAlchemy</footer>
+      </main>
+    </div>
+  </body>
+</html>

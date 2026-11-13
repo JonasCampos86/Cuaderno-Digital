@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Relaciones entre modelos, cascadas, dinero, responsabilidades y carga de datos." />
+    <title>Relaciones y buenas prácticas | Cuaderno Digital</title>
+    <meta name="author" content="@JonasCampos86" />
+    <meta name="theme-color" content="#7c3aed" />
+    <script type="module" src="/src/js/main.js"></script>
+  </head>
+  <body>
+    <div class="lesson-layout">
+      <aside class="lesson-sidebar">
+        <a class="lesson-sidebar__back" href="./index.html">← Volver a SQLAlchemy</a>
+        <nav class="lesson-sidebar__nav" aria-label="Índice de Relaciones y buenas prácticas">
+          <h2>Índice</h2>
+          <a href="#clave-foranea-y-relacion-orm">1. Clave foránea y relación ORM</a>
+          <a href="#relacion-uno-a-muchos">2. Relación uno a muchos</a>
+          <a href="#back-populates">3. <code>back_populates</code></a>
+          <a href="#relacion-muchos-a-muchos">4. Relación muchos a muchos</a>
+          <a href="#modelos-de-ejemplo">5. Modelos de ejemplo</a>
+          <a href="#cascadas">6. Cascadas</a>
+          <a href="#crear-objetos-relacionados">7. Crear objetos relacionados</a>
+          <a href="#dinero-y-decimal">8. Dinero y <code>Decimal</code></a>
+          <a href="#informacion-calculada">9. Información calculada</a>
+          <a href="#orden-de-importacion-y-create-all">10. Orden de importación y <code>create_all()</code></a>
+          <a href="#separacion-de-responsabilidades">11. Separación de responsabilidades</a>
+          <a href="#solid-aplicado-de-forma-breve">12. SOLID aplicado de forma breve</a>
+          <a href="#control-de-la-transaccion">13. Control de la transacción</a>
+          <a href="#carga-de-relaciones-y-problema-n-1">14. Carga de relaciones y problema N+1</a>
+          <a href="#errores-frecuentes">15. Errores frecuentes</a>
+          <a href="#resumen">16. Resumen</a>
+        </nav>
+      </aside>
+      <main class="lesson-main">
+        <header class="lesson-hero">
+          <h1>Relaciones y buenas prácticas</h1>
+          <p>Relaciones entre modelos, cascadas, dinero, responsabilidades y carga de datos.</p>
+        </header>
+<section class="lesson-section" id="clave-foranea-y-relacion-orm">
+<h2>1. Clave foránea y relación ORM</h2>
+
+<p class="lesson-note lesson-note--explanation">Los fragmentos continúan la configuración de las lecciones anteriores: se reutilizan <code>Base</code>, <code>engine</code>, <code>SessionLocal</code> y los modelos según corresponda.</p>
+
+<p class="lesson-note lesson-note--explanation">Una clave foránea conecta filas de dos tablas. Una relación ORM permite navegar entre los objetos que representan esas filas.</p>
+
+<p class="lesson-note lesson-note--example">Clave foránea:</p>
+
+<pre class="code-block"><code class="language-python">pedido_id: Mapped[int] = mapped_column(
+    ForeignKey(&quot;pedidos.id&quot;),
+    nullable=False,
+)</code></pre>
+
+<p class="lesson-note lesson-note--example">Relación ORM:</p>
+
+<pre class="code-block"><code class="language-python">pedido: Mapped[&quot;Pedido&quot;] = relationship(
+    back_populates=&quot;lineas&quot;,
+)</code></pre>
+
+<p class="lesson-note lesson-note--important lesson-note--key"><code>ForeignKey</code> protege la relación en la base de datos. <code>relationship()</code> facilita trabajar con ella desde Python.</p>
+
+</section>
+
+<section class="lesson-section" id="relacion-uno-a-muchos">
+<h2>2. Relación uno a muchos</h2>
+
+<p class="lesson-note lesson-note--explanation">Un pedido puede tener muchas líneas, pero cada línea pertenece a un solo pedido.</p>
+
+<pre class="diagram-block">Pedido 1 ───── N PedidoProducto</pre>
+
+<p class="lesson-note lesson-note--key">La clave foránea está en el lado muchos:</p>
+
+<pre class="diagram-block">pedido_producto.pedido_id → pedidos.id</pre>
+
+</section>
+
+<section class="lesson-section" id="back-populates">
+<h2>3. <code>back_populates</code></h2>
+
+<p class="lesson-note lesson-note--explanation">Este fragmento muestra solo los atributos de relación; los modelos completos, con sus tablas y claves, aparecen en el apartado 5.</p>
+
+<p class="lesson-note lesson-note--explanation"><code>back_populates</code> conecta explícitamente los dos extremos de una relación bidireccional.</p>
+
+<pre class="code-block"><code class="language-python">class Pedido(Base):
+    lineas: Mapped[list[&quot;PedidoProducto&quot;]] = relationship(
+        back_populates=&quot;pedido&quot;
+    )
+
+
+class PedidoProducto(Base):
+    pedido: Mapped[&quot;Pedido&quot;] = relationship(
+        back_populates=&quot;lineas&quot;
+    )</code></pre>
+
+<p class="lesson-note lesson-note--example">Permite navegar en ambas direcciones:</p>
+
+<pre class="code-block"><code class="language-python">pedido.lineas
+linea.pedido</code></pre>
+
+<p class="lesson-note lesson-note--warning">Los nombres indicados en <code>back_populates</code> deben coincidir exactamente con los atributos del otro modelo.</p>
+
+</section>
+
+<section class="lesson-section" id="relacion-muchos-a-muchos">
+<h2>4. Relación muchos a muchos</h2>
+
+<p class="lesson-note lesson-note--explanation">Un pedido puede contener varios productos y un producto puede aparecer en varios pedidos.</p>
+
+<pre class="diagram-block">Pedido N ───── N Producto</pre>
+
+<p class="lesson-note lesson-note--explanation">Esta relación necesita una tabla intermedia.</p>
+
+<h3>Tabla intermedia simple</h3>
+
+<p class="lesson-note lesson-note--explanation">Se utiliza cuando la relación solo necesita almacenar las dos claves foráneas.</p>
+
+<h3>Modelo intermedio</h3>
+
+<p class="lesson-note lesson-note--explanation">Se utiliza cuando la relación contiene datos propios, como la cantidad.</p>
+
+<pre class="diagram-block">Pedido 1 ───── N PedidoProducto N ───── 1 Producto</pre>
+
+<p class="lesson-note lesson-note--important lesson-note--key"><code>PedidoProducto</code> representa una línea de pedido, no solamente una unión técnica.</p>
+
+<p class="lesson-note lesson-note--important lesson-note--key">Técnicamente, el muchos a muchos se construye mediante dos relaciones uno a muchos: <code>Pedido → PedidoProducto</code> y <code>Producto → PedidoProducto</code>.</p>
+
+<div class="lesson-table"><table>
+<thead><tr><th scope="col">Columna</th><th scope="col">Función</th></tr></thead>
+<tbody>
+<tr><td><code>id</code></td><td>Identifica la línea</td></tr>
+<tr><td><code>pedido_id</code></td><td>Relaciona la línea con el pedido</td></tr>
+<tr><td><code>producto_id</code></td><td>Relaciona la línea con el producto</td></tr>
+<tr><td><code>cantidad</code></td><td>Dato propio de la relación</td></tr>
+</tbody></table></div>
+
+</section>
+
+<section class="lesson-section" id="modelos-de-ejemplo">
+<h2>5. Modelos de ejemplo</h2>
+
+<p class="lesson-note lesson-note--example">Producto:</p>
+
+<pre class="code-block"><code class="language-python">from decimal import Decimal
+from sqlalchemy import Numeric, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+
+class Producto(Base):
+    __tablename__ = &quot;productos&quot;
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+    precio: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2),
+        nullable=False,
+    )
+
+    lineas: Mapped[list[&quot;PedidoProducto&quot;]] = relationship(
+        back_populates=&quot;producto&quot;
+    )</code></pre>
+
+<p class="lesson-note lesson-note--example">Pedido:</p>
+
+<pre class="code-block"><code class="language-python">from decimal import Decimal
+from sqlalchemy import Numeric, String
+
+
+class Pedido(Base):
+    __tablename__ = &quot;pedidos&quot;
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cliente: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+    total: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2),
+        default=Decimal(&quot;0.00&quot;),
+        nullable=False,
+    )
+
+    lineas: Mapped[list[&quot;PedidoProducto&quot;]] = relationship(
+        back_populates=&quot;pedido&quot;,
+        cascade=&quot;all, delete-orphan&quot;,
+    )</code></pre>
+
+<p class="lesson-note lesson-note--example">Línea de pedido:</p>
+
+<pre class="code-block"><code class="language-python">from sqlalchemy import ForeignKey
+
+
+class PedidoProducto(Base):
+    __tablename__ = &quot;pedido_producto&quot;
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    pedido_id: Mapped[int] = mapped_column(
+        ForeignKey(&quot;pedidos.id&quot;),
+        nullable=False,
+    )
+    producto_id: Mapped[int] = mapped_column(
+        ForeignKey(&quot;productos.id&quot;),
+        nullable=False,
+    )
+    cantidad: Mapped[int] = mapped_column(
+        default=1,
+        nullable=False,
+    )
+
+    pedido: Mapped[&quot;Pedido&quot;] = relationship(
+        back_populates=&quot;lineas&quot;
+    )
+    producto: Mapped[&quot;Producto&quot;] = relationship(
+        back_populates=&quot;lineas&quot;
+    )</code></pre>
+
+</section>
+
+<section class="lesson-section" id="cascadas">
+<h2>6. Cascadas</h2>
+
+<p class="lesson-note lesson-note--explanation">Una cascada indica cómo debe comportarse SQLAlchemy con los objetos relacionados.</p>
+
+<pre class="code-block"><code class="language-python">lineas = relationship(
+    back_populates=&quot;pedido&quot;,
+    cascade=&quot;all, delete-orphan&quot;,
+)</code></pre>
+
+<p class="lesson-note lesson-note--explanation"><code>delete-orphan</code> permite eliminar una línea cuando deja de pertenecer a su pedido.</p>
+
+<p class="lesson-note lesson-note--explanation">Esta cascada la gestiona el ORM. No configura por sí sola un <code>ON DELETE CASCADE</code> en MySQL.</p>
+
+<p class="lesson-note lesson-note--warning">Las cascadas deben decidirse según las reglas reales. No deben añadirse automáticamente a todas las relaciones.</p>
+
+</section>
+
+<section class="lesson-section" id="crear-objetos-relacionados">
+<h2>7. Crear objetos relacionados</h2>
+
+<p class="lesson-note lesson-note--example">Es preferible expresar la relación mediante objetos:</p>
+
+<pre class="code-block"><code class="language-python">from decimal import Decimal
+
+producto = Producto(
+    nombre=&quot;Pizza margarita&quot;,
+    precio=Decimal(&quot;8.50&quot;),
+)
+
+pedido = Pedido(cliente=&quot;Ana Martínez&quot;)
+pedido.lineas.append(
+    PedidoProducto(
+        producto=producto,
+        cantidad=2,
+    )
+)
+
+with SessionLocal.begin() as session:
+    session.add(pedido)</code></pre>
+
+<p class="lesson-note lesson-note--explanation">SQLAlchemy utiliza las relaciones y claves foráneas para ordenar los <code>INSERT</code> necesarios.</p>
+
+<p class="lesson-note lesson-note--warning">Este ejemplo guarda el pedido y sus líneas, pero no calcula su total: la columna conserva el valor predeterminado <code>0.00</code>. El apartado 9 explica el cálculo; asignarlo y guardarlo requiere una decisión explícita de la aplicación.</p>
+
+</section>
+
+<section class="lesson-section" id="dinero-y-decimal">
+<h2>8. Dinero y <code>Decimal</code></h2>
+
+<p class="lesson-note lesson-note--warning">Debe evitarse <code>Float</code> para almacenar dinero porque la coma flotante puede introducir errores de precisión.</p>
+
+<p class="lesson-note lesson-note--example">Modelo:</p>
+
+<pre class="code-block"><code class="language-python">precio: Mapped[Decimal] = mapped_column(
+    Numeric(10, 2),
+    nullable=False,
+)</code></pre>
+
+<p class="lesson-note lesson-note--example">Creación correcta:</p>
+
+<pre class="code-block"><code class="language-python">precio=Decimal(&quot;8.50&quot;)</code></pre>
+
+<p class="lesson-note lesson-note--warning">Los valores <code>Decimal</code> deben construirse preferiblemente desde texto. Si se crean desde un <code>float</code>, pueden heredar su imprecisión.</p>
+
+<p class="lesson-note lesson-note--important lesson-note--key">En Python se utiliza <code>Decimal</code> y en MySQL <code>DECIMAL</code> mediante <code>Numeric</code>.</p>
+
+</section>
+
+<section class="lesson-section" id="informacion-calculada">
+<h2>9. Información calculada</h2>
+
+<p class="lesson-note lesson-note--explanation">Un total puede calcularse a partir del precio y la cantidad:</p>
+
+<pre class="code-block"><code class="language-python">from decimal import Decimal
+
+
+def calcular_total(pedido: Pedido) -&gt; Decimal:
+    return sum(
+        (
+            linea.producto.precio * linea.cantidad
+            for linea in pedido.lineas
+        ),
+        start=Decimal(&quot;0.00&quot;),
+    )</code></pre>
+
+<p class="lesson-note lesson-note--warning">Si el total también se almacena en una columna, puede quedar desactualizado cuando cambian precios o cantidades.</p>
+
+<p class="lesson-note lesson-note--key">Debe decidirse:</p>
+
+<ul>
+<li class="lesson-note lesson-note--key">Cuándo se calcula.</li>
+<li class="lesson-note lesson-note--key">Cuándo se guarda.</li>
+<li class="lesson-note lesson-note--key">Si debe conservar el precio histórico de cada operación.</li>
+<li class="lesson-note lesson-note--key">Qué ocurre cuando cambia el precio actual del producto.</li>
+</ul>
+
+</section>
+
+<section class="lesson-section" id="orden-de-importacion-y-create-all">
+<h2>10. Orden de importación y <code>create_all()</code></h2>
+
+<p class="lesson-note lesson-note--explanation">SQLAlchemy solo puede crear las tablas registradas en <code>Base.metadata</code>.</p>
+
+<p class="lesson-note lesson-note--example">Orden correcto:</p>
+
+<pre class="code-block"><code class="language-python">from database import Base, engine
+from models import Pedido, PedidoProducto, Producto
+
+Base.metadata.create_all(bind=engine)</code></pre>
+
+<p class="lesson-note lesson-note--warning">Si <code>create_all()</code> se ejecuta antes de importar los modelos, algunas tablas no se crearán.</p>
+
+<p class="lesson-note lesson-note--warning">También debe evitarse que cada archivo cree tablas automáticamente al ser importado.</p>
+
+</section>
+
+<section class="lesson-section" id="separacion-de-responsabilidades">
+<h2>11. Separación de responsabilidades</h2>
+
+<p class="lesson-note lesson-note--explanation">En una organización básica pueden separarse:</p>
+
+<div class="lesson-table"><table>
+<thead><tr><th scope="col">Elemento</th><th scope="col">Responsabilidad</th></tr></thead>
+<tbody>
+<tr><td>Modelo</td><td>Mapea datos y relaciones</td></tr>
+<tr><td>Repositorio</td><td>Consulta y guarda objetos</td></tr>
+<tr><td>Servicio</td><td>Aplica reglas de negocio</td></tr>
+<tr><td>Presentación</td><td>Muestra resultados o recibe datos</td></tr>
+<tr><td>Informe</td><td>Genera documentos</td></tr>
+</tbody></table></div>
+
+<p class="lesson-note lesson-note--important lesson-note--key">La finalidad no es crear muchas clases, sino evitar que una sola parte consulte, valide, calcule y presente todo a la vez.</p>
+
+</section>
+
+<section class="lesson-section" id="solid-aplicado-de-forma-breve">
+<h2>12. SOLID aplicado de forma breve</h2>
+
+<h3>Responsabilidad única</h3>
+
+<p class="lesson-note lesson-note--explanation">Cada componente debe tener un motivo principal para cambiar.</p>
+
+<h3>Abierto/cerrado</h3>
+
+<p class="lesson-note lesson-note--explanation">Una regla puede ampliarse mediante nuevas implementaciones sin modificar continuamente el código existente.</p>
+
+<h3>Sustitución de Liskov</h3>
+
+<p class="lesson-note lesson-note--explanation">Una implementación debe poder sustituir a su abstracción respetando el comportamiento esperado.</p>
+
+<h3>Segregación de interfaces</h3>
+
+<p class="lesson-note lesson-note--explanation">Las capacidades independientes deben separarse para que una clase no dependa de métodos que no utiliza.</p>
+
+<h3>Inversión de dependencias</h3>
+
+<p class="lesson-note lesson-note--explanation">La lógica de negocio no debería depender directamente de una sesión global o de una implementación concreta.</p>
+
+<p class="lesson-note lesson-note--warning">Estos principios no se cumplen únicamente por crear herencia o clases abstractas. Deben mejorar realmente las dependencias y responsabilidades.</p>
+
+</section>
+
+<section class="lesson-section" id="control-de-la-transaccion">
+<h2>13. Control de la transacción</h2>
+
+<p class="lesson-note lesson-note--explanation">El repositorio puede añadir o consultar objetos, pero una operación superior debe controlar la transacción completa.</p>
+
+<p class="lesson-note lesson-note--example">Ejemplo:</p>
+
+<pre class="code-block"><code class="language-python">with SessionLocal.begin() as session:
+    repositorio = RepositorioPedidos(session)
+    servicio = ServicioPedidos(repositorio)
+
+    servicio.crear_pedido(datos)</code></pre>
+
+<p class="lesson-note lesson-note--explanation">Si la operación crea un pedido, varias líneas y actualiza existencias, todo puede confirmarse o revertirse conjuntamente.</p>
+
+<p class="lesson-note lesson-note--important lesson-note--key">Una operación de negocio completa suele necesitar una sola transacción coherente.</p>
+
+</section>
+
+<section class="lesson-section" id="carga-de-relaciones-y-problema-n-1">
+<h2>14. Carga de relaciones y problema N+1</h2>
+
+<p class="lesson-note lesson-note--explanation">Al acceder a una relación, SQLAlchemy puede ejecutar una consulta adicional.</p>
+
+<p class="lesson-note lesson-note--example">Ejemplo:</p>
+
+<pre class="code-block"><code class="language-python">pedidos = session.scalars(select(Pedido)).all()
+
+for pedido in pedidos:
+    for linea in pedido.lineas:
+        print(linea.producto.nombre)</code></pre>
+
+<p class="lesson-note lesson-note--explanation">Si se ejecuta una consulta inicial y después otra por cada pedido o producto, aparece el problema N+1.</p>
+
+<p class="lesson-note lesson-note--example">Carga anticipada (con <code>select</code> importado desde <code>sqlalchemy</code>):</p>
+
+<pre class="code-block"><code class="language-python">from sqlalchemy.orm import selectinload
+
+sentencia = (
+    select(Pedido)
+    .options(
+        selectinload(Pedido.lineas)
+        .selectinload(PedidoProducto.producto)
+    )
+)
+
+pedidos = session.scalars(sentencia).all()</code></pre>
+
+<p class="lesson-note lesson-note--warning">No es necesario anticipar todas las relaciones siempre. Debe elegirse según los datos que vaya a utilizar la operación.</p>
+
+</section>
+
+<section class="lesson-section" id="errores-frecuentes">
+<h2>15. Errores frecuentes</h2>
+
+<p class="lesson-note lesson-note--warning">Confundir <code>ForeignKey</code> con <code>relationship()</code>.</p>
+
+<p class="lesson-note lesson-note--warning">Ejecutar <code>create_all()</code> antes de importar los modelos.</p>
+
+<p class="lesson-note lesson-note--warning">Abrir sesiones en varias funciones y no cerrarlas.</p>
+
+<p class="lesson-note lesson-note--warning">Utilizar <code>Float</code> para dinero.</p>
+
+<p class="lesson-note lesson-note--warning">Depender del orden accidental de las importaciones.</p>
+
+<p class="lesson-note lesson-note--warning">Almacenar datos calculados sin controlar cuándo se actualizan.</p>
+
+<p class="lesson-note lesson-note--warning">Generar una consulta adicional por cada objeto relacionado.</p>
+
+<p class="lesson-note lesson-note--warning">Mezclar consultas, reglas de negocio y presentación en una sola función.</p>
+
+</section>
+
+<section class="lesson-section" id="resumen">
+<h2>16. Resumen</h2>
+
+<p class="lesson-note lesson-note--key"><code>ForeignKey</code> define la relación en la base de datos.</p>
+
+<p class="lesson-note lesson-note--key"><code>relationship()</code> permite navegar entre objetos.</p>
+
+<p class="lesson-note lesson-note--key"><code>back_populates</code> conecta los dos extremos de la relación.</p>
+
+<p class="lesson-note lesson-note--key">Una relación muchos a muchos con datos adicionales necesita un modelo intermedio.</p>
+
+<p class="lesson-note lesson-note--key"><code>Decimal</code> y <code>Numeric</code> son apropiados para dinero.</p>
+
+<p class="lesson-note lesson-note--key">Los modelos deben importarse antes de crear las tablas.</p>
+
+<p class="lesson-note lesson-note--key">La transacción debe abarcar la operación completa.</p>
+
+<p class="lesson-note lesson-note--key">SOLID ayuda a separar persistencia y lógica de negocio, pero no exige dividir el código sin necesidad.</p>
+
+<p class="lesson-note lesson-note--important lesson-note--key">El ORM facilita las relaciones, pero el diseño de la base de datos y la calidad del SQL generado siguen siendo responsabilidad del desarrollador.</p>
+
+</section>
+
+<nav aria-label="Continuar el bloque SQLAlchemy"><ul class="lesson-index">
+<li class="lesson-index__item"><a class="lesson-index__link" href="./sesiones-transacciones-crud.html"><strong>← Lección anterior</strong><span>Sesiones, transacciones y CRUD</span></a></li>
+</ul></nav>
+        <footer class="lesson-footer">Cuaderno Digital · Python · SQLAlchemy</footer>
+      </main>
+    </div>
+  </body>
+</html>
